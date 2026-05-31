@@ -21,7 +21,6 @@
         }
         body { font-family: system-ui, -apple-system, sans-serif; max-width: 1500px; margin: 2rem auto; padding: 0 1rem; background: var(--bg); color: var(--text-main); line-height: 1.5; }
         
-        /* Header & Mode Switcher */
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1.5rem; }
         .header h1 { margin: 0; font-size: 1.8rem; }
         
@@ -45,7 +44,6 @@
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Layout & Panels */
         .grid { display: grid; grid-template-columns: 450px 1fr; gap: 2rem; align-items: start; }
         .panel { background: var(--panel); padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .inputs-panel { max-height: 85vh; overflow-y: auto; }
@@ -53,7 +51,6 @@
         .section { margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
         .section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
         
-        /* Checkbox Headers */
         .asset-header { display: flex; align-items: center; gap: 0.5rem; font-size: 1rem; font-weight: 700; color: var(--text-main); margin: 0 0 1rem 0; padding: 0.75rem; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; }
         .asset-header input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary); }
         .asset-body { padding-left: 0.5rem; border-left: 2px solid #e2e8f0; margin-left: 0.5rem; margin-bottom: 1.5rem; transition: opacity 0.2s; }
@@ -68,7 +65,7 @@
         .tt-icon { background: #e5e7eb; color: #6b7280; border-radius: 50%; font-size: 11px; width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; }
         .tt-text { visibility: hidden; width: 260px; background-color: #1f2937; color: #fff; text-align: left; padding: 0.75rem; border-radius: 6px; position: absolute; z-index: 50; bottom: 130%; left: 50%; transform: translateX(-50%); opacity: 0; transition: opacity 0.2s ease-in-out; font-size: 0.75rem; font-weight: normal; line-height: 1.4; box-shadow: 0 4px 6px rgba(0,0,0,0.2); pointer-events: none; }
         .tt-text::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #1f2937 transparent transparent transparent; }
-        .tt-container:hover .tt-text, .tt-container:active .tt-text { visibility: visible; opacity: 1; }
+        .tt-container:hover .tt-text, .tt-container:active .tt-text { visibility: visible; opacity: 1; z-index: 999; }
 
         input[type="number"] { width: 110px; padding: 0.4rem; border: 1px solid var(--border); border-radius: 6px; font-family: inherit; font-size: 0.9rem; text-align: right; }
         input[type="number"]:focus { outline: 2px solid var(--primary); border-color: transparent; }
@@ -193,8 +190,14 @@
                     </div>
                     <div class="input-group">
                         <div class="input-header">
-                            <div class="label-wrapper">Exchange Rate (USD to SGD) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Used to convert your global USD investments into SGD. Lowering this number simulates a stronger SGD relative to the US Dollar, which reduces the local purchasing power of your global portfolio.</span></div></div>
+                            <div class="label-wrapper">Exchange Rate (USD to SGD) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Used to convert your global USD investments into SGD.</span></div></div>
                             <input type="number" id="inp-fx" value="1.35" step="0.01">
+                        </div>
+                    </div>
+                    <div class="input-group advanced-only">
+                        <div class="input-header">
+                            <div class="label-wrapper">Annual FX Drift (%) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Defaulted to -0.8%, reflecting the ~20-year historical trend. A negative value means the SGD steadily appreciates against the USD, reducing the local SGD value of your portfolio. A positive value means the SGD is depreciating against the USD.</span></div></div>
+                            <input type="number" id="inp-fxDrift" value="-0.8" step="0.1">
                         </div>
                     </div>
                 </div>
@@ -242,7 +245,7 @@
             <div class="section">
                 <div class="section-title" style="margin-bottom: 0.5rem;">Mortgage & Housing</div>
                 <p class="simple-only" style="font-size: 0.85rem; color: #6b7280; margin-top: -0.75rem; margin-bottom: 1rem; font-style: italic;">
-                    * Simple Mode assumes your CPF OA contributions exactly cover your mortgage while working, leaving your cash free to invest.
+                    * Simple Mode assumes your CPF OA contributions exactly cover your mortgage while working. Switch to Advanced Mode to unlock dynamic loan amortization and floating interest rates.
                 </p>
                 
                 <label class="asset-header">
@@ -251,18 +254,41 @@
                 </label>
                 
                 <div id="asset-mortgage" class="asset-body">
-                    <div class="input-group">
+                    
+                    <div class="simple-only input-group">
                         <div class="input-header">
                             <div class="label-wrapper">Total Monthly Mortgage (SGD) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Your fixed nominal monthly loan obligation.</span></div></div>
                             <input type="number" id="inp-mortgage" value="3280">
                         </div>
+                        <div style="font-size: 0.75rem; color: #6b7280; margin-top: 0.25rem; font-style: italic;">Note: For bank loans with floating interest rates (e.g., SORA), switch to Advanced Mode to accurately model interest rate fluctuations.</div>
                     </div>
-                    <div class="input-group"><div class="input-header"><div class="label-wrapper">Years Remaining on Loan</div><input type="number" id="inp-loanYrs" value="23"></div></div>
+
+                    <div class="advanced-only">
+                        <div class="input-group">
+                            <div class="input-header">
+                                <div class="label-wrapper">Remaining Loan Principal (SGD) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Your outstanding loan balance today. The simulator will automatically calculate your monthly payments based on this, the tenure, and the interest rate.</span></div></div>
+                                <input type="number" id="inp-mortgagePrincipal" value="650000">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <div class="input-header">
+                                <div class="label-wrapper">Current Interest Rate (%)</div>
+                                <input type="number" id="inp-mortgageRate" value="3.5" step="0.1">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <div class="input-header">
+                            <div class="label-wrapper">Years Remaining on Loan</div>
+                            <input type="number" id="inp-loanYrs" value="23">
+                        </div>
+                    </div>
                     
                     <div class="advanced-only">
                         <div class="input-group" style="margin-top: 1rem;">
                             <div class="input-header">
-                                <div class="label-wrapper">Mortgage Paid via OA (SGD) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">The target amount of your mortgage you intend to pay using CPF OA. This cannot exceed the Total Monthly Mortgage.</span></div></div>
+                                <div class="label-wrapper">Target Mortgage Paid via OA (SGD/mo) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">The amount of CPF OA you intend to use. If floating rates cause your required monthly payment to spike above this target, the shortfall will be paid from your cash/investments.</span></div></div>
                                 <input type="number" id="inp-mortgageOA" value="3280">
                             </div>
                         </div>
@@ -336,19 +362,42 @@
                 <div class="vol-grid">
                     <div class="vol-grid-header">Variable</div>
                     <div class="vol-grid-header" style="text-align: center;">Base Rate</div>
-                    <div class="vol-grid-header" style="text-align: right;">Volatility (± pp) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text" style="right:0; left:auto; transform:none; margin-left:0;">Standard deviation swing. E.g., Return of 8% with ±15 means most years fall between -7% and +23%. Global Equities (±15-20), Bond Funds (±5-8).</span></div></div>
+                    <div class="vol-grid-header" style="text-align: right;">Volatility (± pp) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text" style="right:0; left:auto; transform:none; margin-left:0;">"pp" stands for Percentage Points. This sets the standard deviation for randomized swings.</span></div></div>
                     
                     <div class="vol-label">Global Equities</div>
                     <div class="vol-disp" id="disp-usdRet">9.8%</div>
-                    <input type="number" id="inp-usdVol" value="15.0" step="0.1">
+                    <div style="position: relative; display: flex; align-items: center; justify-content: flex-end;">
+                        <input type="number" id="inp-usdVol" value="15.0" step="0.1" style="width: 80px; margin-right: 0.5rem;">
+                        <div class="tt-container"><span class="tt-icon">i</span><span class="tt-text" style="right:0; left:auto; transform:none; margin-left:0;">Historical std dev (S&P 500 / MSCI World):<br>~13.5 pp (10-yr)<br>~15.0 pp (20-yr)<br>~15.3 pp (30-yr)</span></div>
+                    </div>
 
                     <div class="vol-label">SG Equities</div>
                     <div class="vol-disp" id="disp-sgdRet">5.0%</div>
-                    <input type="number" id="inp-sgdVol" value="10.0" step="0.1">
+                    <div style="position: relative; display: flex; align-items: center; justify-content: flex-end;">
+                        <input type="number" id="inp-sgdVol" value="14.0" step="0.1" style="width: 80px; margin-right: 0.5rem;">
+                        <div class="tt-container"><span class="tt-icon">i</span><span class="tt-text" style="right:0; left:auto; transform:none; margin-left:0;">Historical std dev (Straits Times Index):<br>~12.0 pp (10-yr)<br>~14.0 pp (20-yr)<br>~15.5 pp (30-yr)</span></div>
+                    </div>
 
                     <div class="vol-label">Inflation</div>
                     <div class="vol-disp" id="disp-infl">3.0%</div>
-                    <input type="number" id="inp-inflVol" value="1.5" step="0.1">
+                    <div style="position: relative; display: flex; align-items: center; justify-content: flex-end;">
+                        <input type="number" id="inp-inflVol" value="1.5" step="0.1" style="width: 80px; margin-right: 0.5rem;">
+                        <div class="tt-container"><span class="tt-icon">i</span><span class="tt-text" style="right:0; left:auto; transform:none; margin-left:0;">Historical std dev (SG Core CPI):<br>~1.2 pp (10-yr)<br>~1.5 pp (20-yr)<br>~1.8 pp (30-yr)</span></div>
+                    </div>
+
+                    <div class="vol-label">USD/SGD FX Drift</div>
+                    <div class="vol-disp" id="disp-fxDrift">-0.8%</div>
+                    <div style="position: relative; display: flex; align-items: center; justify-content: flex-end;">
+                        <input type="number" id="inp-fxVol" value="4.5" step="0.1" style="width: 80px; margin-right: 0.5rem;">
+                        <div class="tt-container"><span class="tt-icon">i</span><span class="tt-text" style="right:0; left:auto; transform:none; margin-left:0;">Historical std dev (USD/SGD Exchange Rate):<br>~4.0 pp (10-yr)<br>~4.5 pp (20-yr)<br>~4.8 pp (30-yr)</span></div>
+                    </div>
+
+                    <div class="vol-label">Mortgage Rate</div>
+                    <div class="vol-disp" id="disp-mortgageRate">3.5%</div>
+                    <div style="position: relative; display: flex; align-items: center; justify-content: flex-end;">
+                        <input type="number" id="inp-mortgageVol" value="1.5" step="0.1" style="width: 80px; margin-right: 0.5rem;">
+                        <div class="tt-container"><span class="tt-icon">i</span><span class="tt-text" style="right:0; left:auto; transform:none; margin-left:0;">Historical std dev (SG 3-Month SIBOR/SORA):<br>~1.2 pp (10-yr)<br>~1.5 pp (20-yr)<br>~2.0 pp (30-yr)</span></div>
+                    </div>
                 </div>
             </div>
 
@@ -356,10 +405,10 @@
                 <h4>Ready for more detailed planning?</h4>
                 <p>Simple Mode keeps things clean by assuming your working CPF contributions perfectly offset your mortgage. Switch to <strong>Advanced Mode</strong> to customize exactly how your wealth is modeled:</p>
                 <ul style="margin-top: 0.75rem; margin-bottom: 0; padding-left: 1.25rem; font-size: 0.85rem; color: #1e3a8a; line-height: 1.5;">
+                    <li><strong style="color: #1e40af;">Floating Mortgages:</strong> Use your remaining principal and current interest rate to dynamically model amortization and SORA rate swings.</li>
+                    <li><strong style="color: #1e40af;">Currency Risk:</strong> Map the long-term trend of the SGD appreciating against the USD.</li>
                     <li><strong style="color: #1e40af;">CPF OA Shielding:</strong> Track your actual OA balance and salary contributions to see how long your CPF can shield your portfolio from the mortgage in retirement.</li>
-                    <li><strong style="color: #1e40af;">CPF LIFE:</strong> Model the sudden drop in OA liquidity when your Retirement Account is funded at 55, and factor in LIFE payouts starting at 65.</li>
-                    <li><strong style="color: #1e40af;">Income Streams:</strong> Add passive income like rental yield, side hustles, or pensions.</li>
-                    <li><strong style="color: #1e40af;">Monte Carlo Engine:</strong> Stress-test your timeline with randomized market crashes based on your portfolio's specific volatility.</li>
+                    <li><strong style="color: #1e40af;">Monte Carlo Engine:</strong> Stress-test your timeline with randomized market crashes based on your portfolio's specific empirical volatility.</li>
                 </ul>
             </div>
 
@@ -378,28 +427,31 @@
 
             <details class="guide">
                 <summary>How to Use This Simulator & Assumptions Guide</summary>
-                <h4>Architecture & Withdrawals</h4>
-                <p>This simulator enforces a strict sequential withdrawal strategy during retirement to maximize the compounding of high-yield assets. When your expenses exceed your retirement income, capital is drawn down in this exact order: <strong>1. Cash Reserve -> 2. SGD Portfolio -> 3. USD Portfolio.</strong></p>
                 
-                <h4>Mortgage & Cashflow Logic</h4>
-                <p><strong>Working Years:</strong> If your CPF OA cannot cover your target mortgage payment, the "shortfall" is paid in cash. Instead of withdrawing from your portfolio, this shortfall <em>reduces your monthly investment contributions</em>. If the shortfall is greater than your total monthly contributions, the remainder is drawn from your Cash Reserve.</p>
-                <p><strong>Retirement Years:</strong> Your mortgage (minus whatever is covered by your remaining CPF OA) becomes a hard cash obligation added to your base living expenses.</p>
+                <h4>Lines of Defense (Mortgage Shortfalls)</h4>
+                <p>During your working years, if floating interest rates cause your mortgage payment to spike above your CPF OA Target, the simulator defends your cash buffer using a specific sequence:</p>
+                <ul style="margin-top: 0; padding-left: 1.25rem; font-size: 0.95rem; color: var(--text-muted);">
+                    <li><strong>Line 1 (CPF Buffer):</strong> It will drain any available excess balance in your CPF OA.</li>
+                    <li><strong>Line 2 (Reduce Investments):</strong> It will automatically reduce your monthly out-of-pocket investment contributions. It does this <em>proportionally</em>. For example, if you contribute 80% to Global and 20% to SG, the reduction will hit those portfolios at an 80/20 split.</li>
+                    <li><strong>Line 3 (Drain Cash):</strong> Only if the rate spike completely consumes all of your monthly investment contributions will it begin to drain your sacred Cash Reserve.</li>
+                </ul>
 
-                <h4>Inflation</h4>
-                <p>Inflation applies to Base Living Expenses and Monthly Contributions (if enabled). Your Mortgage Payment and Retirement Income Streams are treated as fixed nominal values.</p>
+                <h4>Floating Mortgages & Amortization (Advanced Mode)</h4>
+                <p>Instead of a flat monthly payment, Advanced Mode calculates your mortgage dynamically using standard loan amortization. If you run a Monte Carlo simulation, your interest rate will fluctuate annually, which will immediately recalculate your required monthly payment based on your remaining principal and tenure.</p>
 
-                <h4>Monte Carlo Simulation</h4>
-                <p>When enabled, the deterministic returns are replaced with randomized annual returns based on a normal distribution (using your Expected Return as the mean and Volatility as the standard deviation). The chart displays the Median (50th percentile) outcome, alongside a confidence band representing the 10th (pessimistic) and 90th (optimistic) percentiles.</p>
+                <h4>FX Drift & Currency Risk (Advanced Mode)</h4>
+                <p>Because the MAS uses exchange rate policy to manage inflation, the SGD has historically appreciated against the USD over the long term. The "Annual FX Drift" input allows you to model this depreciation of the US Dollar, which gradually reduces the local SGD purchasing power of your global portfolio over decades.</p>
+
+                <h4>Architecture & Withdrawals in Retirement</h4>
+                <p>When you retire and your expenses exceed your income, capital is drawn down in this strict order to maximize compounding time for high-yield assets: <strong>1. Cash Reserve -> 2. SGD Portfolio -> 3. USD Portfolio.</strong></p>
                 
                 <h4 style="color: #991b1b; margin-top: 2rem;">⚠️ Limitations & Blindspots (For Beginners)</h4>
                 <p>This tool provides a strong baseline, but real life is messier than math. Do not base major life decisions on this chart without understanding its blindspots:</p>
                 <ul class="blindspots-list">
                     <li><strong>The Cash Drawdown Trap:</strong> The simulator strictly drains your cash reserve first before touching equities. While mathematically optimal, in reality, you should maintain a cash buffer to avoid selling stocks during a market crash.</li>
-                    <li><strong>Floating Mortgage Rates:</strong> The tool treats your mortgage as a fixed monthly payment forever. In Singapore, rates are typically tied to SORA and fluctuate. A rate spike will drastically alter your cash flow needs.</li>
                     <li><strong>Invisible Tax Drag:</strong> If your global portfolio includes US-domiciled ETFs, remember that the US levies a 30% Dividend Withholding Tax on Singaporeans. A projected 8% gross return might effectively be 7.4% after this tax drag.</li>
                     <li><strong>The Retirement "Smile":</strong> The tool inflates expenses on a straight line. Real retirement spending usually "smiles"—high in early retirement (travel), lower in the middle, and spiking heavily at the end due to healthcare/nursing costs.</li>
                     <li><strong>CPF Simplification:</strong> At age 55, the tool deducts your entire Retirement Account (RA) set-aside from your OA. In reality, your Special Account (SA) funds this first, meaning your actual OA might not drop as drastically as simulated here.</li>
-                    <li><strong>Currency Risk:</strong> The exchange rate is static in this simulation. If the MAS continues to strengthen the SGD to fight inflation, the local purchasing power of your USD portfolio will decrease over time.</li>
                     <li><strong>Monte Carlo Limits:</strong> The simulation assumes market returns follow a standard "bell curve." It systematically underestimates the frequency of massive, multi-year "Black Swan" crashes.</li>
                 </ul>
             </details>
@@ -409,19 +461,6 @@
     <script>
         let fireChart;
         let incomeStreamCount = 0;
-
-        // Dynamic Mortgage Cap Logic
-        document.getElementById('inp-mortgage').addEventListener('input', function() {
-            let max = parseFloat(this.value) || 0;
-            let oaInput = document.getElementById('inp-mortgageOA');
-            if (parseFloat(oaInput.value) > max) oaInput.value = max;
-            runSim();
-        });
-        document.getElementById('inp-mortgageOA').addEventListener('input', function() {
-            let max = parseFloat(document.getElementById('inp-mortgage').value) || 0;
-            if (parseFloat(this.value) > max) this.value = max;
-            runSim();
-        });
 
         // UI Interactions
         function setMode(mode) {
@@ -462,15 +501,15 @@
                 document.getElementById('inp-inflation').value = '3.0';
                 msg = "Applied Conservative: Global 6%, SG 3%, Inflation 3.0%";
             } else if (type === 'balanced') {
-                document.getElementById('inp-usdRet').value = '8.0';
+                document.getElementById('inp-usdRet').value = '9.8';
                 document.getElementById('inp-sgdRet').value = '5.0';
                 document.getElementById('inp-inflation').value = '2.5';
-                msg = "Applied Balanced: Global 8%, SG 5%, Inflation 2.5%";
+                msg = "Applied Balanced: Global 9.8%, SG 5%, Inflation 2.5%";
             } else if (type === 'optimistic') {
-                document.getElementById('inp-usdRet').value = '10.0';
+                document.getElementById('inp-usdRet').value = '11.0';
                 document.getElementById('inp-sgdRet').value = '7.0';
                 document.getElementById('inp-inflation').value = '2.0';
-                msg = "Applied Optimistic: Global 10%, SG 7%, Inflation 2.0%";
+                msg = "Applied Optimistic: Global 11%, SG 7%, Inflation 2.0%";
             }
             
             const banner = document.getElementById('preset-banner');
@@ -480,7 +519,7 @@
             runSim();
         }
 
-        document.querySelectorAll('input:not(#inp-mortgage):not(#inp-mortgageOA):not([name="mode"])').forEach(el => {
+        document.querySelectorAll('input:not([name="mode"])').forEach(el => {
             el.addEventListener('input', runSim);
         });
 
@@ -491,13 +530,23 @@
             return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
         }
 
+        // Standard Loan Amortization Formula
+        function calcPmt(principal, ratePerYear, yearsRemaining) {
+            if (yearsRemaining <= 0 || principal <= 0) return 0;
+            let r = ratePerYear / 12;
+            let n = yearsRemaining * 12;
+            if (r === 0) return principal / n;
+            return principal * (r * Math.pow(1+r, n)) / (Math.pow(1+r, n) - 1);
+        }
+
         function simulatePath(inputs, isMonteCarlo) {
-            let { currentAge, retireAge, inflation, inflVol, inflateContribs, fx, 
+            let { currentAge, retireAge, inflation, inflVol, inflateContribs, 
+                  fx, fxDrift, fxVol,
                   hasGlobal, usdStart, usdContrib, usdRet, usdVol,
                   hasSG, sgdStart, sgdContrib, sgdRet, sgdVol,
                   hasCash, cashStart, cashYield, 
-                  mortgage, mortgageOA, loanYrs, oaStart, oaContrib,
-                  expenses, cpfEnabled, raSetAside, cpfPayout, cpfStartAge, incomeStreams } = inputs;
+                  hasMortgage, simpleMortgage, mortgagePrincipal, mortgageRate, mortgageVol, mortgageOA, loanYrs, oaStart, oaContrib,
+                  expenses, cpfEnabled, raSetAside, cpfPayout, cpfStartAge, incomeStreams, isAdvanced } = inputs;
             
             let usdPort = hasGlobal ? usdStart : 0;
             let sgdPort = hasSG ? sgdStart : 0;
@@ -509,6 +558,9 @@
             let currentSgdContrib = hasSG ? sgdContrib : 0;
             let currentOaContrib = oaContrib; 
             let currentExpenses = expenses;
+            let currentFx = fx;
+            
+            let remPrincipal = mortgagePrincipal;
 
             let pathData = [];
             let phaseMap = [];
@@ -521,20 +573,24 @@
                 let actualInfl = inflation;
                 let actualUsdRet = usdRet;
                 let actualSgdRet = sgdRet;
+                let actualFxDrift = fxDrift;
+                let actualMortgageRate = mortgageRate;
 
                 if (isMonteCarlo) {
                     actualInfl = inflation + (randn_bm() * inflVol);
                     actualUsdRet = usdRet + (randn_bm() * usdVol);
                     actualSgdRet = sgdRet + (randn_bm() * sgdVol);
+                    actualFxDrift = fxDrift + (randn_bm() * fxVol);
+                    actualMortgageRate = Math.max(0, mortgageRate + (randn_bm() * mortgageVol)); // Prevent negative mortgage rates
                 }
 
-                // Yearly Inflation Logic
                 if (age > currentAge) {
                     currentExpenses *= (1 + actualInfl);
+                    currentFx *= (1 + actualFxDrift);
                     if (inflateContribs) {
                         currentUsdContrib *= (1 + actualInfl);
                         currentSgdContrib *= (1 + actualInfl);
-                        if (inputs.isAdvanced) currentOaContrib *= (1 + actualInfl);
+                        if (isAdvanced) currentOaContrib *= (1 + actualInfl);
                     }
                 }
 
@@ -542,13 +598,23 @@
                     let prevOa = oaBal;
                     oaBal = Math.max(0, oaBal - raSetAside);
                     if (prevOa - oaBal > 0 && oaBal < mortgageOA * 12) {
-                        warnings.add("CPF RA funding at 55 significantly depleted OA, exposing cash portfolio to mortgage payments.");
+                        warnings.add("CPF RA funding at 55 significantly depleted OA, exposing your portfolio to mortgage payments.");
                     }
                 }
 
                 let isWorking = age < retireAge;
-                let isMortgageActive = age < mortgageEndAge;
+                let isMortgageActive = age < mortgageEndAge && hasMortgage;
                 
+                // Calculate this year's fixed monthly payment based on current principal and rate
+                let currentMonthlyMortgage = 0;
+                if (isMortgageActive) {
+                    if (isAdvanced) {
+                        currentMonthlyMortgage = calcPmt(remPrincipal, actualMortgageRate, mortgageEndAge - age);
+                    } else {
+                        currentMonthlyMortgage = simpleMortgage;
+                    }
+                }
+
                 for (let m = 1; m <= 12; m++) {
                     usdPort *= (1 + (actualUsdRet / 12));
                     sgdPort *= (1 + (actualSgdRet / 12));
@@ -560,38 +626,54 @@
                     if (isWorking) {
                         oaBal += currentOaContrib;
                         
-                        if (isMortgageActive && mortgage > 0) {
-                            let targetOaPay = Math.min(mortgageOA, mortgage);
+                        if (isMortgageActive && currentMonthlyMortgage > 0) {
+                            // Pay down principal (Advanced Mode tracking)
+                            if (isAdvanced) {
+                                let interestPayment = remPrincipal * (actualMortgageRate / 12);
+                                remPrincipal = Math.max(0, remPrincipal - (currentMonthlyMortgage - interestPayment));
+                            }
+
+                            // Calculate OA cover vs Shortfall
+                            let targetOaPay = isAdvanced ? Math.min(mortgageOA, currentMonthlyMortgage) : currentMonthlyMortgage;
                             if (oaBal >= targetOaPay) {
                                 oaBal -= targetOaPay;
-                                mortgageShortfall = mortgage - targetOaPay;
+                                mortgageShortfall = currentMonthlyMortgage - targetOaPay;
                             } else {
-                                mortgageShortfall = mortgage - oaBal;
+                                mortgageShortfall = currentMonthlyMortgage - oaBal;
                                 oaBal = 0;
                             }
                         }
 
-                        let totalContribSGD = currentSgdContrib + (currentUsdContrib * fx);
+                        let totalContribSGD = currentSgdContrib + (currentUsdContrib * currentFx);
+                        
                         if (mortgageShortfall > totalContribSGD) {
+                            // Line of Defense 3: Drain Cash
                             let excessShortfall = mortgageShortfall - totalContribSGD;
                             cashRes -= excessShortfall;
-                            if (totalContribSGD > 0 && inputs.isAdvanced) warnings.add("Mortgage shortfall exceeds monthly contributions during working years. Dipping into cash reserves.");
+                            if (totalContribSGD > 0 && isAdvanced) warnings.add("Mortgage spike completely consumed monthly investments. Dipping into cash reserves.");
                         } else if (totalContribSGD > 0) {
+                            // Line of Defense 2: Proportional Reduction of Investments
                             let effectiveContribSGD = totalContribSGD - mortgageShortfall;
-                            let usdRatio = (currentUsdContrib * fx) / totalContribSGD;
+                            let usdRatio = (currentUsdContrib * currentFx) / totalContribSGD;
                             let sgdRatio = currentSgdContrib / totalContribSGD;
                             
-                            usdPort += (effectiveContribSGD * usdRatio) / fx;
+                            usdPort += (effectiveContribSGD * usdRatio) / currentFx;
                             sgdPort += (effectiveContribSGD * sgdRatio);
                         }
                     } else {
                         // Retired
                         let grossSpending = currentExpenses;
-                        if (isMortgageActive && mortgage > 0) {
-                            if (oaBal >= mortgage) {
-                                oaBal -= mortgage;
+                        if (isMortgageActive && currentMonthlyMortgage > 0) {
+                            // Pay down principal (Advanced Mode tracking)
+                            if (isAdvanced) {
+                                let interestPayment = remPrincipal * (actualMortgageRate / 12);
+                                remPrincipal = Math.max(0, remPrincipal - (currentMonthlyMortgage - interestPayment));
+                            }
+
+                            if (oaBal >= currentMonthlyMortgage) {
+                                oaBal -= currentMonthlyMortgage;
                             } else {
-                                grossSpending += (mortgage - oaBal);
+                                grossSpending += (currentMonthlyMortgage - oaBal);
                                 oaBal = 0;
                             }
                         }
@@ -605,6 +687,7 @@
 
                         let netWithdrawal = Math.max(0, grossSpending - retirementIncome);
 
+                        // Retirement Sequence of Withdrawals
                         if (netWithdrawal > 0) {
                             if (cashRes >= netWithdrawal) {
                                 cashRes -= netWithdrawal;
@@ -616,13 +699,13 @@
                                 } else {
                                     let rem2 = rem - sgdPort;
                                     sgdPort = 0;
-                                    usdPort -= (rem2 / fx);
+                                    usdPort -= (rem2 / currentFx);
                                 }
                             }
                         }
                     }
                     
-                    let totalLiquid = cashRes + sgdPort + (usdPort * fx);
+                    let totalLiquid = cashRes + sgdPort + (usdPort * currentFx);
                     if (totalLiquid < 0 && solvent) {
                         solvent = false;
                         depletionAge = age;
@@ -631,10 +714,10 @@
                 }
 
                 let phase = 1;
-                if (!isWorking && isMortgageActive && mortgage > 0) phase = 2; // Mortgage Drawdown
-                if (!isWorking && (!isMortgageActive || mortgage === 0)) phase = 3; // Debt-Free
+                if (!isWorking && isMortgageActive && (isAdvanced ? remPrincipal > 0 : simpleMortgage > 0)) phase = 2; // Mortgage Drawdown
+                if (!isWorking && (!isMortgageActive || (isAdvanced ? remPrincipal <= 0 : simpleMortgage === 0))) phase = 3; // Debt-Free
 
-                let totalLiquidSGD = cashRes + sgdPort + (usdPort * fx);
+                let totalLiquidSGD = cashRes + sgdPort + (usdPort * currentFx);
                 pathData.push({ age, val: totalLiquidSGD });
                 phaseMap.push(phase);
             }
@@ -647,14 +730,16 @@
             const hasGlobal = document.getElementById('toggle-global').checked;
             const hasSG = document.getElementById('toggle-sg').checked;
             const hasCash = document.getElementById('toggle-cash').checked;
-            
             const hasMortgage = document.getElementById('toggle-mortgage').checked;
-            const rawMortgage = hasMortgage ? (parseFloat(document.getElementById('inp-mortgage').value) || 0) : 0;
 
             // Sync Display fields in Monte Carlo Grid
-            document.getElementById('disp-usdRet').innerText = document.getElementById('inp-usdRet').value + '%';
-            document.getElementById('disp-sgdRet').innerText = document.getElementById('inp-sgdRet').value + '%';
-            document.getElementById('disp-infl').innerText = document.getElementById('inp-inflation').value + '%';
+            if (isAdvanced) {
+                document.getElementById('disp-usdRet').innerText = document.getElementById('inp-usdRet').value + '%';
+                document.getElementById('disp-sgdRet').innerText = document.getElementById('inp-sgdRet').value + '%';
+                document.getElementById('disp-infl').innerText = document.getElementById('inp-inflation').value + '%';
+                document.getElementById('disp-fxDrift').innerText = document.getElementById('inp-fxDrift').value + '%';
+                document.getElementById('disp-mortgageRate').innerText = document.getElementById('inp-mortgageRate').value + '%';
+            }
 
             const inputs = {
                 isAdvanced: isAdvanced,
@@ -662,33 +747,40 @@
                 retireAge: parseFloat(document.getElementById('inp-retireAge').value) || 0,
                 
                 inflation: (parseFloat(document.getElementById('inp-inflation').value) || 0) / 100,
-                inflVol: (parseFloat(document.getElementById('inp-inflVol').value) || 0) / 100,
+                inflVol: isAdvanced ? (parseFloat(document.getElementById('inp-inflVol').value) || 0) / 100 : 0,
                 inflateContribs: document.getElementById('inp-inflateContribs').checked,
                 
                 fx: parseFloat(document.getElementById('inp-fx').value) || 1.35,
+                fxDrift: isAdvanced ? (parseFloat(document.getElementById('inp-fxDrift').value) || 0) / 100 : 0,
+                fxVol: isAdvanced ? (parseFloat(document.getElementById('inp-fxVol').value) || 0) / 100 : 0,
                 
                 hasGlobal: hasGlobal,
                 usdStart: parseFloat(document.getElementById('inp-usdStart').value) || 0,
                 usdContrib: parseFloat(document.getElementById('inp-usdContrib').value) || 0,
                 usdRet: (parseFloat(document.getElementById('inp-usdRet').value) || 0) / 100,
-                usdVol: (parseFloat(document.getElementById('inp-usdVol').value) || 0) / 100,
+                usdVol: isAdvanced ? (parseFloat(document.getElementById('inp-usdVol').value) || 0) / 100 : 0,
                 
                 hasSG: hasSG,
                 sgdStart: parseFloat(document.getElementById('inp-sgdStart').value) || 0,
                 sgdContrib: parseFloat(document.getElementById('inp-sgdContrib').value) || 0,
                 sgdRet: (parseFloat(document.getElementById('inp-sgdRet').value) || 0) / 100,
-                sgdVol: (parseFloat(document.getElementById('inp-sgdVol').value) || 0) / 100,
+                sgdVol: isAdvanced ? (parseFloat(document.getElementById('inp-sgdVol').value) || 0) / 100 : 0,
                 
                 hasCash: hasCash,
                 cashStart: parseFloat(document.getElementById('inp-cashStart').value) || 0,
                 cashYield: (parseFloat(document.getElementById('inp-cashYield').value) || 0) / 100,
                 
-                mortgage: rawMortgage,
-                loanYrs: hasMortgage ? (parseFloat(document.getElementById('inp-loanYrs').value) || 0) : 0,
+                hasMortgage: hasMortgage,
+                simpleMortgage: parseFloat(document.getElementById('inp-mortgage').value) || 0,
+                mortgagePrincipal: parseFloat(document.getElementById('inp-mortgagePrincipal').value) || 0,
+                mortgageRate: (parseFloat(document.getElementById('inp-mortgageRate').value) || 0) / 100,
+                mortgageVol: isAdvanced ? (parseFloat(document.getElementById('inp-mortgageVol').value) || 0) / 100 : 0,
+                loanYrs: parseFloat(document.getElementById('inp-loanYrs').value) || 0,
                 
-                mortgageOA: isAdvanced && hasMortgage ? (parseFloat(document.getElementById('inp-mortgageOA').value) || 0) : rawMortgage,
+                // INVISIBLE SHIELD LOGIC: If Simple Mode, set OA math to perfectly balance the Simple Mortgage.
+                mortgageOA: isAdvanced ? (parseFloat(document.getElementById('inp-mortgageOA').value) || 0) : (parseFloat(document.getElementById('inp-mortgage').value) || 0),
                 oaStart: isAdvanced ? (parseFloat(document.getElementById('inp-oaStart').value) || 0) : 0,
-                oaContrib: isAdvanced ? (parseFloat(document.getElementById('inp-oaContrib').value) || 0) : rawMortgage,
+                oaContrib: isAdvanced ? (parseFloat(document.getElementById('inp-oaContrib').value) || 0) : (parseFloat(document.getElementById('inp-mortgage').value) || 0),
                 
                 expenses: parseFloat(document.getElementById('inp-expenses').value) || 0,
                 cpfEnabled: isAdvanced ? document.getElementById('inp-cpfToggle').checked : false,
@@ -710,9 +802,8 @@
             }
 
             let sysWarnings = new Set();
-            if (inputs.inflation >= Math.max(inputs.usdRet, inputs.sgdRet)) sysWarnings.add("Inflation exceeds expected portfolio returns. Real growth is negative.");
+            if (inputs.inflation >= Math.max(inputs.usdRet, inputs.sgdRet) && (inputs.hasGlobal || inputs.hasSG)) sysWarnings.add("Inflation exceeds expected portfolio returns. Real growth is negative.");
             if (inputs.cpfEnabled && inputs.cpfStartAge > inputs.retireAge) sysWarnings.add("Note: CPF LIFE begins after your retirement age. Ensure you have liquid bridges.");
-            if (!isAdvanced && inputs.mortgage > 0) sysWarnings.add("Simple Mode treats CPF as a pure safety net. Your mortgage will be paid entirely from your liquid portfolio. Switch to Advanced Mode to enable CPF OA shielding.");
 
             const isMC = document.getElementById('inp-mcToggle').checked && isAdvanced;
             
