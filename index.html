@@ -40,7 +40,11 @@
         .preset-btn { cursor: pointer; padding: 0.5rem 1rem; border-radius: 6px; border: 1px solid #d1d5db; background: #f3f4f6; font-weight: 600; font-size: 0.85rem; color: #4b5563; transition: all 0.2s; }
         .preset-btn:hover { background: #e5e7eb; color: #1f2937; }
 
-        .preset-banner { display: none; background: #dbeafe; color: #1e40af; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.85rem; font-weight: 600; text-align: center; margin-bottom: 1rem; border: 1px solid #bfdbfe; animation: fadeIn 0.3s; }
+        .preset-banner { display: none; align-items: center; justify-content: space-between; background: #dbeafe; color: #1e40af; padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.85rem; font-weight: 600; margin-bottom: 1rem; border: 1px solid #bfdbfe; animation: fadeIn 0.3s; }
+        .preset-banner-text { flex: 1; text-align: center; }
+        .preset-close { cursor: pointer; background: none; border: none; font-size: 1.2rem; color: #1e40af; opacity: 0.7; padding: 0; line-height: 1; margin-left: 1rem; font-weight: bold; }
+        .preset-close:hover { opacity: 1; }
+
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Layout & Panels */
@@ -51,7 +55,7 @@
         .section { margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
         .section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
         
-        /* Checkbox Headers for Assets */
+        /* Checkbox Headers */
         .asset-header { display: flex; align-items: center; gap: 0.5rem; font-size: 1rem; font-weight: 700; color: var(--text-main); margin: 0 0 1rem 0; padding: 0.75rem; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; }
         .asset-header input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary); }
         .asset-body { padding-left: 0.5rem; border-left: 2px solid #e2e8f0; margin-left: 0.5rem; margin-bottom: 1.5rem; transition: opacity 0.2s; }
@@ -97,11 +101,6 @@
         body.advanced-mode .advanced-only { display: block; }
         body.advanced-mode .simple-only { display: none; }
 
-        details.guide { background: var(--panel); padding: 1.5rem; border-radius: 12px; margin-top: 2rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        details.guide summary { font-weight: 700; font-size: 1.1rem; cursor: pointer; color: var(--primary); }
-        details.guide h4 { margin: 1.5rem 0 0.5rem 0; }
-        details.guide p, details.guide ul { margin-top: 0; font-size: 0.95rem; color: var(--text-muted); }
-
         @media (max-width: 900px) {
             .grid { grid-template-columns: 1fr; }
             .inputs-panel { max-height: none; overflow-y: visible; }
@@ -131,7 +130,10 @@
         </div>
     </div>
     
-    <div id="preset-banner" class="preset-banner"></div>
+    <div id="preset-banner" class="preset-banner">
+        <span id="preset-banner-text" class="preset-banner-text"></span>
+        <button class="preset-close" onclick="document.getElementById('preset-banner').style.display='none'">✕</button>
+    </div>
 
     <div class="grid">
         <div class="panel inputs-panel">
@@ -152,9 +154,19 @@
                 </div>
                 <div class="input-group">
                     <div class="input-header">
-                        <div class="label-wrapper">Inflation Rate (%) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">The assumed annual increase in your living expenses and your monthly contributions. Note: Mortgage payments do not inflate.</span></div></div>
+                        <div class="label-wrapper">Inflation Rate (%) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">The assumed annual increase in your living expenses.</span></div></div>
                         <input type="number" id="inp-inflation" value="3.0" step="0.1">
                     </div>
+                </div>
+
+                <div style="margin-top: 1.5rem; padding: 1rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px;">
+                    <div class="toggle-row" style="margin-bottom: 0.25rem; background: transparent; border: none; padding: 0;">
+                        <input type="checkbox" id="inp-inflateContribs" onchange="runSim()">
+                        <label for="inp-inflateContribs" style="font-size: 0.85rem; color: #92400e;">Increase monthly contributions with inflation</label>
+                    </div>
+                    <p style="font-size: 0.8rem; color: #92400e; margin: 0; padding-left: 1.7rem; line-height: 1.4;">
+                        Check this if you expect your salary to grow in tandem with inflation AND your lifestyle to remain completely unchanged. Note: This level of financial discipline is uncommon for most individuals.
+                    </p>
                 </div>
             </div>
 
@@ -162,7 +174,6 @@
                 <div class="section-title" style="margin-bottom: 0.5rem;">Asset Classes</div>
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0; margin-bottom: 1.5rem;">Enable the asset classes you currently hold.</p>
                 
-                <!-- Global Portfolio -->
                 <label class="asset-header">
                     <input type="checkbox" id="toggle-global" checked onchange="toggleAsset('global')"> 
                     Global (outside Singapore) investments (in USD)
@@ -185,7 +196,6 @@
                     </div>
                 </div>
 
-                <!-- SG Portfolio -->
                 <label class="asset-header">
                     <input type="checkbox" id="toggle-sg" onchange="toggleAsset('sg')"> 
                     SG investments (in SGD)
@@ -202,7 +212,6 @@
                     </div>
                 </div>
 
-                <!-- Cash Reserve -->
                 <label class="asset-header">
                     <input type="checkbox" id="toggle-cash" checked onchange="toggleAsset('cash')"> 
                     Cash Reserve (in SGD)
@@ -219,26 +228,37 @@
             </div>
 
             <div class="section">
-                <div class="section-title">Mortgage & Housing</div>
+                <div class="section-title" style="margin-bottom: 0.5rem;">Mortgage & CPF OA</div>
                 <p class="simple-only" style="font-size: 0.85rem; color: #6b7280; margin-top: -0.75rem; margin-bottom: 1rem; font-style: italic;">
                     * Simple Mode assumes your CPF OA contributions exactly cover your mortgage while working, leaving your cash free to invest.
                 </p>
-                <div class="input-group">
-                    <div class="input-header">
-                        <div class="label-wrapper">Total Monthly Mortgage (SGD) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Your fixed nominal monthly loan obligation.</span></div></div>
-                        <input type="number" id="inp-mortgage" value="3280">
-                    </div>
-                </div>
-                <div class="input-group"><div class="input-header"><div class="label-wrapper">Years Remaining on Loan</div><input type="number" id="inp-loanYrs" value="23"></div></div>
                 
-                <div class="advanced-only">
-                    <hr style="border: 0; border-top: 1px solid var(--border); margin: 1.5rem 0;">
+                <label class="asset-header">
+                    <input type="checkbox" id="toggle-mortgage" checked onchange="toggleAsset('mortgage')"> 
+                    I have a property with a current mortgage
+                </label>
+                
+                <div id="asset-mortgage" class="asset-body">
                     <div class="input-group">
                         <div class="input-header">
-                            <div class="label-wrapper">Mortgage Paid via OA (SGD) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">The target amount of your mortgage you intend to pay using CPF OA. This cannot exceed the Total Monthly Mortgage.</span></div></div>
-                            <input type="number" id="inp-mortgageOA" value="3280">
+                            <div class="label-wrapper">Total Monthly Mortgage (SGD) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Your fixed nominal monthly loan obligation.</span></div></div>
+                            <input type="number" id="inp-mortgage" value="3280">
                         </div>
                     </div>
+                    <div class="input-group"><div class="input-header"><div class="label-wrapper">Years Remaining on Loan</div><input type="number" id="inp-loanYrs" value="23"></div></div>
+                    
+                    <div class="advanced-only">
+                        <div class="input-group" style="margin-top: 1rem;">
+                            <div class="input-header">
+                                <div class="label-wrapper">Mortgage Paid via OA (SGD) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">The target amount of your mortgage you intend to pay using CPF OA. This cannot exceed the Total Monthly Mortgage.</span></div></div>
+                                <input type="number" id="inp-mortgageOA" value="3280">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="advanced-only">
+                    <hr style="border: 0; border-top: 1px solid var(--border); margin: 1.5rem 0;">
                     <div class="input-group"><div class="input-header"><div class="label-wrapper">Current CPF OA Balance (SGD)</div><input type="number" id="inp-oaStart" value="50000"></div></div>
                     <div class="input-group">
                         <div class="input-header">
@@ -303,8 +323,14 @@
             </div>
 
             <div class="simple-only advanced-callout">
-                <h4>Looking for more precision?</h4>
-                <p>Simple Mode assumes your working CPF contributions perfectly offset your mortgage, leaving no buffer for early retirement. Flip the switch to <strong>Advanced Mode</strong> to model custom cash top-ups, OA balance carryovers, CPF LIFE payouts, multiple income streams, and Monte Carlo market crash simulations.</p>
+                <h4>Ready for more detailed planning?</h4>
+                <p>Simple Mode keeps things clean by assuming your working CPF contributions perfectly offset your mortgage. Switch to <strong>Advanced Mode</strong> to customize exactly how your wealth is modeled:</p>
+                <ul style="margin-top: 0.75rem; margin-bottom: 0; padding-left: 1.25rem; font-size: 0.85rem; color: #1e3a8a; line-height: 1.5;">
+                    <li><strong style="color: #1e40af;">CPF OA Shielding:</strong> Track your actual OA balance and salary contributions to see how long your CPF can shield your portfolio from the mortgage in retirement.</li>
+                    <li><strong style="color: #1e40af;">CPF LIFE:</strong> Model the sudden drop in OA liquidity when your Retirement Account is funded at 55, and factor in LIFE payouts starting at 65.</li>
+                    <li><strong style="color: #1e40af;">Income Streams:</strong> Add passive income like rental yield, side hustles, or pensions.</li>
+                    <li><strong style="color: #1e40af;">Monte Carlo Engine:</strong> Stress-test your timeline with randomized market crashes based on your portfolio's specific volatility.</li>
+                </ul>
             </div>
 
         </div>
@@ -325,7 +351,6 @@
     <script>
         let fireChart;
         let incomeStreamCount = 0;
-        let presetTimeout;
 
         // Dynamic Mortgage Cap Logic
         document.getElementById('inp-mortgage').addEventListener('input', function() {
@@ -391,10 +416,8 @@
             }
             
             const banner = document.getElementById('preset-banner');
-            banner.innerText = msg;
-            banner.style.display = 'block';
-            clearTimeout(presetTimeout);
-            presetTimeout = setTimeout(() => { banner.style.display = 'none'; }, 4000);
+            document.getElementById('preset-banner-text').innerText = msg;
+            banner.style.display = 'flex';
             
             runSim();
         }
@@ -411,7 +434,7 @@
         }
 
         function simulatePath(inputs, isMonteCarlo) {
-            let { currentAge, retireAge, inflation, fx, 
+            let { currentAge, retireAge, inflation, inflateContribs, fx, 
                   hasGlobal, usdStart, usdContrib, usdRet, usdVol,
                   hasSG, sgdStart, sgdContrib, sgdRet, sgdVol,
                   hasCash, cashStart, cashYield, 
@@ -426,6 +449,7 @@
             let mortgageEndAge = currentAge + loanYrs;
             let currentUsdContrib = hasGlobal ? usdContrib : 0;
             let currentSgdContrib = hasSG ? sgdContrib : 0;
+            let currentOaContrib = oaContrib; 
             let currentExpenses = expenses;
 
             let pathData = [];
@@ -435,10 +459,15 @@
             let warnings = new Set();
 
             for (let age = currentAge; age <= 95; age++) {
+                
+                // Yearly Inflation Logic
                 if (age > currentAge) {
                     currentExpenses *= (1 + inflation);
-                    currentUsdContrib *= (1 + inflation);
-                    currentSgdContrib *= (1 + inflation);
+                    if (inflateContribs) {
+                        currentUsdContrib *= (1 + inflation);
+                        currentSgdContrib *= (1 + inflation);
+                        if (inputs.isAdvanced) currentOaContrib *= (1 + inflation);
+                    }
                 }
 
                 let actualUsdRet = usdRet;
@@ -468,9 +497,9 @@
                     let mortgageShortfall = 0;
 
                     if (isWorking) {
-                        oaBal += oaContrib;
+                        oaBal += currentOaContrib;
                         
-                        if (isMortgageActive) {
+                        if (isMortgageActive && mortgage > 0) {
                             let targetOaPay = Math.min(mortgageOA, mortgage);
                             if (oaBal >= targetOaPay) {
                                 oaBal -= targetOaPay;
@@ -497,7 +526,7 @@
                     } else {
                         // Retired
                         let grossSpending = currentExpenses;
-                        if (isMortgageActive) {
+                        if (isMortgageActive && mortgage > 0) {
                             if (oaBal >= mortgage) {
                                 oaBal -= mortgage;
                             } else {
@@ -541,8 +570,8 @@
                 }
 
                 let phase = 1;
-                if (!isWorking && isMortgageActive) phase = 2; // Mortgage Drawdown
-                if (!isWorking && !isMortgageActive) phase = 3; // Debt-Free
+                if (!isWorking && isMortgageActive && mortgage > 0) phase = 2; // Mortgage Drawdown
+                if (!isWorking && (!isMortgageActive || mortgage === 0)) phase = 3; // Debt-Free
 
                 let totalLiquidSGD = cashRes + sgdPort + (usdPort * fx);
                 pathData.push({ age, val: totalLiquidSGD });
@@ -557,13 +586,16 @@
             const hasGlobal = document.getElementById('toggle-global').checked;
             const hasSG = document.getElementById('toggle-sg').checked;
             const hasCash = document.getElementById('toggle-cash').checked;
-            let rawMortgage = parseFloat(document.getElementById('inp-mortgage').value) || 0;
+            
+            const hasMortgage = document.getElementById('toggle-mortgage').checked;
+            const rawMortgage = hasMortgage ? (parseFloat(document.getElementById('inp-mortgage').value) || 0) : 0;
 
             const inputs = {
                 isAdvanced: isAdvanced,
                 currentAge: parseFloat(document.getElementById('inp-currentAge').value) || 0,
                 retireAge: parseFloat(document.getElementById('inp-retireAge').value) || 0,
                 inflation: (parseFloat(document.getElementById('inp-inflation').value) || 0) / 100,
+                inflateContribs: document.getElementById('inp-inflateContribs').checked,
                 fx: parseFloat(document.getElementById('inp-fx').value) || 1.35,
                 
                 hasGlobal: hasGlobal,
@@ -583,10 +615,10 @@
                 cashYield: (parseFloat(document.getElementById('inp-cashYield').value) || 0) / 100,
                 
                 mortgage: rawMortgage,
-                loanYrs: parseFloat(document.getElementById('inp-loanYrs').value) || 0,
+                loanYrs: hasMortgage ? (parseFloat(document.getElementById('inp-loanYrs').value) || 0) : 0,
                 
                 // INVISIBLE SHIELD LOGIC: If Simple Mode, set OA math to perfectly balance the mortgage.
-                mortgageOA: isAdvanced ? (parseFloat(document.getElementById('inp-mortgageOA').value) || 0) : rawMortgage,
+                mortgageOA: isAdvanced && hasMortgage ? (parseFloat(document.getElementById('inp-mortgageOA').value) || 0) : rawMortgage,
                 oaStart: isAdvanced ? (parseFloat(document.getElementById('inp-oaStart').value) || 0) : 0,
                 oaContrib: isAdvanced ? (parseFloat(document.getElementById('inp-oaContrib').value) || 0) : rawMortgage,
                 
@@ -612,6 +644,7 @@
             let sysWarnings = new Set();
             if (inputs.inflation >= Math.max(inputs.usdRet, inputs.sgdRet)) sysWarnings.add("Inflation exceeds expected portfolio returns. Real growth is negative.");
             if (inputs.cpfEnabled && inputs.cpfStartAge > inputs.retireAge) sysWarnings.add("Note: CPF LIFE begins after your retirement age. Ensure you have liquid bridges.");
+            if (!isAdvanced && inputs.mortgage > 0) sysWarnings.add("Simple Mode treats CPF as a pure safety net. Your mortgage will be paid entirely from your liquid portfolio. Switch to Advanced Mode to enable CPF OA shielding.");
 
             const isMC = document.getElementById('inp-mcToggle').checked && isAdvanced;
             
