@@ -101,6 +101,16 @@
         body.advanced-mode .advanced-only { display: block; }
         body.advanced-mode .simple-only { display: none; }
 
+        details.guide { background: var(--panel); padding: 1.5rem; border-radius: 12px; margin-top: 2rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        details.guide summary { font-weight: 700; font-size: 1.1rem; cursor: pointer; color: var(--primary); }
+        details.guide h4 { margin: 1.5rem 0 0.5rem 0; }
+        details.guide p, details.guide ul { margin-top: 0; font-size: 0.95rem; color: var(--text-muted); }
+        
+        /* Blindspots specific styling */
+        .blindspots-list { margin-top: 0.75rem; color: #4b5563; font-size: 0.95rem; line-height: 1.6; padding-left: 1.25rem; }
+        .blindspots-list li { margin-bottom: 0.75rem; }
+        .blindspots-list strong { color: #1f2937; }
+
         @media (max-width: 900px) {
             .grid { grid-template-columns: 1fr; }
             .inputs-panel { max-height: none; overflow-y: visible; }
@@ -159,6 +169,7 @@
                     </div>
                 </div>
 
+                <!-- Inflation Behavior Toggle -->
                 <div style="margin-top: 1.5rem; padding: 1rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px;">
                     <div class="toggle-row" style="margin-bottom: 0.25rem; background: transparent; border: none; padding: 0;">
                         <input type="checkbox" id="inp-inflateContribs" onchange="runSim()">
@@ -174,6 +185,7 @@
                 <div class="section-title" style="margin-bottom: 0.5rem;">Asset Classes</div>
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0; margin-bottom: 1.5rem;">Enable the asset classes you currently hold.</p>
                 
+                <!-- Global Portfolio -->
                 <label class="asset-header">
                     <input type="checkbox" id="toggle-global" checked onchange="toggleAsset('global')"> 
                     Global (outside Singapore) investments (in USD)
@@ -196,6 +208,7 @@
                     </div>
                 </div>
 
+                <!-- SG Portfolio -->
                 <label class="asset-header">
                     <input type="checkbox" id="toggle-sg" onchange="toggleAsset('sg')"> 
                     SG investments (in SGD)
@@ -212,6 +225,7 @@
                     </div>
                 </div>
 
+                <!-- Cash Reserve -->
                 <label class="asset-header">
                     <input type="checkbox" id="toggle-cash" checked onchange="toggleAsset('cash')"> 
                     Cash Reserve (in SGD)
@@ -228,7 +242,7 @@
             </div>
 
             <div class="section">
-                <div class="section-title" style="margin-bottom: 0.5rem;">Mortgage & CPF OA</div>
+                <div class="section-title" style="margin-bottom: 0.5rem;">Mortgage & Housing</div>
                 <p class="simple-only" style="font-size: 0.85rem; color: #6b7280; margin-top: -0.75rem; margin-bottom: 1rem; font-style: italic;">
                     * Simple Mode assumes your CPF OA contributions exactly cover your mortgage while working, leaving your cash free to invest.
                 </p>
@@ -347,6 +361,34 @@
             </div>
         </div>
     </div>
+
+    <details class="guide">
+        <summary>How to Use This Simulator & Assumptions Guide</summary>
+        <h4>Architecture & Withdrawals</h4>
+        <p>This simulator enforces a strict sequential withdrawal strategy during retirement to maximize the compounding of high-yield assets. When your expenses exceed your retirement income, capital is drawn down in this exact order: <strong>1. Cash Reserve -> 2. SGD Portfolio -> 3. USD Portfolio.</strong></p>
+        
+        <h4>Mortgage & Cashflow Logic</h4>
+        <p><strong>Working Years:</strong> If your CPF OA cannot cover your target mortgage payment, the "shortfall" is paid in cash. Instead of withdrawing from your portfolio, this shortfall <em>reduces your monthly investment contributions</em>. If the shortfall is greater than your total monthly contributions, the remainder is drawn from your Cash Reserve.</p>
+        <p><strong>Retirement Years:</strong> Your mortgage (minus whatever is covered by your remaining CPF OA) becomes a hard cash obligation added to your base living expenses.</p>
+
+        <h4>Inflation</h4>
+        <p>Inflation applies to Base Living Expenses and Monthly Contributions (if enabled). Your Mortgage Payment and Retirement Income Streams are treated as fixed nominal values.</p>
+
+        <h4>Monte Carlo Simulation</h4>
+        <p>When enabled, the deterministic returns are replaced with randomized annual returns based on a normal distribution (using your Expected Return as the mean and Volatility as the standard deviation). The chart displays the Median (50th percentile) outcome, alongside a confidence band representing the 10th (pessimistic) and 90th (optimistic) percentiles.</p>
+        
+        <h4 style="color: #991b1b; margin-top: 2rem;">⚠️ Limitations & Blindspots (For Beginners)</h4>
+        <p>This tool provides a strong baseline, but real life is messier than math. Do not base major life decisions on this chart without understanding its blindspots:</p>
+        <ul class="blindspots-list">
+            <li><strong>The Cash Drawdown Trap:</strong> The simulator strictly drains your cash reserve first before touching equities. While mathematically optimal, in reality, you should maintain a cash buffer to avoid selling stocks during a market crash.</li>
+            <li><strong>Floating Mortgage Rates:</strong> The tool treats your mortgage as a fixed monthly payment forever. In Singapore, rates are typically tied to SORA and fluctuate. A rate spike will drastically alter your cash flow needs.</li>
+            <li><strong>Invisible Tax Drag:</strong> If your global portfolio includes US-domiciled ETFs, remember that the US levies a 30% Dividend Withholding Tax on Singaporeans. A projected 8% gross return might effectively be 7.4% after this tax drag.</li>
+            <li><strong>The Retirement "Smile":</strong> The tool inflates expenses on a straight line. Real retirement spending usually "smiles"—high in early retirement (travel), lower in the middle, and spiking heavily at the end due to healthcare/nursing costs.</li>
+            <li><strong>CPF Simplification:</strong> At age 55, the tool deducts your entire Retirement Account (RA) set-aside from your OA. In reality, your Special Account (SA) funds this first, meaning your actual OA might not drop as drastically as simulated here.</li>
+            <li><strong>Currency Risk:</strong> The exchange rate is static in this simulation. If the MAS continues to strengthen the SGD to fight inflation, the local purchasing power of your USD portfolio will decrease over time.</li>
+            <li><strong>Monte Carlo Limits:</strong> The simulation assumes market returns follow a standard "bell curve." It systematically underestimates the frequency of massive, multi-year "Black Swan" crashes.</li>
+        </ul>
+    </details>
 
     <script>
         let fireChart;
