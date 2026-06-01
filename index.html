@@ -9,119 +9,126 @@
         :root {
             --primary: #2563eb;
             --primary-hover: #1d4ed8;
-            --bg: #f3f4f6;
+            --bg: #f8fafc;
             --panel: #ffffff;
-            --text-main: #1f2937;
-            --text-muted: #4b5563;
-            --border: #e5e7eb;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
             --warning-bg: #fef2f2;
             --warning-text: #991b1b;
             --success-bg: #f0fdf4;
             --success-text: #166534;
         }
-        body { font-family: system-ui, -apple-system, sans-serif; max-width: 1500px; margin: 2rem auto; padding: 0 1rem; background: var(--bg); color: var(--text-main); line-height: 1.5; }
+        body { font-family: system-ui, -apple-system, sans-serif; max-width: 1500px; margin: 0 auto; padding: 2rem 1rem; background: var(--bg); color: var(--text-main); line-height: 1.5; }
         
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1.5rem; }
-        .header h1 { margin: 0; font-size: 1.8rem; }
+        /* Header & Top Controls */
+        .header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1.5rem; }
+        .header-container h1 { margin: 0; font-size: 1.8rem; color: #1e293b; }
+        .top-controls { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
         
-        .mode-slider { position: relative; display: flex; background: #e5e7eb; border-radius: 30px; padding: 4px; width: 280px; }
+        .btn-sample { background: #10b981; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2); }
+        .btn-sample:hover { background: #059669; }
+
+        .mode-slider { position: relative; display: flex; background: #e2e8f0; border-radius: 30px; padding: 4px; width: 280px; }
         .mode-slider input { display: none; }
-        .mode-slider label { flex: 1; text-align: center; padding: 8px 16px; font-weight: 600; font-size: 0.9rem; cursor: pointer; z-index: 2; color: #4b5563; transition: color 0.3s; }
+        .mode-slider label { flex: 1; text-align: center; padding: 8px 16px; font-weight: 600; font-size: 0.9rem; cursor: pointer; z-index: 2; color: #475569; transition: color 0.3s; }
         .mode-slider .slider-bg { position: absolute; top: 4px; left: 4px; bottom: 4px; width: calc(50% - 4px); background: white; border-radius: 26px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: transform 0.3s ease; z-index: 1; }
-        
         #mode-simple:checked ~ label[for="mode-simple"] { color: var(--primary); }
         #mode-advanced:checked ~ label[for="mode-advanced"] { color: var(--primary); }
         #mode-advanced:checked ~ .slider-bg { transform: translateX(100%); }
 
-        .preset-group { display: flex; gap: 0.5rem; background: #f8fafc; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border); }
-        .preset-btn { flex: 1; cursor: pointer; padding: 0.5rem 1rem; border-radius: 6px; border: 1px solid #d1d5db; background: #ffffff; font-weight: 600; font-size: 0.85rem; color: #4b5563; transition: all 0.2s; text-align: center; }
-        .preset-btn:hover { background: #e5e7eb; color: #1f2937; }
-
+        /* Scenarios */
+        .preset-group { display: flex; gap: 0.5rem; background: #ffffff; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 1.5rem; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+        .preset-btn { flex: 1; cursor: pointer; padding: 0.5rem 1rem; border-radius: 6px; border: 1px solid #cbd5e1; background: #f8fafc; font-weight: 600; font-size: 0.85rem; color: #475569; transition: all 0.2s; text-align: center; }
+        .preset-btn:hover { background: #e2e8f0; color: #0f172a; }
         .preset-banner { display: none; align-items: center; justify-content: space-between; background: #dbeafe; color: #1e40af; padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.85rem; font-weight: 600; margin-bottom: 1.5rem; border: 1px solid #bfdbfe; animation: fadeIn 0.3s; }
-        .preset-banner-text { flex: 1; text-align: left; }
-        .preset-close { cursor: pointer; background: none; border: none; font-size: 1.2rem; color: #1e40af; opacity: 0.7; padding: 0; line-height: 1; margin-left: 1rem; font-weight: bold; }
-        .preset-close:hover { opacity: 1; }
-
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
-        .grid { display: grid; grid-template-columns: 450px 1fr; gap: 2rem; align-items: start; }
-        .panel { background: var(--panel); padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .inputs-panel { max-height: 85vh; overflow-y: auto; }
+        /* Main Layout */
+        .grid { display: grid; grid-template-columns: 480px 1fr; gap: 2rem; align-items: start; }
         
-        .section { margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
-        .section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-        
-        .asset-header { display: flex; align-items: center; gap: 0.5rem; font-size: 1rem; font-weight: 700; color: var(--text-main); margin: 0 0 1rem 0; padding: 0.75rem; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; }
-        .asset-header input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary); }
-        .asset-body { padding-left: 0.5rem; border-left: 2px solid #e2e8f0; margin-left: 0.5rem; margin-bottom: 1.5rem; transition: opacity 0.2s; }
+        /* Accordions (Progressive Disclosure) */
+        .inputs-panel { display: flex; flex-direction: column; gap: 1rem; }
+        details.accordion { background: var(--panel); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.02); overflow: hidden; }
+        details.accordion summary { list-style: none; padding: 1.25rem 1.5rem; font-weight: 700; font-size: 1.1rem; cursor: pointer; background: #ffffff; display: flex; justify-content: space-between; align-items: center; user-select: none; }
+        details.accordion summary::-webkit-details-marker { display: none; }
+        details.accordion summary::after { content: '+'; font-size: 1.5rem; color: var(--primary); font-weight: normal; line-height: 1; transition: transform 0.2s; }
+        details.accordion[open] summary::after { content: '−'; transform: rotate(180deg); }
+        details.accordion[open] summary { border-bottom: 1px solid var(--border); background: #f8fafc; }
+        .accordion-content { padding: 1.5rem; background: #ffffff; }
 
-        .section-title { font-size: 1.1rem; font-weight: 700; color: var(--text-main); margin: 0 0 1.25rem 0; }
-        .input-group { margin-bottom: 1rem; }
+        /* Form Elements & Sliders */
+        .input-group { margin-bottom: 1.25rem; }
         .input-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
         .label-wrapper { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; font-size: 0.85rem; color: var(--text-muted); }
         
-        /* Custom Tooltip */
+        input[type="text"], input[type="number"] { width: 120px; padding: 0.4rem 0.5rem; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit; font-size: 0.95rem; text-align: right; color: #0f172a; font-weight: 500; transition: border-color 0.2s; }
+        input[type="text"]:focus, input[type="number"]:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+        input::placeholder { color: #94a3b8; font-weight: 400; }
+        
+        .slider-container { display: flex; align-items: center; gap: 1rem; }
+        input[type="range"] { flex: 1; accent-color: var(--primary); cursor: pointer; }
+
+        .asset-header { display: flex; align-items: center; gap: 0.5rem; font-size: 1rem; font-weight: 700; color: var(--text-main); margin: 0 0 1rem 0; padding: 0.75rem; background: #f1f5f9; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; }
+        .asset-header input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary); }
+        .asset-body { padding-left: 0.75rem; border-left: 2px solid #e2e8f0; margin-left: 0.5rem; margin-bottom: 1.5rem; }
+
+        /* Tooltips */
         .tt-container { position: relative; display: inline-flex; cursor: help; align-items: center; justify-content: center; }
-        .tt-icon { background: #e5e7eb; color: #6b7280; border-radius: 50%; font-size: 11px; width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; }
-        .tt-text { visibility: hidden; width: 280px; background-color: #1f2937; color: #fff; text-align: left; padding: 0.75rem; border-radius: 6px; position: absolute; z-index: 50; bottom: 130%; left: 50%; transform: translateX(-50%); opacity: 0; transition: opacity 0.2s ease-in-out; font-size: 0.75rem; font-weight: normal; line-height: 1.4; box-shadow: 0 4px 6px rgba(0,0,0,0.2); pointer-events: none; }
-        .tt-text::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #1f2937 transparent transparent transparent; }
+        .tt-icon { background: #e2e8f0; color: #64748b; border-radius: 50%; font-size: 11px; width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; }
+        .tt-text { visibility: hidden; width: 280px; background-color: #1e293b; color: #fff; text-align: left; padding: 0.75rem; border-radius: 6px; position: absolute; z-index: 50; bottom: 130%; left: 50%; transform: translateX(-50%); opacity: 0; transition: opacity 0.2s; font-size: 0.75rem; font-weight: normal; line-height: 1.4; box-shadow: 0 4px 6px rgba(0,0,0,0.2); pointer-events: none; }
+        .tt-text::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #1e293b transparent transparent transparent; }
         .tt-container:hover .tt-text, .tt-container:active .tt-text { visibility: visible; opacity: 1; z-index: 999; }
 
-        input[type="number"], input[type="text"] { width: 110px; padding: 0.4rem; border: 1px solid var(--border); border-radius: 6px; font-family: inherit; font-size: 0.9rem; text-align: right; }
-        input[type="number"]:focus, input[type="text"]:focus { outline: 2px solid var(--primary); border-color: transparent; }
-        input::placeholder { color: #9ca3af; }
+        /* Dynamic Mortgage Readout */
+        .mortgage-readout { background: #eff6ff; border: 1px dashed #bfdbfe; padding: 0.75rem; border-radius: 6px; text-align: center; color: #1e40af; font-weight: 600; font-size: 0.95rem; margin-bottom: 1.5rem; }
+
+        /* Right Panel (Sticky Hero + Chart) */
+        .right-panel { position: sticky; top: 2rem; display: flex; flex-direction: column; gap: 1.5rem; }
         
-        .toggle-row { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; font-weight: 600; font-size: 0.9rem; padding: 0.75rem; background: #f8fafc; border-radius: 6px; border: 1px solid var(--border); }
-        .toggle-row input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary); }
+        .hero-dashboard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+        .hero-card { background: white; padding: 1.25rem; border-radius: 12px; border: 1px solid var(--border); text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        .hero-card.success { border-bottom: 4px solid #10b981; }
+        .hero-card.warning { border-bottom: 4px solid #f59e0b; }
+        .hero-card.danger { border-bottom: 4px solid #ef4444; }
+        .hero-label { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem; }
+        .hero-value { font-size: 1.4rem; font-weight: 800; color: var(--text-main); }
+        .hero-subtext { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; }
 
-        .income-stream { display: grid; grid-template-columns: 1fr 100px 70px 70px 30px; gap: 0.5rem; margin-bottom: 0.5rem; align-items: center; }
-        .income-stream input[type="text"] { width: 100%; text-align: left; }
-        .income-stream input[type="number"] { width: 100%; }
-        .btn-remove { background: #fee2e2; color: #991b1b; border: none; padding: 0.4rem; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .btn-add { width: 100%; padding: 0.5rem; margin-top: 0.5rem; background: #f0fdf4; color: #166534; border: 1px dashed #bbf7d0; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .chart-container { background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.02); position: relative; height: 500px; width: 100%; }
 
-        /* Monte Carlo Volatility Grid */
-        .vol-grid { display: grid; grid-template-columns: 1fr auto 110px; gap: 0.75rem; align-items: center; margin-top: 1rem; background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid var(--border); }
-        .vol-grid-header { font-size: 0.75rem; font-weight: bold; color: var(--text-muted); border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; }
-        .vol-label { font-size: 0.85rem; font-weight: 600; color: var(--text-main); }
-        .vol-disp { font-size: 0.85rem; color: var(--primary); font-weight: bold; text-align: center; }
-
-        .status-box { padding: 1.25rem; border-radius: 8px; margin-bottom: 1.5rem; background: var(--success-bg); color: var(--success-text); border: 1px solid #bbf7d0; }
-        .status-box.error { background: var(--warning-bg); color: var(--warning-text); border-color: #fecaca; }
-        .status-box h3 { margin: 0 0 0.5rem 0; font-size: 1.1rem; }
-        .status-box p { margin: 0; font-size: 0.95rem; }
-
-        .warnings-container { margin-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem; }
+        .warnings-container { display: flex; flex-direction: column; gap: 0.5rem; }
         .warning-alert { background: #fffbeb; border-left: 4px solid #f59e0b; padding: 0.75rem; font-size: 0.85rem; color: #92400e; border-radius: 0 6px 6px 0; }
 
-        .advanced-callout { background: #eff6ff; border: 1px solid #bfdbfe; padding: 1.25rem; border-radius: 8px; margin-top: 2rem; }
-        .advanced-callout h4 { margin: 0 0 0.5rem 0; color: #1e40af; font-size: 1rem; }
-        .advanced-callout p { margin: 0; font-size: 0.85rem; color: #1e3a8a; line-height: 1.5; }
-
+        /* Conditional Rendering */
         .advanced-only { display: none; }
         body.advanced-mode .advanced-only { display: block; }
         body.advanced-mode .simple-only { display: none; }
 
-        details.guide { background: #f8fafc; padding: 1.5rem; border-radius: 12px; margin-top: 2rem; border: 1px solid var(--border); }
+        /* Guide */
+        details.guide { background: #f8fafc; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); }
         details.guide summary { font-weight: 700; font-size: 1.1rem; cursor: pointer; color: var(--primary); }
-        details.guide h4 { margin: 1.5rem 0 0.5rem 0; }
-        details.guide p, details.guide ul { margin-top: 0; font-size: 0.95rem; color: var(--text-muted); }
         
-        .blindspots-list { margin-top: 0.75rem; color: #4b5563; font-size: 0.95rem; line-height: 1.6; padding-left: 1.25rem; }
-        .blindspots-list li { margin-bottom: 0.75rem; }
-        .blindspots-list strong { color: #1f2937; }
-
-        @media (max-width: 900px) {
+        @media (max-width: 1000px) {
             .grid { grid-template-columns: 1fr; }
-            .inputs-panel { max-height: none; overflow-y: visible; }
+            .right-panel { position: static; }
+            .hero-dashboard { position: sticky; top: 0; z-index: 100; padding-top: 1rem; background: var(--bg); margin-top: -1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+        }
+        @media (max-width: 600px) {
+            .hero-dashboard { grid-template-columns: 1fr; gap: 0.5rem; }
+            .hero-card { padding: 0.75rem; display: flex; justify-content: space-between; align-items: center; border-bottom: none; border-left: 4px solid transparent; }
+            .hero-card.success { border-left-color: #10b981; }
+            .hero-label { margin-bottom: 0; }
+            .hero-subtext { display: none; }
         }
     </style>
 </head>
 <body class="simple-mode">
 
-    <div class="header">
-        <h1>FIRE Simulator for Singapore residents</h1>
-        <div class="controls-header">
+    <div class="header-container">
+        <h1>Institutional FIRE Simulator</h1>
+        <div class="top-controls">
+            <button class="btn-sample" onclick="loadSampleProfile()">Not sure where to start? Load Sample Profile</button>
             <div class="mode-slider">
                 <input type="radio" id="mode-simple" name="mode" value="simple" checked onchange="setMode('simple')">
                 <label for="mode-simple">Simple Mode</label>
@@ -133,12 +140,12 @@
     </div>
 
     <div class="grid">
-        <div class="panel inputs-panel">
+        <div class="inputs-panel">
             
-            <div class="simple-only" style="margin-bottom: 1.5rem;">
-                <div class="section-title" style="margin-bottom: 0.25rem; font-size: 1rem;">Macroeconomic Scenarios</div>
+            <div class="simple-only" style="margin-bottom: 0.5rem;">
+                <div style="font-size: 1rem; font-weight: 700; margin-bottom: 0.25rem;">Macroeconomic Scenarios</div>
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0; margin-bottom: 0.75rem;">Test how your plan holds up under different market conditions. (Note: Retirement planning should prioritize conservativeness, so all of these options, including 'balanced' are more conservative than 20-year historical averages).</p>
-                <div class="preset-group" style="margin-bottom: 0;">
+                <div class="preset-group">
                     <button class="preset-btn" onclick="applyPreset('highly-conservative')">Highly Conservative</button>
                     <button class="preset-btn" onclick="applyPreset('somewhat-conservative')">Somewhat Conservative</button>
                     <button class="preset-btn" onclick="applyPreset('balanced')">Balanced</button>
@@ -150,336 +157,365 @@
                 <button class="preset-close" onclick="document.getElementById('preset-banner').style.display='none'">✕</button>
             </div>
 
-            <div class="section">
-                <div class="section-title">Timeline</div>
-                <div class="input-group">
-                    <div class="input-header">
-                        <div class="label-wrapper">Current Age <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Your age today. Used as the starting point for compounding.</span></div></div>
-                        <input type="number" id="inp-currentAge" value="" placeholder="e.g., 34">
-                    </div>
-                </div>
-                <div class="input-group">
-                    <div class="input-header">
-                        <div class="label-wrapper">Retirement Age <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">The age at which your monthly investment contributions stop, and you begin drawing down your portfolio to fund your living expenses.</span></div></div>
-                        <input type="number" id="inp-retireAge" value="" placeholder="e.g., 60">
-                    </div>
-                </div>
-            </div>
-
-            <div class="section">
-                <div class="section-title">Inflation</div>
-                <div class="input-group">
-                    <div class="input-header">
-                        <div class="label-wrapper">Inflation Rate (%) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">The assumed annual increase in your living expenses.</span></div></div>
-                        <input type="number" id="inp-inflation" value="3.0" step="0.1">
-                    </div>
-                </div>
-            </div>
-
-            <div class="section">
-                <div class="section-title" style="margin-bottom: 0.5rem;">Asset Classes</div>
-                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0; margin-bottom: 1.5rem;">Enable the asset classes you currently hold.</p>
-                
-                <label class="asset-header">
-                    <input type="checkbox" id="toggle-global" checked onchange="toggleAsset('global')"> 
-                    Global (outside Singapore) investments (in USD)
-                </label>
-                <div id="asset-global" class="asset-body">
-                    <div class="input-group"><div class="input-header"><div class="label-wrapper">Starting Balance (USD)</div><input type="number" id="inp-usdStart" value="" placeholder="0"></div></div>
-                    <div class="input-group"><div class="input-header"><div class="label-wrapper">Monthly Contribution (USD)</div><input type="number" id="inp-usdContrib" value="" placeholder="0"></div></div>
+            <details class="accordion" open>
+                <summary>Timeline & Inflation</summary>
+                <div class="accordion-content">
                     <div class="input-group">
                         <div class="input-header">
-                            <div class="label-wrapper">Expected Return (%) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Defaulted to 7.8%. The historical 20-year annualized nominal return of the S&P 500 is ~9.8%; this default is intentionally set 20% lower to build in a margin of safety.</span></div></div>
-                            <input type="number" id="inp-usdRet" value="7.8" step="0.1">
+                            <div class="label-wrapper">Current Age <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Your age today. Used as the starting point for compounding.</span></div></div>
+                            <input type="text" class="num-format sync-input" id="inp-currentAge" data-slider="slide-currentAge" placeholder="e.g., 35">
                         </div>
+                        <div class="slider-container"><input type="range" id="slide-currentAge" min="20" max="80" value="35" class="sync-slider" data-input="inp-currentAge"></div>
                     </div>
+                    
                     <div class="input-group">
                         <div class="input-header">
-                            <div class="label-wrapper">Exchange Rate (USD to SGD) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Used to convert your global USD investments into SGD.</span></div></div>
-                            <input type="number" id="inp-fx" value="1.35" step="0.01">
+                            <div class="label-wrapper">Target Retirement Age <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">The age your monthly investment contributions stop, and you begin drawing down your portfolio.</span></div></div>
+                            <input type="text" class="num-format sync-input" id="inp-retireAge" data-slider="slide-retireAge" placeholder="e.g., 50">
                         </div>
+                        <div class="slider-container"><input type="range" id="slide-retireAge" min="30" max="80" value="50" class="sync-slider" data-input="inp-retireAge"></div>
                     </div>
-                    <div class="input-group advanced-only">
+
+                    <div class="input-group" style="margin-top: 1.5rem;">
                         <div class="input-header">
-                            <div class="label-wrapper">Annual FX Drift (%) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Defaulted to -0.8%, reflecting the ~20-year historical trend. A negative value means the SGD steadily appreciates against the USD, reducing the local SGD value of your portfolio. A positive value means the SGD is depreciating against the USD.</span></div></div>
-                            <input type="number" id="inp-fxDrift" value="-0.8" step="0.1">
+                            <div class="label-wrapper">Inflation Rate (%) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">The assumed annual increase in your living expenses.</span></div></div>
+                            <input type="text" class="num-format sync-input" id="inp-inflation" data-slider="slide-inflation" value="3.0">
                         </div>
+                        <div class="slider-container"><input type="range" id="slide-inflation" min="0" max="10" step="0.1" value="3.0" class="sync-slider" data-input="inp-inflation"></div>
                     </div>
                 </div>
+            </details>
 
-                <label class="asset-header">
-                    <input type="checkbox" id="toggle-sg" onchange="toggleAsset('sg')"> 
-                    SG investments (in SGD)
-                </label>
-                <div id="asset-sg" class="asset-body" style="display: none;">
-                    <div class="input-group"><div class="input-header"><div class="label-wrapper">Starting Balance (SGD)</div><input type="number" id="inp-sgdStart" value="" placeholder="0"></div></div>
-                    <div class="input-group"><div class="input-header"><div class="label-wrapper">Monthly Contribution (SGD)</div><input type="number" id="inp-sgdContrib" value="" placeholder="0"></div></div>
-                    <div class="input-group">
-                        <div class="input-header">
-                            <div class="label-wrapper">Expected Return (%) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Defaulted to 4.0%. The historical annualized return of the Straits Times Index is ~5.0%; this default is intentionally set 20% lower for conservativeness.</span></div></div>
-                            <input type="number" id="inp-sgdRet" value="4.0" step="0.1">
+            <details class="accordion">
+                <summary>Asset Classes</summary>
+                <div class="accordion-content">
+                    
+                    <label class="asset-header">
+                        <input type="checkbox" id="toggle-global" checked onchange="toggleAsset('global')"> 
+                        Global Investments (USD)
+                    </label>
+                    <div id="asset-global" class="asset-body">
+                        <div class="input-group"><div class="input-header"><div class="label-wrapper">Starting Balance (USD)</div><input type="text" class="num-format" id="inp-usdStart" placeholder="0"></div></div>
+                        <div class="input-group"><div class="input-header"><div class="label-wrapper">Monthly Contribution (USD)</div><input type="text" class="num-format" id="inp-usdContrib" placeholder="0"></div></div>
+                        <div class="input-group">
+                            <div class="input-header">
+                                <div class="label-wrapper">Expected Return (%) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Defaulted to 7.8%. The historical 20-year annualized return of the S&P 500 is ~9.8%; this default is intentionally set 20% lower for safety.</span></div></div>
+                                <input type="text" class="num-format sync-input" id="inp-usdRet" data-slider="slide-usdRet" value="7.8">
+                            </div>
+                            <div class="slider-container"><input type="range" id="slide-usdRet" min="0" max="15" step="0.1" value="7.8" class="sync-slider" data-input="inp-usdRet"></div>
+                        </div>
+                        <div class="input-group">
+                            <div class="input-header">
+                                <div class="label-wrapper">Exchange Rate (USD to SGD)</div>
+                                <input type="text" class="num-format" id="inp-fx" value="1.35">
+                            </div>
+                        </div>
+                        <div class="input-group advanced-only">
+                            <div class="input-header">
+                                <div class="label-wrapper">Expected Currency Trend (%) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Historically, MAS actively strengthens the SGD against the USD. A default of -0.8% means your global US investments lose ~0.8% of their local value each year due to currency appreciation.</span></div></div>
+                                <input type="text" class="num-format" id="inp-fxDrift" value="-0.8">
+                            </div>
                         </div>
                     </div>
+
+                    <label class="asset-header">
+                        <input type="checkbox" id="toggle-sg" onchange="toggleAsset('sg')"> 
+                        SG Investments (SGD)
+                    </label>
+                    <div id="asset-sg" class="asset-body" style="display: none;">
+                        <div class="input-group"><div class="input-header"><div class="label-wrapper">Starting Balance (SGD)</div><input type="text" class="num-format" id="inp-sgdStart" placeholder="0"></div></div>
+                        <div class="input-group"><div class="input-header"><div class="label-wrapper">Monthly Contribution (SGD)</div><input type="text" class="num-format" id="inp-sgdContrib" placeholder="0"></div></div>
+                        <div class="input-group">
+                            <div class="input-header">
+                                <div class="label-wrapper">Expected Return (%) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Defaulted to 4.0%. The historical annualized return of the Straits Times Index is ~5.0%; this default is intentionally set 20% lower for safety.</span></div></div>
+                                <input type="text" class="num-format sync-input" id="inp-sgdRet" data-slider="slide-sgdRet" value="4.0">
+                            </div>
+                            <div class="slider-container"><input type="range" id="slide-sgdRet" min="0" max="15" step="0.1" value="4.0" class="sync-slider" data-input="inp-sgdRet"></div>
+                        </div>
+                    </div>
+
+                    <label class="asset-header">
+                        <input type="checkbox" id="toggle-cash" checked onchange="toggleAsset('cash')"> 
+                        Cash Reserve (SGD)
+                    </label>
+                    <div id="asset-cash" class="asset-body">
+                        <div class="input-group">
+                            <div class="input-header">
+                                <div class="label-wrapper">Starting Balance <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Emergency fund, fixed deposits, or Singapore Savings Bonds. In retirement, the simulator drains this FIRST to protect investments.</span></div></div>
+                                <input type="text" class="num-format" id="inp-cashStart" placeholder="0">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <div class="input-header">
+                                <div class="label-wrapper">Annual Yield (%) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Defaulted to 0.05%, reflecting typical base savings account interest rates in Singapore.</span></div></div>
+                                <input type="text" class="num-format" id="inp-cashYield" value="0.05">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 1.5rem; padding: 1rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.25rem;">
+                            <input type="checkbox" id="inp-inflateContribs" onchange="runSim()" style="width:18px; height:18px; accent-color:#d97706;">
+                            <label for="inp-inflateContribs" style="font-size: 0.85rem; font-weight:600; color: #92400e; cursor:pointer;">Increase contributions with inflation</label>
+                        </div>
+                        <p style="font-size: 0.8rem; color: #92400e; margin: 0; padding-left: 1.8rem; line-height: 1.4;">
+                            Check this if you expect your salary to grow in tandem with inflation AND your lifestyle to remain completely unchanged. Note: This level of discipline is uncommon.
+                        </p>
+                    </div>
+
                 </div>
+            </details>
 
-                <label class="asset-header">
-                    <input type="checkbox" id="toggle-cash" checked onchange="toggleAsset('cash')"> 
-                    Cash Reserve (in SGD)
-                </label>
-                <div id="asset-cash" class="asset-body">
-                    <div class="input-group">
-                        <div class="input-header">
-                            <div class="label-wrapper">Starting Balance <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Emergency fund, fixed deposits, or Singapore Savings Bonds. In retirement, the simulator will drain this bucket FIRST to protect your investments.</span></div></div>
-                            <input type="number" id="inp-cashStart" value="" placeholder="0">
-                        </div>
-                    </div>
-                    <div class="input-group">
-                        <div class="input-header">
-                            <div class="label-wrapper">Annual Yield (%) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Defaulted to 0.05%, reflecting typical base savings account interest rates in Singapore.</span></div></div>
-                            <input type="number" id="inp-cashYield" value="0.05" step="0.01">
-                        </div>
-                    </div>
-                </div>
-
-                <div style="margin-top: 1.5rem; padding: 1rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px;">
-                    <div class="toggle-row" style="margin-bottom: 0.25rem; background: transparent; border: none; padding: 0;">
-                        <input type="checkbox" id="inp-inflateContribs" onchange="runSim()">
-                        <label for="inp-inflateContribs" style="font-size: 0.85rem; color: #92400e;">Increase monthly contributions with inflation</label>
-                    </div>
-                    <p style="font-size: 0.8rem; color: #92400e; margin: 0; padding-left: 1.7rem; line-height: 1.4;">
-                        Check this if you expect your salary to grow in tandem with inflation AND your lifestyle to remain completely unchanged. Note: This level of financial discipline is uncommon for most individuals.
+            <details class="accordion">
+                <summary>Mortgage & Housing</summary>
+                <div class="accordion-content">
+                    <p class="simple-only" style="font-size: 0.85rem; color: #64748b; margin-top: 0; margin-bottom: 1.25rem; font-style: italic;">
+                        * Simple Mode assumes your CPF OA mathematically covers your mortgage while working. Switch to Advanced Mode to unlock dynamic loan amortization, interest rates, and precise CPF OA shielding.
                     </p>
-                </div>
-            </div>
-
-            <div class="section">
-                <div class="section-title" style="margin-bottom: 0.5rem;">Mortgage & Housing</div>
-                <p class="simple-only" style="font-size: 0.85rem; color: #6b7280; margin-top: -0.75rem; margin-bottom: 1rem; font-style: italic;">
-                    * Simple Mode assumes your CPF OA contributions exactly cover your mortgage while working. Switch to Advanced Mode to unlock dynamic loan amortization and floating interest rates.
-                </p>
-                
-                <label class="asset-header">
-                    <input type="checkbox" id="toggle-mortgage" checked onchange="toggleAsset('mortgage')"> 
-                    I have a property with a current mortgage
-                </label>
-                
-                <div id="asset-mortgage" class="asset-body">
                     
-                    <div class="simple-only input-group">
-                        <div class="input-header">
-                            <div class="label-wrapper">Total Monthly Mortgage (SGD) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Your fixed nominal monthly loan obligation.</span></div></div>
-                            <input type="number" id="inp-mortgage" value="" placeholder="0">
+                    <label class="asset-header">
+                        <input type="checkbox" id="toggle-mortgage" onchange="toggleAsset('mortgage'); calcLiveMortgage();"> 
+                        I have a property with a current mortgage
+                    </label>
+                    
+                    <div id="asset-mortgage" class="asset-body" style="display: none;">
+                        
+                        <div class="advanced-only" style="margin-bottom: 1.5rem;">
+                            <div class="label-wrapper" style="margin-bottom: 0.5rem;">Loan Type</div>
+                            <div style="display: flex; gap: 1rem; background: #f1f5f9; padding: 0.5rem; border-radius: 8px;">
+                                <label style="flex:1; display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; font-weight:600; cursor:pointer;">
+                                    <input type="radio" name="loanType" id="loan-hdb" value="hdb" checked onchange="calcLiveMortgage()"> HDB Concessionary
+                                </label>
+                                <label style="flex:1; display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; font-weight:600; cursor:pointer;">
+                                    <input type="radio" name="loanType" id="loan-bank" value="bank" onchange="calcLiveMortgage()"> Bank Loan (Floating)
+                                </label>
+                            </div>
                         </div>
-                        <div style="font-size: 0.75rem; color: #6b7280; margin-top: 0.25rem; font-style: italic;">Note: For bank loans with floating interest rates (e.g., SORA), switch to Advanced Mode to accurately model interest rate fluctuations.</div>
-                    </div>
 
-                    <div class="advanced-only">
                         <div class="input-group">
                             <div class="input-header">
-                                <div class="label-wrapper">Remaining Loan Principal (SGD) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Your outstanding loan balance today. The simulator will automatically calculate your monthly payments based on this, the tenure, and the interest rate.</span></div></div>
-                                <input type="number" id="inp-mortgagePrincipal" value="" placeholder="0">
+                                <div class="label-wrapper">Remaining Loan Principal (SGD)</div>
+                                <input type="text" class="num-format" id="inp-mortgagePrincipal" placeholder="0" oninput="calcLiveMortgage()">
                             </div>
                         </div>
                         <div class="input-group">
                             <div class="input-header">
-                                <div class="label-wrapper">Current Interest Rate (%)</div>
-                                <input type="number" id="inp-mortgageRate" value="3.5" step="0.1">
+                                <div class="label-wrapper">Years Remaining on Loan</div>
+                                <input type="text" class="num-format" id="inp-loanYrs" placeholder="0" oninput="calcLiveMortgage()">
                             </div>
                         </div>
-                    </div>
-
-                    <div class="input-group">
-                        <div class="input-header">
-                            <div class="label-wrapper">Years Remaining on Loan</div>
-                            <input type="number" id="inp-loanYrs" value="" placeholder="0">
-                        </div>
-                    </div>
-                    
-                    <div class="advanced-only">
-                        <div class="input-group" style="margin-top: 1rem;">
+                        
+                        <div class="advanced-only input-group">
                             <div class="input-header">
-                                <div class="label-wrapper">Target Mortgage Paid via OA (SGD/mo) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">The amount of CPF OA you intend to use. If floating rates cause your required monthly payment to spike above this target, the shortfall will be paid from your cash/investments.</span></div></div>
-                                <input type="number" id="inp-mortgageOA" value="" placeholder="0">
+                                <div class="label-wrapper">Current Interest Rate (%) <div class="tt-container" id="tt-mortgageRate"><span class="tt-icon">?</span><span class="tt-text" id="tt-text-mortgageRate">HDB rate is pegged at 0.1% above prevailing CPF OA interest rate.</span></div></div>
+                                <input type="text" class="num-format" id="inp-mortgageRate" value="2.6" disabled oninput="calcLiveMortgage()">
                             </div>
                         </div>
+
+                        <div class="mortgage-readout" id="mortgage-readout-box">
+                            Calculated Monthly Installment: <span id="disp-calc-pmt">$0</span>
+                        </div>
+                        
+                        <div class="advanced-only">
+                            <hr style="border: 0; border-top: 1px solid var(--border); margin: 1.5rem 0;">
+                            <div class="input-group">
+                                <div class="input-header">
+                                    <div class="label-wrapper">Gross Monthly OA Contrib. (from salary)</div>
+                                    <input type="text" class="num-format" id="inp-oaContrib" placeholder="0">
+                                </div>
+                            </div>
+                            <div class="input-group"><div class="input-header"><div class="label-wrapper">Current CPF OA Balance (SGD)</div><input type="text" class="num-format" id="inp-oaStart" placeholder="0"></div></div>
+                            
+                            <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid var(--border); margin-top: 1rem;">
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <input type="checkbox" id="inp-maxOA" checked onchange="toggleCustomOA()" style="width:18px; height:18px; accent-color:var(--primary);">
+                                    <label for="inp-maxOA" style="font-size: 0.85rem; font-weight:600; color: var(--text-main); cursor:pointer;">Maximize CPF OA to pay this mortgage</label>
+                                </div>
+                                <div id="custom-oa-cap" style="display: none; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                                    <div class="input-header" style="margin-bottom:0;">
+                                        <div class="label-wrapper">Custom Monthly OA Cap (SGD) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">The maximum amount of OA you allow to be drained monthly. Any mortgage shortfall beyond this cap will be paid in cash.</span></div></div>
+                                        <input type="text" class="num-format" id="inp-customOACap" value="0">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
+            </details>
 
-                <div class="advanced-only">
-                    <hr style="border: 0; border-top: 1px solid var(--border); margin: 1.5rem 0;">
-                    <div class="input-group"><div class="input-header"><div class="label-wrapper">Current CPF OA Balance (SGD)</div><input type="number" id="inp-oaStart" value="" placeholder="0"></div></div>
+            <details class="accordion">
+                <summary>Retirement & CPF LIFE</summary>
+                <div class="accordion-content">
                     <div class="input-group">
                         <div class="input-header">
-                            <div class="label-wrapper">Gross Monthly OA Contrib. (from salary) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">The gross inflow to your OA from your employment. The simulator will automatically subtract your 'Mortgage Paid via OA' from this amount each month.</span></div></div>
-                            <input type="number" id="inp-oaContrib" value="" placeholder="0">
+                            <div class="label-wrapper">Base Living Expenses (SGD/mo) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Your target monthly spending in TODAY's dollars. The simulator will compound this upward every year based on your Inflation assumption.</span></div></div>
+                            <input type="text" class="num-format" id="inp-expenses" placeholder="e.g., 4000">
+                        </div>
+                    </div>
+                    
+                    <div class="advanced-only" style="margin-top: 2rem;">
+                        <div class="section-title" style="font-size: 1rem;">Passive Income Streams (SGD/mo)</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">Only active during retirement. Nominal values (does not inflate).</div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 100px 70px 70px 30px; gap: 0.5rem; font-size: 0.75rem; font-weight: bold; color: var(--text-muted); margin-bottom: 0.25rem;">
+                            <div>Name</div><div>Amt (mo)</div><div>Start Age</div><div>End Age</div><div></div>
+                        </div>
+                        <div id="income-streams-container"></div>
+                        <button class="btn-add" onclick="addIncomeStream()">+ Add Income Stream</button>
+
+                        <hr style="border: 0; border-top: 1px solid var(--border); margin: 2rem 0;">
+                        
+                        <div class="section-title" style="font-size: 1rem; display: flex; align-items: center; justify-content: space-between;">
+                            CPF Retirement Modeling
+                            <input type="checkbox" id="inp-cpfToggle" onchange="toggleCpfSettings()" style="width:18px; height:18px; accent-color:var(--primary);">
+                        </div>
+                        <div id="cpf-settings" style="display: none; padding-left: 0.75rem; border-left: 2px solid var(--primary); margin-top: 1rem;">
+                            <div class="input-group">
+                                <div class="input-header">
+                                    <div class="label-wrapper">Age 55 RA Set-Aside (SGD) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">A one-time deduction from your OA balance at age 55 to fund your Retirement Account. This accurately models the sudden loss of OA liquidity.</span></div></div>
+                                    <input type="text" class="num-format" id="inp-raSetAside" placeholder="0">
+                                </div>
+                            </div>
+                            <div class="input-group"><div class="input-header"><div class="label-wrapper">CPF LIFE Monthly Payout (SGD)</div><input type="text" class="num-format" id="inp-cpfPayout" placeholder="0"></div></div>
+                            <div class="input-group"><div class="input-header"><div class="label-wrapper">CPF LIFE Start Age</div><input type="text" class="num-format" id="inp-cpfStartAge" value="65"></div></div>
                         </div>
                     </div>
                 </div>
-            </div>
+            </details>
 
-            <div class="section">
-                <div class="section-title">Retirement Expenses & Income</div>
-                <div class="input-group">
-                    <div class="input-header">
-                        <div class="label-wrapper">Base Living Expenses (SGD/mo) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Your target monthly spending in TODAY's dollars. The simulator will compound this upward every year based on your Inflation assumption.</span></div></div>
-                        <input type="number" id="inp-expenses" value="" placeholder="e.g., 3500">
-                    </div>
-                </div>
-                
-                <div class="advanced-only" style="margin-top: 1.5rem;">
-                    <strong>Retirement Income Streams (SGD/mo)</strong>
-                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">Only active during retirement. Nominal values (does not inflate).</div>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 100px 70px 70px 30px; gap: 0.5rem; font-size: 0.75rem; font-weight: bold; color: var(--text-muted); margin-bottom: 0.25rem;">
-                        <div>Name</div><div>Amt (mo)</div><div>Start Age</div><div>End Age</div><div></div>
-                    </div>
-                    <div id="income-streams-container"></div>
-                    <button class="btn-add" onclick="addIncomeStream()">+ Add Income Stream</button>
-                </div>
-            </div>
+            <details class="accordion advanced-only">
+                <summary>Monte Carlo Simulation</summary>
+                <div class="accordion-content">
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0; margin-bottom: 1.5rem;">
+                        Real markets don't move in a straight line. Instead of assuming perfect average returns every year, this engine runs hundreds of alternate realities with randomized market booms and crashes to stress-test your plan. It helps you see the probability of success, rather than just a single best guess.
+                    </p>
 
-            <div class="section advanced-only">
-                <div class="section-title">CPF Retirement Modeling</div>
-                <div class="toggle-row">
-                    <input type="checkbox" id="inp-cpfToggle" onchange="toggleCpfSettings()">
-                    <label for="inp-cpfToggle">Enable CPF Retirement Modeling</label>
-                </div>
-                <div id="cpf-settings" style="display: none; padding-left: 1rem; border-left: 2px solid var(--primary);">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid var(--border);">
+                        <input type="checkbox" id="inp-mcToggle" onchange="runSim()" style="width:18px; height:18px; accent-color:var(--primary);">
+                        <label for="inp-mcToggle" style="font-weight:700; color:var(--text-main); cursor:pointer;">Enable Monte Carlo Engine</label>
+                    </div>
+
                     <div class="input-group">
                         <div class="input-header">
-                            <div class="label-wrapper">Age 55 RA Set-Aside (SGD) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">A one-time deduction from your OA balance at age 55 to fund your Retirement Account. This accurately models the sudden loss of OA liquidity.</span></div></div>
-                            <input type="number" id="inp-raSetAside" value="" placeholder="e.g., 205800">
+                            <div class="label-wrapper">Simulations <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Number of random paths to generate. Higher numbers take slightly longer to calculate.</span></div></div>
+                            <input type="text" class="num-format" id="inp-mcRuns" value="200">
                         </div>
                     </div>
-                    <div class="input-group"><div class="input-header"><div class="label-wrapper">CPF LIFE Monthly Payout (SGD)</div><input type="number" id="inp-cpfPayout" value="" placeholder="0"></div></div>
-                    <div class="input-group"><div class="input-header"><div class="label-wrapper">CPF LIFE Start Age</div><input type="number" id="inp-cpfStartAge" value="65" min="65" max="70"></div></div>
-                </div>
-            </div>
 
-            <div class="section advanced-only">
-                <div class="section-title">Monte Carlo Simulation Settings</div>
-                <div class="toggle-row">
-                    <input type="checkbox" id="inp-mcToggle" onchange="runSim()">
-                    <label for="inp-mcToggle">Run Monte Carlo Simulation</label>
-                </div>
-                <div class="input-group">
-                    <div class="input-header">
-                        <div class="label-wrapper">Simulations <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Number of random paths to generate. Higher numbers take slightly longer to calculate.</span></div></div>
-                        <input type="number" id="inp-mcRuns" value="200" step="50" min="50" max="1000">
-                    </div>
-                </div>
+                    <div class="vol-grid">
+                        <div class="vol-grid-header">Variable</div>
+                        <div class="vol-grid-header" style="text-align: center;">Base Rate</div>
+                        <div class="vol-grid-header" style="text-align: right;">Volatility (± pp) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text" style="right:0; left:auto; transform:none; margin-left:0;">"pp" stands for Percentage Points. This sets the standard deviation for randomized swings.</span></div></div>
+                        
+                        <div class="vol-label">Global Equities</div>
+                        <div class="vol-disp" id="disp-usdRet">7.8%</div>
+                        <div style="position: relative; display: flex; align-items: center; justify-content: flex-end;">
+                            <input type="text" class="num-format" id="inp-usdVol" value="15.0" style="width: 70px; margin-right: 0.5rem;">
+                            <div class="tt-container"><span class="tt-icon">i</span><span class="tt-text" style="right:0; left:auto; transform:none; margin-left:0;">Historical std dev (S&P 500):<br>~13.5 pp (10-yr)<br>~15.0 pp (20-yr)<br>~15.3 pp (30-yr)</span></div>
+                        </div>
 
-                <div class="vol-grid">
-                    <div class="vol-grid-header">Variable</div>
-                    <div class="vol-grid-header" style="text-align: center;">Base Rate</div>
-                    <div class="vol-grid-header" style="text-align: right;">Volatility (± pp) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text" style="right:0; left:auto; transform:none; margin-left:0;">"pp" stands for Percentage Points. This sets the standard deviation for randomized swings.</span></div></div>
-                    
-                    <div class="vol-label">Global Equities</div>
-                    <div class="vol-disp" id="disp-usdRet">7.8%</div>
-                    <div style="position: relative; display: flex; align-items: center; justify-content: flex-end;">
-                        <input type="number" id="inp-usdVol" value="15.0" step="0.1" style="width: 80px; margin-right: 0.5rem;">
-                        <div class="tt-container"><span class="tt-icon">i</span><span class="tt-text" style="right:0; left:auto; transform:none; margin-left:0;">Historical std dev (S&P 500 / MSCI World):<br>~13.5 pp (10-yr)<br>~15.0 pp (20-yr)<br>~15.3 pp (30-yr)</span></div>
-                    </div>
+                        <div class="vol-label">SG Equities</div>
+                        <div class="vol-disp" id="disp-sgdRet">4.0%</div>
+                        <div style="position: relative; display: flex; align-items: center; justify-content: flex-end;">
+                            <input type="text" class="num-format" id="inp-sgdVol" value="14.0" style="width: 70px; margin-right: 0.5rem;">
+                            <div class="tt-container"><span class="tt-icon">i</span><span class="tt-text" style="right:0; left:auto; transform:none; margin-left:0;">Historical std dev (Straits Times Index):<br>~12.0 pp (10-yr)<br>~14.0 pp (20-yr)<br>~15.5 pp (30-yr)</span></div>
+                        </div>
 
-                    <div class="vol-label">SG Equities</div>
-                    <div class="vol-disp" id="disp-sgdRet">4.0%</div>
-                    <div style="position: relative; display: flex; align-items: center; justify-content: flex-end;">
-                        <input type="number" id="inp-sgdVol" value="14.0" step="0.1" style="width: 80px; margin-right: 0.5rem;">
-                        <div class="tt-container"><span class="tt-icon">i</span><span class="tt-text" style="right:0; left:auto; transform:none; margin-left:0;">Historical std dev (Straits Times Index):<br>~12.0 pp (10-yr)<br>~14.0 pp (20-yr)<br>~15.5 pp (30-yr)</span></div>
-                    </div>
+                        <div class="vol-label">Inflation</div>
+                        <div class="vol-disp" id="disp-infl">3.0%</div>
+                        <div style="position: relative; display: flex; align-items: center; justify-content: flex-end;">
+                            <input type="text" class="num-format" id="inp-inflVol" value="1.5" style="width: 70px; margin-right: 0.5rem;">
+                            <div class="tt-container"><span class="tt-icon">i</span><span class="tt-text" style="right:0; left:auto; transform:none; margin-left:0;">Historical std dev (SG Core CPI):<br>~1.2 pp (10-yr)<br>~1.5 pp (20-yr)<br>~1.8 pp (30-yr)</span></div>
+                        </div>
 
-                    <div class="vol-label">Inflation</div>
-                    <div class="vol-disp" id="disp-infl">3.0%</div>
-                    <div style="position: relative; display: flex; align-items: center; justify-content: flex-end;">
-                        <input type="number" id="inp-inflVol" value="1.5" step="0.1" style="width: 80px; margin-right: 0.5rem;">
-                        <div class="tt-container"><span class="tt-icon">i</span><span class="tt-text" style="right:0; left:auto; transform:none; margin-left:0;">Historical std dev (SG Core CPI):<br>~1.2 pp (10-yr)<br>~1.5 pp (20-yr)<br>~1.8 pp (30-yr)</span></div>
+                        <div class="vol-label">USD/SGD FX Drift</div>
+                        <div class="vol-disp" id="disp-fxDrift">-0.8%</div>
+                        <div style="position: relative; display: flex; align-items: center; justify-content: flex-end;">
+                            <input type="text" class="num-format" id="inp-fxVol" value="4.5" style="width: 70px; margin-right: 0.5rem;">
+                            <div class="tt-container"><span class="tt-icon">i</span><span class="tt-text" style="right:0; left:auto; transform:none; margin-left:0;">Historical std dev (USD/SGD Exchange Rate):<br>~4.0 pp (10-yr)<br>~4.5 pp (20-yr)<br>~4.8 pp (30-yr)</span></div>
+                        </div>
+
+                        <div class="vol-label">Mortgage Rate</div>
+                        <div class="vol-disp" id="disp-mortgageRate">3.5%</div>
+                        <div style="position: relative; display: flex; align-items: center; justify-content: flex-end;">
+                            <input type="text" class="num-format" id="inp-mortgageVol" value="1.5" style="width: 70px; margin-right: 0.5rem;">
+                            <div class="tt-container"><span class="tt-icon">i</span><span class="tt-text" style="right:0; left:auto; transform:none; margin-left:0;">Historical std dev (SG 3-Month SIBOR/SORA):<br>~1.2 pp (10-yr)<br>~1.5 pp (20-yr)<br>~2.0 pp (30-yr)</span></div>
+                        </div>
                     </div>
 
-                    <div class="vol-label">USD/SGD FX Drift</div>
-                    <div class="vol-disp" id="disp-fxDrift">-0.8%</div>
-                    <div style="position: relative; display: flex; align-items: center; justify-content: flex-end;">
-                        <input type="number" id="inp-fxVol" value="4.5" step="0.1" style="width: 80px; margin-right: 0.5rem;">
-                        <div class="tt-container"><span class="tt-icon">i</span><span class="tt-text" style="right:0; left:auto; transform:none; margin-left:0;">Historical std dev (USD/SGD Exchange Rate):<br>~4.0 pp (10-yr)<br>~4.5 pp (20-yr)<br>~4.8 pp (30-yr)</span></div>
-                    </div>
-
-                    <div class="vol-label">Mortgage Rate</div>
-                    <div class="vol-disp" id="disp-mortgageRate">3.5%</div>
-                    <div style="position: relative; display: flex; align-items: center; justify-content: flex-end;">
-                        <input type="number" id="inp-mortgageVol" value="1.5" step="0.1" style="width: 80px; margin-right: 0.5rem;">
-                        <div class="tt-container"><span class="tt-icon">i</span><span class="tt-text" style="right:0; left:auto; transform:none; margin-left:0;">Historical std dev (SG 3-Month SIBOR/SORA):<br>~1.2 pp (10-yr)<br>~1.5 pp (20-yr)<br>~2.0 pp (30-yr)</span></div>
-                    </div>
-                </div>
-
-                <div class="input-group" style="margin-top: 1rem;">
-                    <div class="toggle-row" style="background: #fffbeb; border-color: #fde68a;">
-                        <input type="checkbox" id="inp-blackSwan" onchange="runSim()">
-                        <label for="inp-blackSwan" style="color: #92400e; display: flex; align-items: center; gap: 0.5rem;">
-                            Enable "Black Swan" Market Risk
+                    <div style="margin-top: 1.5rem; background: #fffbeb; border: 1px solid #fde68a; padding: 1rem; border-radius: 8px;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <input type="checkbox" id="inp-blackSwan" onchange="runSim()" style="width:18px; height:18px; accent-color:#d97706;">
+                            <label for="inp-blackSwan" style="font-weight:700; color:#92400e; cursor:pointer;">Enable "Black Swan" Market Risk</label>
                             <div class="tt-container">
                                 <span class="tt-icon" style="background: #fcd34d; color: #92400e;">?</span>
-                                <span class="tt-text">A 'Black Swan' is a rare, unpredictable event with severe financial consequences (e.g., the 2008 financial crisis or the 2020 pandemic). A standard bell curve assumes these events are almost impossible. Checking this box replaces the bell curve with a "fat-tailed" distribution (Student's t-distribution, df=5), which mathematically increases the frequency of extreme market crashes in the simulation for a much more rigorous stress test.</span>
+                                <span class="tt-text" style="right:0; left:auto; transform:none; margin-left:0;">A 'Black Swan' is a rare, unpredictable event with severe financial consequences. Checking this box replaces the standard bell curve with a "fat-tailed" distribution (Student's t-distribution, df=5), drastically increasing the simulated frequency of extreme market crashes for a rigorous stress test.</span>
                             </div>
-                        </label>
+                        </div>
                     </div>
+
                 </div>
-
-            </div>
-
-            <div class="simple-only advanced-callout">
-                <h4>Ready for more detailed planning?</h4>
-                <p>Simple Mode keeps things clean by assuming your working CPF contributions perfectly offset your mortgage. Switch to <strong>Advanced Mode</strong> to customize exactly how your wealth is modeled:</p>
-                <ul style="margin-top: 0.75rem; margin-bottom: 0; padding-left: 1.25rem; font-size: 0.85rem; color: #1e3a8a; line-height: 1.5;">
-                    <li><strong style="color: #1e40af;">Floating Mortgages:</strong> Use your remaining principal and current interest rate to dynamically model amortization and SORA rate swings.</li>
-                    <li><strong style="color: #1e40af;">Currency Risk:</strong> Map the long-term trend of the SGD appreciating against the USD.</li>
-                    <li><strong style="color: #1e40af;">CPF OA Shielding:</strong> Track your actual OA balance and salary contributions to see how long your CPF can shield your portfolio from the mortgage in retirement.</li>
-                    <li><strong style="color: #1e40af;">Monte Carlo Engine:</strong> Stress-test your timeline with randomized market crashes based on your portfolio's specific empirical volatility and extreme tail risks.</li>
-                </ul>
-            </div>
+            </details>
 
         </div>
 
-        <div class="panel" style="display: flex; flex-direction: column;">
-            <div id="statusBox" class="status-box">
-                <h3 id="statusTitle">Calculating...</h3>
-                <p id="statusDesc"></p>
-                <div id="warningsBox" class="warnings-container"></div>
-            </div>
+        <div class="right-panel">
             
-            <div style="position: relative; height: 600px; width: 100%;">
+            <div class="hero-dashboard">
+                <div class="hero-card" id="hero-target">
+                    <div class="hero-label">Target Retire Age</div>
+                    <div class="hero-value" id="val-targetAge">--</div>
+                    <div class="hero-subtext">Base Expenses: <span id="val-heroExp">$0</span></div>
+                </div>
+                <div class="hero-card" id="hero-peak">
+                    <div class="hero-label">Peak Nest Egg</div>
+                    <div class="hero-value" id="val-peak">$0</div>
+                    <div class="hero-subtext">Liquid SGD Portfolio</div>
+                </div>
+                <div class="hero-card" id="hero-status">
+                    <div class="hero-label">Simulation Outlook</div>
+                    <div class="hero-value" id="val-statusText" style="font-size: 1.1rem; line-height: 1.2; margin-top: 0.4rem;">Awaiting Data</div>
+                    <div class="hero-subtext" id="val-statusSub">Enter age to begin</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div id="warningsBox" class="warnings-container" style="position: absolute; top: 1rem; left: 1rem; right: 1rem; z-index: 10;"></div>
                 <canvas id="fireChart"></canvas>
             </div>
 
             <details class="guide">
-                <summary>How to Use This Simulator & Assumptions Guide</summary>
+                <summary>Assumptions & Beginner Blindspots Guide</summary>
                 
+                <h4 style="margin-top: 1rem;">Floating Mortgages & Amortization</h4>
+                <p>Advanced Mode calculates your mortgage dynamically using standard loan amortization. If you run a Monte Carlo simulation on a Bank Loan, your interest rate will fluctuate annually, which immediately recalculates your required monthly payment based on your remaining principal.</p>
+
                 <h4>Lines of Defense (Mortgage Shortfalls)</h4>
-                <p>During your working years, if floating interest rates cause your mortgage payment to spike above your CPF OA Target, the simulator defends your cash buffer using a specific sequence:</p>
+                <p>During working years, if floating rates cause your mortgage payment to spike above your CPF OA Target, the simulator defends your cash buffer using a specific sequence:</p>
                 <ul style="margin-top: 0; padding-left: 1.25rem; font-size: 0.95rem; color: var(--text-muted);">
-                    <li><strong>Line 1 (CPF Buffer):</strong> It will drain any available excess balance in your CPF OA.</li>
-                    <li><strong>Line 2 (Reduce Investments):</strong> It will automatically reduce your monthly out-of-pocket investment contributions. It does this <em>proportionally</em>. For example, if you contribute 80% to Global and 20% to SG, the reduction will hit those portfolios at an 80/20 split.</li>
-                    <li><strong>Line 3 (Drain Cash):</strong> Only if the rate spike completely consumes all of your monthly investment contributions will it begin to drain your sacred Cash Reserve.</li>
+                    <li><strong>Line 1 (CPF Buffer):</strong> It drains any available excess balance in your CPF OA.</li>
+                    <li><strong>Line 2 (Reduce Investments):</strong> It automatically reduces your out-of-pocket investment contributions proportionally across your asset classes.</li>
+                    <li><strong>Line 3 (Drain Cash):</strong> Only if the rate spike completely consumes all investment contributions will it begin to drain your sacred Cash Reserve.</li>
                 </ul>
 
-                <h4>Floating Mortgages & Amortization (Advanced Mode)</h4>
-                <p>Instead of a flat monthly payment, Advanced Mode calculates your mortgage dynamically using standard loan amortization. If you run a Monte Carlo simulation, your interest rate will fluctuate annually, which will immediately recalculate your required monthly payment based on your remaining principal and tenure.</p>
-
-                <h4>FX Drift & Currency Risk (Advanced Mode)</h4>
-                <p>Because the MAS uses exchange rate policy to manage inflation, the SGD has historically appreciated against the USD over the long term. The "Annual FX Drift" input allows you to model this depreciation of the US Dollar, which gradually reduces the local SGD purchasing power of your global portfolio over decades.</p>
+                <h4>FX Drift & Currency Risk</h4>
+                <p>The MAS uses exchange rate policy to manage inflation, meaning the SGD has historically appreciated against the USD. The "Expected Currency Trend" input models this depreciation of the US Dollar, gradually reducing the local SGD purchasing power of your global portfolio over decades.</p>
 
                 <h4>Architecture & Withdrawals in Retirement</h4>
-                <p>When you retire and your expenses exceed your income, capital is drawn down in this strict order to maximize compounding time for high-yield assets: <strong>1. Cash Reserve -> 2. SGD Portfolio -> 3. USD Portfolio.</strong></p>
+                <p>When retired and expenses exceed income, capital is drawn down in a strict sequence to maximize compounding time for high-yield assets: <strong>1. Cash Reserve -> 2. SGD Portfolio -> 3. USD Portfolio.</strong></p>
                 
                 <h4 style="color: #991b1b; margin-top: 2rem;">⚠️ Limitations & Blindspots (For Beginners)</h4>
-                <p>This tool provides a strong baseline, but real life is messier than math. Do not base major life decisions on this chart without understanding its blindspots:</p>
+                <p>Real life is messier than math. Do not base major life decisions on this chart without understanding its blindspots:</p>
                 <ul class="blindspots-list">
-                    <li><strong>The "Stagflation" Blindspot:</strong> The macroeconomic preset buttons pair lower market returns with higher inflation. However, real life can be much harsher. "Stagflation" occurs when inflation spikes dramatically at the exact same time markets crash (e.g., 2022 or the 1970s). The presets do not model this double-impact; you must manually type in high inflation and negative returns to stress-test a true stagflation environment.</li>
-                    <li><strong>The Cash Drawdown Trap:</strong> The simulator strictly drains your cash reserve first before touching equities. While mathematically optimal, in reality, you should maintain a cash buffer to avoid selling stocks during a market crash.</li>
-                    <li><strong>Invisible Tax Drag:</strong> If your global portfolio includes US-domiciled ETFs, remember that the US levies a 30% Dividend Withholding Tax on Singaporeans. A projected 8% gross return might effectively be 7.4% after this tax drag.</li>
-                    <li><strong>The Retirement "Smile":</strong> The tool inflates expenses on a straight line. Real retirement spending usually "smiles"—high in early retirement (travel), lower in the middle, and spiking heavily at the end due to healthcare/nursing costs.</li>
-                    <li><strong>CPF Simplification:</strong> At age 55, the tool deducts your entire Retirement Account (RA) set-aside from your OA. In reality, your Special Account (SA) funds this first, meaning your actual OA might not drop as drastically as simulated here.</li>
-                    <li><strong>Monte Carlo Limits:</strong> Unless the "Black Swan" fat-tailed risk is enabled, the simulation assumes market returns follow a standard "bell curve." A standard normal distribution systematically underestimates the frequency of massive, multi-year market crashes.</li>
+                    <li><strong>The "Stagflation" Blindspot:</strong> The macroeconomic preset buttons pair lower market returns with higher inflation. However, real life can feature "Stagflation" where inflation spikes dramatically at the exact same time markets crash (e.g., 2022). You must manually type in high inflation and negative returns to stress-test this.</li>
+                    <li><strong>The Cash Drawdown Trap:</strong> The simulator strictly drains your cash reserve first. While mathematically optimal on paper, in reality, you should maintain a dynamic cash buffer to avoid selling stocks during a market crash.</li>
+                    <li><strong>Invisible Tax Drag:</strong> If your global portfolio includes US-domiciled ETFs, the US levies a 30% Dividend Withholding Tax on Singaporeans. A projected 8% gross return might effectively be 7.4% after this tax drag.</li>
+                    <li><strong>The Retirement "Smile":</strong> The tool inflates expenses on a straight line. Real retirement spending usually "smiles"—high early on (travel), lower in the middle, and spiking heavily at the end (healthcare).</li>
+                    <li><strong>Monte Carlo Limits:</strong> Unless the "Black Swan" fat-tailed risk is enabled, the simulation assumes market returns follow a standard "bell curve," systematically underestimating the frequency of massive, multi-year crashes.</li>
                 </ul>
             </details>
+
         </div>
     </div>
 
@@ -487,22 +523,62 @@
         let fireChart;
         let incomeStreamCount = 0;
 
-        // Dynamic Mortgage Cap Logic
-        document.getElementById('inp-mortgage').addEventListener('input', function() {
-            let max = parseFloat(this.value) || 0;
-            let oaInput = document.getElementById('inp-mortgageOA');
-            if (parseFloat(oaInput.value) > max) oaInput.value = max;
-            runSim();
-        });
-        document.getElementById('inp-mortgageOA').addEventListener('input', function() {
-            let max = parseFloat(document.getElementById('inp-mortgage').value) || 0;
-            if (parseFloat(this.value) > max) this.value = max;
-            runSim();
+        // --- UI & Formatting Utilities ---
+        function getVal(id) {
+            let el = document.getElementById(id);
+            if (!el) return 0;
+            return parseFloat(el.value.replace(/,/g, '')) || 0;
+        }
+
+        function setVal(id, val) {
+            let el = document.getElementById(id);
+            if (!el) return;
+            // Format if it's a large dollar amount, otherwise keep standard for rates/ages
+            if (Math.abs(val) >= 1000 || el.placeholder === "0" || el.id.includes("Start") || el.id.includes("Contrib") || el.id.includes("Principal") || el.id.includes("expenses")) {
+                el.value = Math.round(val).toLocaleString('en-US');
+            } else {
+                el.value = val;
+            }
+        }
+
+        // Attach comma formatting to num-format class
+        document.querySelectorAll('.num-format').forEach(el => {
+            el.addEventListener('blur', function() {
+                if(this.value === '') { runSim(); return; }
+                let val = parseFloat(this.value.replace(/,/g, ''));
+                if(!isNaN(val)) {
+                    // Don't format small decimals like rates
+                    if (this.id.includes('Ret') || this.id.includes('Yield') || this.id.includes('Rate') || this.id.includes('Drift') || this.id.includes('Vol') || this.id.includes('fx')) {
+                        this.value = val; 
+                    } else {
+                        this.value = val.toLocaleString('en-US');
+                    }
+                }
+                runSim();
+            });
+            el.addEventListener('focus', function() {
+                this.value = this.value.replace(/,/g, '');
+            });
         });
 
-        // UI Interactions
+        // Sync Sliders and Inputs
+        document.querySelectorAll('.sync-input').forEach(input => {
+            input.addEventListener('input', function() {
+                let slider = document.getElementById(this.getAttribute('data-slider'));
+                if(slider) slider.value = getVal(this.id);
+            });
+        });
+        document.querySelectorAll('.sync-slider').forEach(slider => {
+            slider.addEventListener('input', function() {
+                let input = document.getElementById(this.getAttribute('data-input'));
+                if(input) { input.value = this.value; runSim(); }
+            });
+        });
+
+        // --- Logic Toggles ---
         function setMode(mode) {
             document.body.className = mode + '-mode';
+            calcLiveMortgage();
             runSim();
         }
 
@@ -517,73 +593,13 @@
             runSim();
         }
 
-        function addIncomeStream(name = '', amt = 1000, start = 42, end = 90) {
-            const id = incomeStreamCount++;
-            const html = `
-                <div class="income-stream" id="stream-${id}">
-                    <input type="text" class="is-name" placeholder="Name" value="${name}">
-                    <input type="number" class="is-amt" value="${amt}">
-                    <input type="number" class="is-start" value="${start}">
-                    <input type="number" class="is-end" value="${end}">
-                    <button class="btn-remove" onclick="document.getElementById('stream-${id}').remove(); runSim();">X</button>
-                </div>
-            `;
-            document.getElementById('income-streams-container').insertAdjacentHTML('beforeend', html);
-        }
-
-        function applyPreset(type) {
-            let msg = "";
-            if (type === 'highly-conservative') {
-                document.getElementById('inp-usdRet').value = '5.0';
-                document.getElementById('inp-sgdRet').value = '2.5';
-                document.getElementById('inp-inflation').value = '3.5';
-                msg = "Applied Highly Conservative: Global 5.0%, SG 2.5%, Inflation 3.5%";
-            } else if (type === 'somewhat-conservative') {
-                document.getElementById('inp-usdRet').value = '6.5';
-                document.getElementById('inp-sgdRet').value = '3.5';
-                document.getElementById('inp-inflation').value = '3.0';
-                msg = "Applied Somewhat Conservative: Global 6.5%, SG 3.5%, Inflation 3.0%";
-            } else if (type === 'balanced') {
-                document.getElementById('inp-usdRet').value = '8.0';
-                document.getElementById('inp-sgdRet').value = '5.0';
-                document.getElementById('inp-inflation').value = '2.5';
-                msg = "Applied Balanced: Global 8.0%, SG 5.0%, Inflation 2.5%";
-            }
-            
-            const banner = document.getElementById('preset-banner');
-            document.getElementById('preset-banner-text').innerText = msg;
-            banner.style.display = 'flex';
-            
+        function toggleCustomOA() {
+            const isMax = document.getElementById('inp-maxOA').checked;
+            document.getElementById('custom-oa-cap').style.display = isMax ? 'none' : 'block';
             runSim();
         }
 
-        document.querySelectorAll('input:not([name="mode"])').forEach(el => {
-            el.addEventListener('input', runSim);
-        });
-
-        // Math Engine: Randomizer
-        function randn_bm() {
-            let u = 0, v = 0;
-            while(u === 0) u = Math.random();
-            while(v === 0) v = Math.random();
-            return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
-        }
-
-        // Student's t-distribution approximation (df=5) scaled to maintain variance = 1
-        function rand_t5_scaled() {
-            let z = randn_bm();
-            // Chi-square with 5 degrees of freedom
-            let v = Math.pow(randn_bm(), 2) + Math.pow(randn_bm(), 2) + Math.pow(randn_bm(), 2) + Math.pow(randn_bm(), 2) + Math.pow(randn_bm(), 2);
-            let t = z / Math.sqrt(v / 5);
-            // Scale the result so standard deviation remains accurate to user inputs
-            return t * Math.sqrt(3/5); 
-        }
-
-        function getRand(isBlackSwan) {
-            return isBlackSwan ? rand_t5_scaled() : randn_bm();
-        }
-
-        // Standard Loan Amortization Formula
+        // --- Mortgage Engine ---
         function calcPmt(principal, ratePerYear, yearsRemaining) {
             if (yearsRemaining <= 0 || principal <= 0) return 0;
             let r = ratePerYear / 12;
@@ -592,13 +608,148 @@
             return principal * (r * Math.pow(1+r, n)) / (Math.pow(1+r, n) - 1);
         }
 
+        function calcLiveMortgage() {
+            let isAdvanced = document.body.className.includes('advanced-mode');
+            let hasMortgage = document.getElementById('toggle-mortgage').checked;
+            if(!hasMortgage) {
+                document.getElementById('disp-calc-pmt').innerText = '$0';
+                runSim();
+                return;
+            }
+
+            if(isAdvanced) {
+                let isHdb = document.getElementById('loan-hdb').checked;
+                let rateInput = document.getElementById('inp-mortgageRate');
+                let ttText = document.getElementById('tt-text-mortgageRate');
+
+                if(isHdb) {
+                    rateInput.value = '2.6';
+                    rateInput.disabled = true;
+                    ttText.innerText = "The HDB concessionary rate is pegged at 0.1% above the prevailing CPF OA interest rate.";
+                } else {
+                    rateInput.disabled = false;
+                    // Only overwrite with default if switching newly to Bank and it was 2.6
+                    if(rateInput.value === '2.6') rateInput.value = '1.8';
+                    ttText.innerText = "Defaulted to 1.8%, reflecting the ~20-year historical average of the 3-Month SIBOR/SORA. (10-yr average: ~1.6% | 30-yr average: ~2.2%).";
+                }
+
+                let p = getVal('inp-mortgagePrincipal');
+                let y = getVal('inp-loanYrs');
+                let r = getVal('inp-mortgageRate') / 100;
+                
+                let pmt = calcPmt(p, r, y);
+                document.getElementById('disp-calc-pmt').innerText = '$' + Math.round(pmt).toLocaleString();
+            }
+            runSim();
+        }
+
+        function addIncomeStream(name = '', amt = '', start = 50, end = 95) {
+            const id = incomeStreamCount++;
+            const html = `
+                <div class="income-stream" id="stream-${id}">
+                    <input type="text" class="is-name" placeholder="Name" value="${name}">
+                    <input type="text" class="num-format is-amt" placeholder="0" value="${amt}">
+                    <input type="number" class="is-start" value="${start}">
+                    <input type="number" class="is-end" value="${end}">
+                    <button class="btn-remove" onclick="document.getElementById('stream-${id}').remove(); runSim();">X</button>
+                </div>
+            `;
+            document.getElementById('income-streams-container').insertAdjacentHTML('beforeend', html);
+        }
+
+        // --- Presets & Loading ---
+        function loadSampleProfile() {
+            setVal('inp-currentAge', 35); document.getElementById('slide-currentAge').value = 35;
+            setVal('inp-retireAge', 50); document.getElementById('slide-retireAge').value = 50;
+            setVal('inp-inflation', 3.0); document.getElementById('slide-inflation').value = 3.0;
+
+            document.getElementById('toggle-global').checked = true; toggleAsset('global');
+            setVal('inp-usdStart', 50000);
+            setVal('inp-usdContrib', 1000);
+            setVal('inp-usdRet', 7.8); document.getElementById('slide-usdRet').value = 7.8;
+            setVal('inp-fx', 1.35);
+            setVal('inp-fxDrift', -0.8);
+
+            document.getElementById('toggle-sg').checked = true; toggleAsset('sg');
+            setVal('inp-sgdStart', 20000);
+            setVal('inp-sgdContrib', 500);
+            setVal('inp-sgdRet', 4.0); document.getElementById('slide-sgdRet').value = 4.0;
+
+            document.getElementById('toggle-cash').checked = true; toggleAsset('cash');
+            setVal('inp-cashStart', 40000);
+            setVal('inp-cashYield', 0.05);
+
+            document.getElementById('toggle-mortgage').checked = true; toggleAsset('mortgage');
+            document.getElementById('loan-hdb').checked = true;
+            setVal('inp-mortgagePrincipal', 350000);
+            setVal('inp-loanYrs', 20);
+            document.getElementById('inp-maxOA').checked = true; toggleCustomOA();
+            setVal('inp-oaStart', 60000);
+            setVal('inp-oaContrib', 1000);
+            calcLiveMortgage();
+
+            setVal('inp-expenses', 4000);
+            
+            document.getElementById('inp-cpfToggle').checked = true; toggleCpfSettings();
+            setVal('inp-raSetAside', 205800);
+            setVal('inp-cpfPayout', 1600);
+            setVal('inp-cpfStartAge', 65);
+
+            runSim();
+        }
+
+        function applyPreset(type) {
+            let msg = "";
+            if (type === 'highly-conservative') {
+                setVal('inp-usdRet', 5.0); document.getElementById('slide-usdRet').value = 5.0;
+                setVal('inp-sgdRet', 2.5); document.getElementById('slide-sgdRet').value = 2.5;
+                setVal('inp-inflation', 3.5); document.getElementById('slide-inflation').value = 3.5;
+                msg = "Applied Highly Conservative: Global 5.0%, SG 2.5%, Inflation 3.5%";
+            } else if (type === 'somewhat-conservative') {
+                setVal('inp-usdRet', 6.5); document.getElementById('slide-usdRet').value = 6.5;
+                setVal('inp-sgdRet', 3.5); document.getElementById('slide-sgdRet').value = 3.5;
+                setVal('inp-inflation', 3.0); document.getElementById('slide-inflation').value = 3.0;
+                msg = "Applied Somewhat Conservative: Global 6.5%, SG 3.5%, Inflation 3.0%";
+            } else if (type === 'balanced') {
+                setVal('inp-usdRet', 8.0); document.getElementById('slide-usdRet').value = 8.0;
+                setVal('inp-sgdRet', 5.0); document.getElementById('slide-sgdRet').value = 5.0;
+                setVal('inp-inflation', 2.5); document.getElementById('slide-inflation').value = 2.5;
+                msg = "Applied Balanced: Global 8.0%, SG 5.0%, Inflation 2.5%";
+            }
+            
+            const banner = document.getElementById('preset-banner');
+            document.getElementById('preset-banner-text').innerText = msg;
+            banner.style.display = 'flex';
+            runSim();
+        }
+
+        // --- Monte Carlo Math Engine ---
+        function randn_bm() {
+            let u = 0, v = 0;
+            while(u === 0) u = Math.random();
+            while(v === 0) v = Math.random();
+            return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+        }
+
+        function rand_t5_scaled() {
+            let z = randn_bm();
+            let v = Math.pow(randn_bm(), 2) + Math.pow(randn_bm(), 2) + Math.pow(randn_bm(), 2) + Math.pow(randn_bm(), 2) + Math.pow(randn_bm(), 2);
+            let t = z / Math.sqrt(v / 5);
+            return t * Math.sqrt(3/5); 
+        }
+
+        function getRand(isBlackSwan) {
+            return isBlackSwan ? rand_t5_scaled() : randn_bm();
+        }
+
+        // --- Core Simulation Logic ---
         function simulatePath(inputs, isMonteCarlo) {
             let { currentAge, retireAge, inflation, inflVol, inflateContribs, 
                   fx, fxDrift, fxVol,
                   hasGlobal, usdStart, usdContrib, usdRet, usdVol,
                   hasSG, sgdStart, sgdContrib, sgdRet, sgdVol,
                   hasCash, cashStart, cashYield, 
-                  hasMortgage, simpleMortgage, mortgagePrincipal, mortgageRate, mortgageVol, mortgageOA, loanYrs, oaStart, oaContrib,
+                  hasMortgage, simpleMortgage, mortgagePrincipal, mortgageRate, mortgageVol, isMaxOA, customOACap, loanYrs, oaStart, oaContrib,
                   expenses, cpfEnabled, raSetAside, cpfPayout, cpfStartAge, incomeStreams, isAdvanced, isBlackSwan } = inputs;
             
             let usdPort = hasGlobal ? usdStart : 0;
@@ -620,6 +771,7 @@
             let solvent = true;
             let depletionAge = null;
             let warnings = new Set();
+            let peakNW = 0;
 
             for (let age = currentAge; age <= 95; age++) {
                 
@@ -634,7 +786,7 @@
                     actualUsdRet = usdRet + (getRand(isBlackSwan) * usdVol);
                     actualSgdRet = sgdRet + (getRand(isBlackSwan) * sgdVol);
                     actualFxDrift = fxDrift + (getRand(isBlackSwan) * fxVol);
-                    actualMortgageRate = Math.max(0, mortgageRate + (getRand(isBlackSwan) * mortgageVol)); // Prevent negative mortgage rates
+                    actualMortgageRate = Math.max(0, mortgageRate + (getRand(isBlackSwan) * mortgageVol)); 
                 }
 
                 if (age > currentAge) {
@@ -650,15 +802,14 @@
                 if (age === 55 && cpfEnabled) {
                     let prevOa = oaBal;
                     oaBal = Math.max(0, oaBal - raSetAside);
-                    if (prevOa - oaBal > 0 && oaBal < mortgageOA * 12) {
-                        warnings.add("CPF RA funding at 55 significantly depleted OA, exposing your portfolio to mortgage payments.");
+                    if (prevOa - oaBal > 0 && oaBal < (isMaxOA ? 999999 : customOACap) * 12) {
+                        warnings.add("CPF RA funding at age 55 significantly depleted OA, exposing your portfolio to future mortgage payments.");
                     }
                 }
 
                 let isWorking = age < retireAge;
                 let isMortgageActive = age < mortgageEndAge && hasMortgage;
                 
-                // Calculate this year's fixed monthly payment based on current principal and rate
                 let currentMonthlyMortgage = 0;
                 if (isMortgageActive) {
                     if (isAdvanced) {
@@ -680,14 +831,14 @@
                         oaBal += currentOaContrib;
                         
                         if (isMortgageActive && currentMonthlyMortgage > 0) {
-                            // Pay down principal (Advanced Mode tracking)
                             if (isAdvanced) {
                                 let interestPayment = remPrincipal * (actualMortgageRate / 12);
                                 remPrincipal = Math.max(0, remPrincipal - (currentMonthlyMortgage - interestPayment));
                             }
 
-                            // Calculate OA cover vs Shortfall
-                            let targetOaPay = isAdvanced ? Math.min(mortgageOA, currentMonthlyMortgage) : currentMonthlyMortgage;
+                            let targetOaPay = currentMonthlyMortgage;
+                            if (isAdvanced && !isMaxOA) targetOaPay = Math.min(customOACap, currentMonthlyMortgage);
+                            
                             if (oaBal >= targetOaPay) {
                                 oaBal -= targetOaPay;
                                 mortgageShortfall = currentMonthlyMortgage - targetOaPay;
@@ -700,12 +851,10 @@
                         let totalContribSGD = currentSgdContrib + (currentUsdContrib * currentFx);
                         
                         if (mortgageShortfall > totalContribSGD) {
-                            // Line of Defense 3: Drain Cash
                             let excessShortfall = mortgageShortfall - totalContribSGD;
                             cashRes -= excessShortfall;
                             if (totalContribSGD > 0 && isAdvanced) warnings.add("Mortgage spike completely consumed monthly investments. Dipping into cash reserves.");
                         } else if (totalContribSGD > 0) {
-                            // Line of Defense 2: Proportional Reduction of Investments
                             let effectiveContribSGD = totalContribSGD - mortgageShortfall;
                             let usdRatio = (currentUsdContrib * currentFx) / totalContribSGD;
                             let sgdRatio = currentSgdContrib / totalContribSGD;
@@ -714,10 +863,8 @@
                             sgdPort += (effectiveContribSGD * sgdRatio);
                         }
                     } else {
-                        // Retired
                         let grossSpending = currentExpenses;
                         if (isMortgageActive && currentMonthlyMortgage > 0) {
-                            // Pay down principal (Advanced Mode tracking)
                             if (isAdvanced) {
                                 let interestPayment = remPrincipal * (actualMortgageRate / 12);
                                 remPrincipal = Math.max(0, remPrincipal - (currentMonthlyMortgage - interestPayment));
@@ -740,7 +887,6 @@
 
                         let netWithdrawal = Math.max(0, grossSpending - retirementIncome);
 
-                        // Retirement Sequence of Withdrawals
                         if (netWithdrawal > 0) {
                             if (cashRes >= netWithdrawal) {
                                 cashRes -= netWithdrawal;
@@ -759,6 +905,8 @@
                     }
                     
                     let totalLiquid = cashRes + sgdPort + (usdPort * currentFx);
+                    if (totalLiquid > peakNW) peakNW = totalLiquid;
+                    
                     if (totalLiquid < 0 && solvent) {
                         solvent = false;
                         depletionAge = age;
@@ -767,15 +915,15 @@
                 }
 
                 let phase = 1;
-                if (!isWorking && isMortgageActive && (isAdvanced ? remPrincipal > 0 : simpleMortgage > 0)) phase = 2; // Mortgage Drawdown
-                if (!isWorking && (!isMortgageActive || (isAdvanced ? remPrincipal <= 0 : simpleMortgage === 0))) phase = 3; // Debt-Free
+                if (!isWorking && isMortgageActive && (isAdvanced ? remPrincipal > 0 : simpleMortgage > 0)) phase = 2; 
+                if (!isWorking && (!isMortgageActive || (isAdvanced ? remPrincipal <= 0 : simpleMortgage === 0))) phase = 3; 
 
                 let totalLiquidSGD = cashRes + sgdPort + (usdPort * currentFx);
                 pathData.push({ age, val: totalLiquidSGD });
                 phaseMap.push(phase);
             }
 
-            return { pathData, phaseMap, solvent, depletionAge, warnings: Array.from(warnings) };
+            return { pathData, phaseMap, solvent, depletionAge, peakNW, warnings: Array.from(warnings) };
         }
 
         function runSim() {
@@ -788,60 +936,60 @@
 
             // Sync Display fields in Monte Carlo Grid
             if (isAdvanced) {
-                document.getElementById('disp-usdRet').innerText = (document.getElementById('inp-usdRet').value || 0) + '%';
-                document.getElementById('disp-sgdRet').innerText = (document.getElementById('inp-sgdRet').value || 0) + '%';
-                document.getElementById('disp-infl').innerText = (document.getElementById('inp-inflation').value || 0) + '%';
-                document.getElementById('disp-fxDrift').innerText = (document.getElementById('inp-fxDrift').value || 0) + '%';
-                document.getElementById('disp-mortgageRate').innerText = (document.getElementById('inp-mortgageRate').value || 0) + '%';
+                document.getElementById('disp-usdRet').innerText = (getVal('inp-usdRet') || 0) + '%';
+                document.getElementById('disp-sgdRet').innerText = (getVal('inp-sgdRet') || 0) + '%';
+                document.getElementById('disp-infl').innerText = (getVal('inp-inflation') || 0) + '%';
+                document.getElementById('disp-fxDrift').innerText = (getVal('inp-fxDrift') || 0) + '%';
+                document.getElementById('disp-mortgageRate').innerText = (getVal('inp-mortgageRate') || 0) + '%';
             }
 
             const inputs = {
                 isAdvanced: isAdvanced,
                 isBlackSwan: isBlackSwan,
-                currentAge: parseFloat(document.getElementById('inp-currentAge').value) || 0,
-                retireAge: parseFloat(document.getElementById('inp-retireAge').value) || 0,
+                currentAge: getVal('inp-currentAge'),
+                retireAge: getVal('inp-retireAge'),
                 
-                inflation: (parseFloat(document.getElementById('inp-inflation').value) || 0) / 100,
-                inflVol: isAdvanced ? (parseFloat(document.getElementById('inp-inflVol').value) || 0) / 100 : 0,
+                inflation: getVal('inp-inflation') / 100,
+                inflVol: isAdvanced ? getVal('inp-inflVol') / 100 : 0,
                 inflateContribs: document.getElementById('inp-inflateContribs').checked,
                 
-                fx: parseFloat(document.getElementById('inp-fx').value) || 1.35,
-                fxDrift: isAdvanced ? (parseFloat(document.getElementById('inp-fxDrift').value) || 0) / 100 : 0,
-                fxVol: isAdvanced ? (parseFloat(document.getElementById('inp-fxVol').value) || 0) / 100 : 0,
+                fx: getVal('inp-fx') || 1.35,
+                fxDrift: isAdvanced ? getVal('inp-fxDrift') / 100 : 0,
+                fxVol: isAdvanced ? getVal('inp-fxVol') / 100 : 0,
                 
                 hasGlobal: hasGlobal,
-                usdStart: parseFloat(document.getElementById('inp-usdStart').value) || 0,
-                usdContrib: parseFloat(document.getElementById('inp-usdContrib').value) || 0,
-                usdRet: (parseFloat(document.getElementById('inp-usdRet').value) || 0) / 100,
-                usdVol: isAdvanced ? (parseFloat(document.getElementById('inp-usdVol').value) || 0) / 100 : 0,
+                usdStart: getVal('inp-usdStart'),
+                usdContrib: getVal('inp-usdContrib'),
+                usdRet: getVal('inp-usdRet') / 100,
+                usdVol: isAdvanced ? getVal('inp-usdVol') / 100 : 0,
                 
                 hasSG: hasSG,
-                sgdStart: parseFloat(document.getElementById('inp-sgdStart').value) || 0,
-                sgdContrib: parseFloat(document.getElementById('inp-sgdContrib').value) || 0,
-                sgdRet: (parseFloat(document.getElementById('inp-sgdRet').value) || 0) / 100,
-                sgdVol: isAdvanced ? (parseFloat(document.getElementById('inp-sgdVol').value) || 0) / 100 : 0,
+                sgdStart: getVal('inp-sgdStart'),
+                sgdContrib: getVal('inp-sgdContrib'),
+                sgdRet: getVal('inp-sgdRet') / 100,
+                sgdVol: isAdvanced ? getVal('inp-sgdVol') / 100 : 0,
                 
                 hasCash: hasCash,
-                cashStart: parseFloat(document.getElementById('inp-cashStart').value) || 0,
-                cashYield: (parseFloat(document.getElementById('inp-cashYield').value) || 0) / 100,
+                cashStart: getVal('inp-cashStart'),
+                cashYield: getVal('inp-cashYield') / 100,
                 
                 hasMortgage: hasMortgage,
-                simpleMortgage: parseFloat(document.getElementById('inp-mortgage').value) || 0,
-                mortgagePrincipal: parseFloat(document.getElementById('inp-mortgagePrincipal').value) || 0,
-                mortgageRate: (parseFloat(document.getElementById('inp-mortgageRate').value) || 0) / 100,
-                mortgageVol: isAdvanced ? (parseFloat(document.getElementById('inp-mortgageVol').value) || 0) / 100 : 0,
-                loanYrs: parseFloat(document.getElementById('inp-loanYrs').value) || 0,
+                simpleMortgage: getVal('inp-mortgage'),
+                mortgagePrincipal: getVal('inp-mortgagePrincipal'),
+                mortgageRate: getVal('inp-mortgageRate') / 100,
+                mortgageVol: isAdvanced ? getVal('inp-mortgageVol') / 100 : 0,
+                loanYrs: getVal('inp-loanYrs'),
                 
-                // INVISIBLE SHIELD LOGIC: If Simple Mode, set OA math to perfectly balance the Simple Mortgage.
-                mortgageOA: isAdvanced ? (parseFloat(document.getElementById('inp-mortgageOA').value) || 0) : (parseFloat(document.getElementById('inp-mortgage').value) || 0),
-                oaStart: isAdvanced ? (parseFloat(document.getElementById('inp-oaStart').value) || 0) : 0,
-                oaContrib: isAdvanced ? (parseFloat(document.getElementById('inp-oaContrib').value) || 0) : (parseFloat(document.getElementById('inp-mortgage').value) || 0),
+                isMaxOA: isAdvanced ? document.getElementById('inp-maxOA').checked : true,
+                customOACap: isAdvanced ? getVal('inp-customOACap') : 0,
+                oaStart: isAdvanced ? getVal('inp-oaStart') : 0,
+                oaContrib: isAdvanced ? getVal('inp-oaContrib') : getVal('inp-mortgage'),
                 
-                expenses: parseFloat(document.getElementById('inp-expenses').value) || 0,
+                expenses: getVal('inp-expenses'),
                 cpfEnabled: isAdvanced ? document.getElementById('inp-cpfToggle').checked : false,
-                raSetAside: parseFloat(document.getElementById('inp-raSetAside').value) || 0,
-                cpfPayout: parseFloat(document.getElementById('inp-cpfPayout').value) || 0,
-                cpfStartAge: parseFloat(document.getElementById('inp-cpfStartAge').value) || 65,
+                raSetAside: getVal('inp-raSetAside'),
+                cpfPayout: getVal('inp-cpfPayout'),
+                cpfStartAge: getVal('inp-cpfStartAge') || 65,
                 
                 incomeStreams: []
             };
@@ -849,7 +997,7 @@
             if(isAdvanced) {
                 document.querySelectorAll('.income-stream').forEach(row => {
                     inputs.incomeStreams.push({
-                        amt: parseFloat(row.querySelector('.is-amt').value) || 0,
+                        amt: getVal(row.querySelector('.is-amt').id) || parseFloat(row.querySelector('.is-amt').value.replace(/,/g, '')) || 0,
                         start: parseFloat(row.querySelector('.is-start').value) || 0,
                         end: parseFloat(row.querySelector('.is-end').value) || 0
                     });
@@ -864,11 +1012,22 @@
             
             let labels = [];
             let datasets = [];
-            let mainStatus = "";
-            let mainDesc = "";
             let finalWarnings = Array.from(sysWarnings);
             
-            // Only generate chart data if currentAge is provided, else leave empty
+            // Hero Dashboard Elements
+            let elTargetAge = document.getElementById('val-targetAge');
+            let elHeroExp = document.getElementById('val-heroExp');
+            let elPeak = document.getElementById('val-peak');
+            let elStatus = document.getElementById('val-statusText');
+            let elStatusSub = document.getElementById('val-statusSub');
+            let cardTarget = document.getElementById('hero-target');
+            let cardPeak = document.getElementById('hero-peak');
+            let cardStatus = document.getElementById('hero-status');
+
+            // Reset Hero Dashboard
+            elTargetAge.innerText = inputs.retireAge > 0 ? 'Age ' + inputs.retireAge : '--';
+            elHeroExp.innerText = '$' + Math.round(inputs.expenses).toLocaleString();
+            
             if (inputs.currentAge > 0) {
                 for(let i=inputs.currentAge; i<=95; i++) labels.push(i);
 
@@ -892,34 +1051,39 @@
                     }
                     
                     datasets = [
-                        { label: 'Phase 1: Accumulation Phase', data: p1, borderColor: '#22c55e', backgroundColor: 'rgba(34, 197, 94, 0.15)', fill: true, tension: 0.2, spanGaps: true },
-                        { label: 'Phase 2: Mortgage Drawdown Phase', data: p2, borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.15)', fill: true, tension: 0.2, spanGaps: true },
-                        { label: 'Phase 3: Debt-Free Retirement Phase', data: p3, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.15)', fill: true, tension: 0.2, spanGaps: true }
+                        { label: 'Accumulation Phase', data: p1, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.2, spanGaps: true },
+                        { label: 'Mortgage Drawdown', data: p2, borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.1)', fill: true, tension: 0.2, spanGaps: true },
+                        { label: 'Debt-Free Retirement', data: p3, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.2, spanGaps: true }
                     ];
                     
                     res.warnings.forEach(w => finalWarnings.push(w));
 
+                    elPeak.innerText = '$' + (res.peakNW / 1000000).toFixed(2) + 'M';
+
                     if (res.solvent) {
-                        mainStatus = "✅ Success (Deterministic)";
-                        mainDesc = `Portfolio safely sustains lifestyle through age 95. Ending balance: $${(res.pathData[res.pathData.length-1].val/1000000).toFixed(2)}M SGD.`;
-                        setStatusStyle(true);
+                        elStatus.innerText = "✅ Safe to Age 95";
+                        elStatusSub.innerText = `Ending bal: $${(res.pathData[res.pathData.length-1].val/1000000).toFixed(2)}M`;
+                        cardStatus.className = 'hero-card success';
                     } else {
-                        mainStatus = "⚠️ Shortfall Detected";
-                        mainDesc = `Liquid portfolio depletes completely at age ${res.depletionAge}.`;
-                        setStatusStyle(false);
+                        elStatus.innerText = "⚠️ Shortfall";
+                        elStatusSub.innerText = `Depletes at Age ${res.depletionAge}`;
+                        cardStatus.className = 'hero-card danger';
                     }
 
                 } else {
-                    let runs = parseInt(document.getElementById('inp-mcRuns').value) || 100;
+                    let runs = getVal('inp-mcRuns') || 100;
                     let results = [];
                     let successes = 0;
+                    let medianPeak = 0;
                     
                     for(let i=0; i<runs; i++) {
                         let res = simulatePath(inputs, true);
                         results.push(res.pathData.map(d => d.val));
                         if (res.solvent) successes++;
+                        medianPeak += res.peakNW;
                         if (i===0) res.warnings.forEach(w => finalWarnings.push(w));
                     }
+                    medianPeak = medianPeak / runs;
 
                     let p10 = [], p50 = [], p90 = [];
                     for(let y=0; y<labels.length; y++) {
@@ -931,41 +1095,36 @@
 
                     datasets = [
                         { label: '90th Percentile (Optimistic)', data: p90, borderColor: '#10b981', borderDash: [5,5], fill: false, tension: 0.2, pointRadius: 0 },
-                        { label: 'Median Outcome', data: p50, borderColor: '#2563eb', backgroundColor: 'rgba(37, 99, 235, 0.15)', fill: true, tension: 0.2, borderWidth: 3 },
+                        { label: 'Median Outcome', data: p50, borderColor: '#2563eb', backgroundColor: 'rgba(37, 99, 235, 0.1)', fill: true, tension: 0.2, borderWidth: 3 },
                         { label: '10th Percentile (Pessimistic)', data: p10, borderColor: '#ef4444', borderDash: [5,5], fill: '-1', backgroundColor: 'rgba(239, 68, 68, 0.05)', tension: 0.2, pointRadius: 0 }
                     ];
 
+                    elPeak.innerText = '$' + (medianPeak / 1000000).toFixed(2) + 'M';
+
                     let winRate = ((successes / runs) * 100).toFixed(1);
+                    elStatusSub.innerText = `${runs} Monte Carlo sims`;
                     if (winRate >= 90) {
-                        mainStatus = `✅ High Confidence (${winRate}% Success)`;
-                        setStatusStyle(true);
+                        elStatus.innerText = `✅ ${winRate}% Success`;
+                        cardStatus.className = 'hero-card success';
                     } else if (winRate >= 70) {
-                        mainStatus = `⚠️ Moderate Risk (${winRate}% Success)`;
-                        setStatusStyle(false, true);
+                        elStatus.innerText = `⚠️ ${winRate}% Success`;
+                        cardStatus.className = 'hero-card warning';
                     } else {
-                        mainStatus = `🛑 High Risk (${winRate}% Success)`;
-                        setStatusStyle(false);
+                        elStatus.innerText = `🛑 ${winRate}% Success`;
+                        cardStatus.className = 'hero-card danger';
                     }
-                    mainDesc = `Based on ${runs} randomized market simulations.`;
                 }
             } else {
-                mainStatus = "Ready to Calculate";
-                mainDesc = "Enter your current age to begin.";
-                setStatusStyle(true);
+                elPeak.innerText = "$0";
+                elStatus.innerText = "Awaiting Data";
+                elStatusSub.innerText = "Enter age to begin";
+                cardStatus.className = 'hero-card';
             }
-
-            document.getElementById('statusTitle').innerText = mainStatus;
-            document.getElementById('statusDesc').innerText = mainDesc;
             
             let wHtml = finalWarnings.map(w => `<div class="warning-alert">${w}</div>`).join('');
             document.getElementById('warningsBox').innerHTML = wHtml;
 
             renderChart(labels, datasets);
-        }
-
-        function setStatusStyle(isSuccess, isWarning = false) {
-            const box = document.getElementById('statusBox');
-            box.className = 'status-box ' + (isSuccess ? '' : (isWarning ? 'error' : 'error'));
         }
 
         function renderChart(labels, datasets) {
