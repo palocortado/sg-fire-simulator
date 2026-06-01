@@ -54,7 +54,6 @@
         .inputs-panel { display: flex; flex-direction: column; gap: 1rem; }
         details.accordion { background: var(--panel); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.02); overflow: hidden; }
         
-        /* Color Mapping Borders */
         details.acc-green { border-left: 4px solid #10b981; }
         details.acc-orange { border-left: 4px solid #f59e0b; }
         details.acc-blue { border-left: 4px solid #3b82f6; }
@@ -89,11 +88,9 @@
         .tt-text { visibility: hidden; width: 280px; background-color: #1e293b; color: #fff; text-align: left; padding: 0.75rem; border-radius: 6px; position: absolute; z-index: 50; bottom: 130%; left: 50%; transform: translateX(-50%); opacity: 0; transition: opacity 0.2s; font-size: 0.75rem; font-weight: normal; line-height: 1.4; box-shadow: 0 4px 6px rgba(0,0,0,0.2); pointer-events: none; }
         .tt-text::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #1e293b transparent transparent transparent; }
         
-        /* Desktop Hover + Mobile Click */
         @media (hover: hover) { .tt-container:hover .tt-text { visibility: visible; opacity: 1; z-index: 999; } }
         .tt-container.active .tt-text { visibility: visible; opacity: 1; z-index: 999; }
 
-        /* Dynamic Mortgage Readout */
         .mortgage-readout { background: #eff6ff; border: 1px dashed #bfdbfe; padding: 0.75rem; border-radius: 6px; text-align: center; color: #1e40af; font-weight: 600; font-size: 0.95rem; margin-bottom: 1.5rem; }
 
         /* Right Panel (Sticky Hero + Chart) */
@@ -113,12 +110,10 @@
         .warnings-container { display: flex; flex-direction: column; gap: 0.5rem; }
         .warning-alert { background: #fffbeb; border-left: 4px solid #f59e0b; padding: 0.75rem; font-size: 0.85rem; color: #92400e; border-radius: 0 6px 6px 0; }
 
-        /* Conditional Rendering */
         .advanced-only { display: none; }
         body.advanced-mode .advanced-only { display: block; }
         body.advanced-mode .simple-only { display: none; }
 
-        /* Guide */
         details.guide { background: #f8fafc; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); }
         details.guide summary { font-weight: 700; font-size: 1.1rem; cursor: pointer; color: var(--primary); }
         
@@ -164,7 +159,6 @@
     </div>
 
     <div class="grid">
-        <!-- LEFT PANEL: ACCORDION INPUTS -->
         <div class="inputs-panel">
             
             <div class="simple-only" style="margin-bottom: 0.5rem;">
@@ -182,7 +176,6 @@
                 <button class="preset-close" onclick="document.getElementById('preset-banner').style.display='none'">✕</button>
             </div>
 
-            <!-- Accordion 1: Timeline & Inflation (Green) -->
             <details class="accordion acc-green" open>
                 <summary>Timeline & Inflation</summary>
                 <div class="accordion-content">
@@ -212,7 +205,6 @@
                 </div>
             </details>
 
-            <!-- Accordion 2: Asset Classes (Green) -->
             <details class="accordion acc-green">
                 <summary>Asset Classes</summary>
                 <div class="accordion-content">
@@ -293,7 +285,6 @@
                 </div>
             </details>
 
-            <!-- Accordion 3: Mortgage & Housing (Orange) -->
             <details class="accordion acc-orange">
                 <summary>Mortgage & Housing</summary>
                 <div class="accordion-content">
@@ -305,10 +296,9 @@
                     
                     <div id="asset-mortgage" class="asset-body" style="display: none;">
                         
-                        <!-- Simple Mode Mortgage Inputs -->
                         <div class="simple-only">
-                            <p style="font-size: 0.85rem; color: #64748b; margin-top: 0; margin-bottom: 1.25rem;">
-                                Assumes a fixed interest rate and that your monthly CPF OA completely covers your mortgage during working years. Switch to Advanced Mode to unlock dynamic loan amortization, interest rates, and precise CPF OA shielding.
+                            <p style="font-size: 0.85rem; color: #64748b; margin-top: 0; margin-bottom: 1.25rem; font-style: italic;">
+                                Assumes a fixed interest rate and that your monthly CPF OA perfectly covers this mortgage during your working years. Any mortgage years that extend into retirement will be paid in cash.
                             </p>
                             <div class="input-group">
                                 <div class="input-header">
@@ -318,7 +308,6 @@
                             </div>
                         </div>
 
-                        <!-- Advanced Mode Mortgage Inputs -->
                         <div class="advanced-only">
                             <div style="margin-bottom: 1.5rem;">
                                 <div class="label-wrapper" style="margin-bottom: 0.5rem;">Loan Type</div>
@@ -340,7 +329,6 @@
                             </div>
                         </div>
 
-                        <!-- Shared Input: Years Remaining -->
                         <div class="input-group">
                             <div class="input-header">
                                 <div class="label-wrapper">Years Remaining on Loan</div>
@@ -348,7 +336,6 @@
                             </div>
                         </div>
                         
-                        <!-- Advanced Mode Additional Inputs -->
                         <div class="advanced-only">
                             <div class="input-group">
                                 <div class="input-header">
@@ -357,7 +344,6 @@
                                 </div>
                             </div>
 
-                            <!-- Dynamic Readout -->
                             <div class="mortgage-readout" id="mortgage-readout-box">
                                 Calculated Monthly Installment: <span id="disp-calc-pmt">$0</span>
                             </div>
@@ -389,9 +375,8 @@
                 </div>
             </details>
 
-            <!-- Accordion 4: Retirement Expenses (Blue) -->
             <details class="accordion acc-blue">
-                <summary>Retirement & CPF LIFE</summary>
+                <summary>Retirement Income & Expenses</summary>
                 <div class="accordion-content">
                     <div class="input-group">
                         <div class="input-header">
@@ -409,28 +394,10 @@
                         </div>
                         <div id="income-streams-container"></div>
                         <button class="btn-add" onclick="addIncomeStream()">+ Add Income Stream</button>
-
-                        <hr style="border: 0; border-top: 1px solid var(--border); margin: 2rem 0;">
-                        
-                        <div class="section-title" style="font-size: 1rem; display: flex; align-items: center; justify-content: space-between;">
-                            CPF Retirement Modeling
-                            <input type="checkbox" id="inp-cpfToggle" onchange="toggleCpfSettings()" style="width:18px; height:18px; accent-color:var(--primary);">
-                        </div>
-                        <div id="cpf-settings" style="display: none; padding-left: 0.75rem; border-left: 2px solid var(--primary); margin-top: 1rem;">
-                            <div class="input-group">
-                                <div class="input-header">
-                                    <div class="label-wrapper">Age 55 RA Set-Aside (SGD) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">A one-time deduction from your OA balance at age 55 to fund your Retirement Account. This accurately models the sudden loss of OA liquidity.</span></div></div>
-                                    <input type="text" class="num-format" id="inp-raSetAside" placeholder="0">
-                                </div>
-                            </div>
-                            <div class="input-group"><div class="input-header"><div class="label-wrapper">CPF LIFE Monthly Payout (SGD)</div><input type="text" class="num-format" id="inp-cpfPayout" placeholder="0"></div></div>
-                            <div class="input-group"><div class="input-header"><div class="label-wrapper">CPF LIFE Start Age</div><input type="text" class="num-format" id="inp-cpfStartAge" value="65"></div></div>
-                        </div>
                     </div>
                 </div>
             </details>
 
-            <!-- Accordion 5: Monte Carlo (Advanced Only) (Gray) -->
             <details class="accordion acc-gray advanced-only">
                 <summary>Monte Carlo Simulation</summary>
                 <div class="accordion-content">
@@ -507,7 +474,6 @@
 
         </div>
 
-        <!-- RIGHT PANEL: HERO DASHBOARD & CHART -->
         <div class="right-panel">
             
             <div class="hero-dashboard">
@@ -536,7 +502,17 @@
             <details class="guide">
                 <summary>Assumptions & Beginner Blindspots Guide</summary>
                 
-                <h4 style="margin-top: 1rem;">Floating Mortgages & Amortization</h4>
+                <h4 style="margin-top: 1rem; color: #166534;">🛡️ The CPF LIFE "Margin of Safety"</h4>
+                <p>This simulator deliberately excludes CPF LIFE payouts and the Age 55 Retirement Account (RA) deduction. We recommend treating your eventual CPF LIFE payouts as a pure "margin of safety" rather than relying on it to fund your base FIRE calculations. For conceptual planning, the <strong>2026 CPF cohort benchmarks</strong> (in <em>today's dollars</em>, which will automatically inflate for future cohorts) are:</p>
+                <ul style="margin-top: 0; padding-left: 1.25rem; font-size: 0.95rem; color: var(--text-muted);">
+                    <li><strong>Basic Retirement Sum (BRS):</strong> $110,200 yielding ~$890 to $930/mo.</li>
+                    <li><strong>Full Retirement Sum (FRS):</strong> $220,400 yielding ~$1,640 to $1,750/mo.</li>
+                </ul>
+                <p style="font-size: 0.85rem; color: #64748b; font-style: italic;">* Note: These payouts begin at age 65.</p>
+
+                <hr style="border: 0; border-top: 1px solid var(--border); margin: 1.5rem 0;">
+
+                <h4>Floating Mortgages & Amortization</h4>
                 <p>Advanced Mode calculates your mortgage dynamically using standard loan amortization. If you run a Monte Carlo simulation on a Bank Loan, your interest rate will fluctuate annually, which immediately recalculates your required monthly payment based on your remaining principal.</p>
 
                 <h4>Lines of Defense (Mortgage Shortfalls)</h4>
@@ -560,7 +536,6 @@
                     <li><strong>The Cash Drawdown Trap:</strong> The simulator strictly drains your cash reserve first. While mathematically optimal on paper, in reality, you should maintain a dynamic cash buffer to avoid selling stocks during a market crash.</li>
                     <li><strong>Invisible Tax Drag:</strong> If your global portfolio includes US-domiciled ETFs, the US levies a 30% Dividend Withholding Tax on Singaporeans. A projected 8% gross return might effectively be 7.4% after this tax drag.</li>
                     <li><strong>The Retirement "Smile":</strong> The tool inflates expenses on a straight line. Real retirement spending usually "smiles"—high early on (travel), lower in the middle, and spiking heavily at the end (healthcare).</li>
-                    <li><strong>CPF Simplification:</strong> At age 55, the tool deducts your entire Retirement Account (RA) set-aside from your OA. In reality, your Special Account (SA) funds this first, meaning your actual OA might not drop as drastically as simulated here.</li>
                     <li><strong>Monte Carlo Limits:</strong> Unless the "Black Swan" fat-tailed risk is enabled, the simulation assumes market returns follow a standard "bell curve," systematically underestimating the frequency of massive, multi-year crashes.</li>
                 </ul>
             </details>
@@ -647,11 +622,6 @@
             runSim();
         }
 
-        function toggleCpfSettings() {
-            document.getElementById('cpf-settings').style.display = document.getElementById('inp-cpfToggle').checked ? 'block' : 'none';
-            runSim();
-        }
-
         function toggleCustomOA() {
             const isMax = document.getElementById('inp-maxOA').checked;
             document.getElementById('custom-oa-cap').style.display = isMax ? 'none' : 'block';
@@ -673,7 +643,6 @@
             document.getElementById('toggle-cash').checked = true; toggleAsset('cash');
             document.getElementById('toggle-mortgage').checked = false; toggleAsset('mortgage');
             document.getElementById('inp-maxOA').checked = true; toggleCustomOA();
-            document.getElementById('inp-cpfToggle').checked = false; toggleCpfSettings();
             document.getElementById('inp-inflateContribs').checked = false;
             
             if(document.body.className.includes('advanced-mode')) {
@@ -776,24 +745,19 @@
             document.getElementById('toggle-mortgage').checked = true; toggleAsset('mortgage');
             document.getElementById('loan-hdb').checked = true;
             
-            // Simple mode mortgage logic
-            setVal('inp-mortgageSimple', 1886);
+            // Simple mode mortgage logic (350k, 20 yrs, 2.6% amortized = 1872)
+            setVal('inp-mortgageSimple', 1872);
 
             // Advanced mode mortgage logic
             setVal('inp-mortgagePrincipal', 350000);
             setVal('inp-loanYrs', 20);
             document.getElementById('inp-maxOA').checked = true; toggleCustomOA();
             setVal('inp-oaStart', 60000);
-            setVal('inp-oaContrib', 1000);
+            setVal('inp-oaContrib', 1872); // Mathematically syncs chart on toggle
             calcLiveMortgage();
 
             setVal('inp-expenses', 4000);
             
-            document.getElementById('inp-cpfToggle').checked = true; toggleCpfSettings();
-            setVal('inp-raSetAside', 205800);
-            setVal('inp-cpfPayout', 1600);
-            setVal('inp-cpfStartAge', 65);
-
             runSim();
         }
 
@@ -849,7 +813,7 @@
                   hasSG, sgdStart, sgdContrib, sgdRet, sgdVol,
                   hasCash, cashStart, cashYield, 
                   hasMortgage, simpleMortgage, mortgagePrincipal, mortgageRate, mortgageVol, isMaxOA, customOACap, loanYrs, oaStart, oaContrib,
-                  expenses, cpfEnabled, raSetAside, cpfPayout, cpfStartAge, incomeStreams, isAdvanced, isBlackSwan } = inputs;
+                  expenses, incomeStreams, isAdvanced, isBlackSwan } = inputs;
             
             let usdPort = hasGlobal ? usdStart : 0;
             let sgdPort = hasSG ? sgdStart : 0;
@@ -898,14 +862,6 @@
                     }
                 }
 
-                if (age === 55 && cpfEnabled) {
-                    let prevOa = oaBal;
-                    oaBal = Math.max(0, oaBal - raSetAside);
-                    if (prevOa - oaBal > 0 && oaBal < (isMaxOA ? 999999 : customOACap) * 12) {
-                        warnings.add("CPF RA funding at age 55 significantly depleted OA, exposing your portfolio to future mortgage payments.");
-                    }
-                }
-
                 let isWorking = age < retireAge;
                 let isMortgageActive = age < mortgageEndAge && hasMortgage;
                 
@@ -935,12 +891,10 @@
                                 remPrincipal = Math.max(0, remPrincipal - (currentMonthlyMortgage - interestPayment));
                             }
 
-                            // Calculate OA cover vs Shortfall
                             let targetOaPay = currentMonthlyMortgage;
                             
-                            // In Simple mode, assume OA perfectly covers the flat mortgage
                             if (!isAdvanced) {
-                                oaBal += currentMonthlyMortgage; // artificial infinite OA
+                                oaBal += currentMonthlyMortgage; // artificial infinite OA buffer for simple mode during working years
                             } else if (!isMaxOA) {
                                 targetOaPay = Math.min(customOACap, currentMonthlyMortgage);
                             }
@@ -969,6 +923,7 @@
                             sgdPort += (effectiveContribSGD * sgdRatio);
                         }
                     } else {
+                        // Retired
                         let grossSpending = currentExpenses;
                         if (isMortgageActive && currentMonthlyMortgage > 0) {
                             if (isAdvanced) {
@@ -985,8 +940,6 @@
                         }
 
                         let retirementIncome = 0;
-                        if (cpfEnabled && age >= cpfStartAge) retirementIncome += cpfPayout;
-                        
                         incomeStreams.forEach(st => {
                             if (age >= st.start && age <= st.end) retirementIncome += st.amt;
                         });
@@ -1092,11 +1045,6 @@
                 oaContrib: isAdvanced ? getVal('inp-oaContrib') : 0,
                 
                 expenses: getVal('inp-expenses'),
-                cpfEnabled: isAdvanced ? document.getElementById('inp-cpfToggle').checked : false,
-                raSetAside: getVal('inp-raSetAside'),
-                cpfPayout: getVal('inp-cpfPayout'),
-                cpfStartAge: getVal('inp-cpfStartAge') || 65,
-                
                 incomeStreams: []
             };
 
@@ -1112,7 +1060,6 @@
 
             let sysWarnings = new Set();
             if (inputs.inflation >= Math.max(inputs.usdRet, inputs.sgdRet) && (inputs.hasGlobal || inputs.hasSG)) sysWarnings.add("Inflation exceeds expected portfolio returns. Real growth is negative.");
-            if (inputs.cpfEnabled && inputs.cpfStartAge > inputs.retireAge) sysWarnings.add("Note: CPF LIFE begins after your retirement age. Ensure you have liquid bridges.");
 
             const isMC = document.getElementById('inp-mcToggle').checked && isAdvanced;
             
@@ -1240,18 +1187,15 @@
             // Build Annotations
             let chartAnnotations = {};
             if (inputs && inputs.retireAge > inputs.currentAge && inputs.retireAge <= 95) {
-                chartAnnotations.lineRetire = {
-                    type: 'line', xMin: inputs.retireAge, xMax: inputs.retireAge,
-                    borderColor: '#f59e0b', borderDash: [5, 5], borderWidth: 2,
-                    label: { display: true, content: 'Retirement', position: 'start', backgroundColor: '#f59e0b', color: '#fff', font: {size: 11} }
-                };
-            }
-            if (inputs && inputs.cpfEnabled && 55 >= inputs.currentAge && 55 <= 95) {
-                chartAnnotations.lineCpf = {
-                    type: 'line', xMin: 55, xMax: 55,
-                    borderColor: '#3b82f6', borderDash: [5, 5], borderWidth: 2,
-                    label: { display: true, content: 'CPF RA Deduction', position: 'start', yAdjust: 30, backgroundColor: '#3b82f6', color: '#fff', font: {size: 11} }
-                };
+                // Calculate correct index for the categorical x-axis
+                let retireIndex = inputs.retireAge - inputs.currentAge;
+                if (retireIndex >= 0 && retireIndex < labels.length) {
+                    chartAnnotations.lineRetire = {
+                        type: 'line', xMin: retireIndex, xMax: retireIndex,
+                        borderColor: '#f59e0b', borderDash: [5, 5], borderWidth: 2,
+                        label: { display: true, content: 'Retirement Age', position: 'start', backgroundColor: '#f59e0b', color: '#fff', font: {size: 11} }
+                    };
+                }
             }
 
             fireChart = new Chart(ctx, {
