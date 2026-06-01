@@ -33,7 +33,7 @@
         #mode-advanced:checked ~ label[for="mode-advanced"] { color: var(--primary); }
         #mode-advanced:checked ~ .slider-bg { transform: translateX(100%); }
 
-        .preset-group { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; background: #f8fafc; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border); }
+        .preset-group { display: flex; gap: 0.5rem; background: #f8fafc; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border); }
         .preset-btn { flex: 1; cursor: pointer; padding: 0.5rem 1rem; border-radius: 6px; border: 1px solid #d1d5db; background: #ffffff; font-weight: 600; font-size: 0.85rem; color: #4b5563; transition: all 0.2s; text-align: center; }
         .preset-btn:hover { background: #e5e7eb; color: #1f2937; }
 
@@ -134,10 +134,14 @@
     <div class="grid">
         <div class="panel inputs-panel">
             
-            <div class="simple-only preset-group">
-                <button class="preset-btn" onclick="applyPreset('conservative')">Conservative</button>
-                <button class="preset-btn" onclick="applyPreset('balanced')">Balanced</button>
-                <button class="preset-btn" onclick="applyPreset('optimistic')">Optimistic</button>
+            <div class="simple-only" style="margin-bottom: 1.5rem;">
+                <div class="section-title" style="margin-bottom: 0.25rem; font-size: 1rem;">Macroeconomic Scenarios</div>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0; margin-bottom: 0.75rem;">Test how your plan holds up under different market conditions. (Note: Retirement planning should prioritize conservativeness, so all of these options, including 'balanced' are more conservative than 20-year historical averages).</p>
+                <div class="preset-group" style="margin-bottom: 0;">
+                    <button class="preset-btn" onclick="applyPreset('highly-conservative')">Highly Conservative</button>
+                    <button class="preset-btn" onclick="applyPreset('somewhat-conservative')">Somewhat Conservative</button>
+                    <button class="preset-btn" onclick="applyPreset('balanced')">Balanced</button>
+                </div>
             </div>
             
             <div id="preset-banner" class="preset-banner">
@@ -150,13 +154,13 @@
                 <div class="input-group">
                     <div class="input-header">
                         <div class="label-wrapper">Current Age <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Your age today. Used as the starting point for compounding.</span></div></div>
-                        <input type="number" id="inp-currentAge" value="34">
+                        <input type="number" id="inp-currentAge" value="" placeholder="e.g., 34">
                     </div>
                 </div>
                 <div class="input-group">
                     <div class="input-header">
                         <div class="label-wrapper">Retirement Age <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">The age at which your monthly investment contributions stop, and you begin drawing down your portfolio to fund your living expenses.</span></div></div>
-                        <input type="number" id="inp-retireAge" value="42">
+                        <input type="number" id="inp-retireAge" value="" placeholder="e.g., 60">
                     </div>
                 </div>
             </div>
@@ -175,17 +179,18 @@
                 <div class="section-title" style="margin-bottom: 0.5rem;">Asset Classes</div>
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0; margin-bottom: 1.5rem;">Enable the asset classes you currently hold.</p>
                 
+                <!-- Global Portfolio -->
                 <label class="asset-header">
                     <input type="checkbox" id="toggle-global" checked onchange="toggleAsset('global')"> 
                     Global (outside Singapore) investments (in USD)
                 </label>
                 <div id="asset-global" class="asset-body">
-                    <div class="input-group"><div class="input-header"><div class="label-wrapper">Starting Balance (USD)</div><input type="number" id="inp-usdStart" value="323000"></div></div>
-                    <div class="input-group"><div class="input-header"><div class="label-wrapper">Monthly Contribution (USD)</div><input type="number" id="inp-usdContrib" value="5000"></div></div>
+                    <div class="input-group"><div class="input-header"><div class="label-wrapper">Starting Balance (USD)</div><input type="number" id="inp-usdStart" value="" placeholder="0"></div></div>
+                    <div class="input-group"><div class="input-header"><div class="label-wrapper">Monthly Contribution (USD)</div><input type="number" id="inp-usdContrib" value="" placeholder="0"></div></div>
                     <div class="input-group">
                         <div class="input-header">
-                            <div class="label-wrapper">Expected Return (%) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Defaulted to 9.8%, reflecting the approximate 20-year annualized nominal return of the S&P 500.</span></div></div>
-                            <input type="number" id="inp-usdRet" value="9.8" step="0.1">
+                            <div class="label-wrapper">Expected Return (%) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Defaulted to 7.8%. The historical 20-year annualized nominal return of the S&P 500 is ~9.8%; this default is intentionally set 20% lower to build in a margin of safety.</span></div></div>
+                            <input type="number" id="inp-usdRet" value="7.8" step="0.1">
                         </div>
                     </div>
                     <div class="input-group">
@@ -202,16 +207,23 @@
                     </div>
                 </div>
 
+                <!-- SG Portfolio -->
                 <label class="asset-header">
                     <input type="checkbox" id="toggle-sg" onchange="toggleAsset('sg')"> 
                     SG investments (in SGD)
                 </label>
                 <div id="asset-sg" class="asset-body" style="display: none;">
-                    <div class="input-group"><div class="input-header"><div class="label-wrapper">Starting Balance (SGD)</div><input type="number" id="inp-sgdStart" value="0"></div></div>
-                    <div class="input-group"><div class="input-header"><div class="label-wrapper">Monthly Contribution (SGD)</div><input type="number" id="inp-sgdContrib" value="0"></div></div>
-                    <div class="input-group"><div class="input-header"><div class="label-wrapper">Expected Return (%)</div><input type="number" id="inp-sgdRet" value="5.0" step="0.1"></div></div>
+                    <div class="input-group"><div class="input-header"><div class="label-wrapper">Starting Balance (SGD)</div><input type="number" id="inp-sgdStart" value="" placeholder="0"></div></div>
+                    <div class="input-group"><div class="input-header"><div class="label-wrapper">Monthly Contribution (SGD)</div><input type="number" id="inp-sgdContrib" value="" placeholder="0"></div></div>
+                    <div class="input-group">
+                        <div class="input-header">
+                            <div class="label-wrapper">Expected Return (%) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Defaulted to 4.0%. The historical annualized return of the Straits Times Index is ~5.0%; this default is intentionally set 20% lower for conservativeness.</span></div></div>
+                            <input type="number" id="inp-sgdRet" value="4.0" step="0.1">
+                        </div>
+                    </div>
                 </div>
 
+                <!-- Cash Reserve -->
                 <label class="asset-header">
                     <input type="checkbox" id="toggle-cash" checked onchange="toggleAsset('cash')"> 
                     Cash Reserve (in SGD)
@@ -220,7 +232,7 @@
                     <div class="input-group">
                         <div class="input-header">
                             <div class="label-wrapper">Starting Balance <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Emergency fund, fixed deposits, or Singapore Savings Bonds. In retirement, the simulator will drain this bucket FIRST to protect your investments.</span></div></div>
-                            <input type="number" id="inp-cashStart" value="50000">
+                            <input type="number" id="inp-cashStart" value="" placeholder="0">
                         </div>
                     </div>
                     <div class="input-group">
@@ -258,7 +270,7 @@
                     <div class="simple-only input-group">
                         <div class="input-header">
                             <div class="label-wrapper">Total Monthly Mortgage (SGD) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Your fixed nominal monthly loan obligation.</span></div></div>
-                            <input type="number" id="inp-mortgage" value="3280">
+                            <input type="number" id="inp-mortgage" value="" placeholder="0">
                         </div>
                         <div style="font-size: 0.75rem; color: #6b7280; margin-top: 0.25rem; font-style: italic;">Note: For bank loans with floating interest rates (e.g., SORA), switch to Advanced Mode to accurately model interest rate fluctuations.</div>
                     </div>
@@ -267,7 +279,7 @@
                         <div class="input-group">
                             <div class="input-header">
                                 <div class="label-wrapper">Remaining Loan Principal (SGD) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Your outstanding loan balance today. The simulator will automatically calculate your monthly payments based on this, the tenure, and the interest rate.</span></div></div>
-                                <input type="number" id="inp-mortgagePrincipal" value="650000">
+                                <input type="number" id="inp-mortgagePrincipal" value="" placeholder="0">
                             </div>
                         </div>
                         <div class="input-group">
@@ -281,7 +293,7 @@
                     <div class="input-group">
                         <div class="input-header">
                             <div class="label-wrapper">Years Remaining on Loan</div>
-                            <input type="number" id="inp-loanYrs" value="23">
+                            <input type="number" id="inp-loanYrs" value="" placeholder="0">
                         </div>
                     </div>
                     
@@ -289,7 +301,7 @@
                         <div class="input-group" style="margin-top: 1rem;">
                             <div class="input-header">
                                 <div class="label-wrapper">Target Mortgage Paid via OA (SGD/mo) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">The amount of CPF OA you intend to use. If floating rates cause your required monthly payment to spike above this target, the shortfall will be paid from your cash/investments.</span></div></div>
-                                <input type="number" id="inp-mortgageOA" value="3280">
+                                <input type="number" id="inp-mortgageOA" value="" placeholder="0">
                             </div>
                         </div>
                     </div>
@@ -297,11 +309,11 @@
 
                 <div class="advanced-only">
                     <hr style="border: 0; border-top: 1px solid var(--border); margin: 1.5rem 0;">
-                    <div class="input-group"><div class="input-header"><div class="label-wrapper">Current CPF OA Balance (SGD)</div><input type="number" id="inp-oaStart" value="50000"></div></div>
+                    <div class="input-group"><div class="input-header"><div class="label-wrapper">Current CPF OA Balance (SGD)</div><input type="number" id="inp-oaStart" value="" placeholder="0"></div></div>
                     <div class="input-group">
                         <div class="input-header">
                             <div class="label-wrapper">Gross Monthly OA Contrib. (from salary) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">The gross inflow to your OA from your employment. The simulator will automatically subtract your 'Mortgage Paid via OA' from this amount each month.</span></div></div>
-                            <input type="number" id="inp-oaContrib" value="1200">
+                            <input type="number" id="inp-oaContrib" value="" placeholder="0">
                         </div>
                     </div>
                 </div>
@@ -312,7 +324,7 @@
                 <div class="input-group">
                     <div class="input-header">
                         <div class="label-wrapper">Base Living Expenses (SGD/mo) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Your target monthly spending in TODAY's dollars. The simulator will compound this upward every year based on your Inflation assumption.</span></div></div>
-                        <input type="number" id="inp-expenses" value="3500">
+                        <input type="number" id="inp-expenses" value="" placeholder="e.g., 3500">
                     </div>
                 </div>
                 
@@ -365,14 +377,14 @@
                     <div class="vol-grid-header" style="text-align: right;">Volatility (± pp) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text" style="right:0; left:auto; transform:none; margin-left:0;">"pp" stands for Percentage Points. This sets the standard deviation for randomized swings.</span></div></div>
                     
                     <div class="vol-label">Global Equities</div>
-                    <div class="vol-disp" id="disp-usdRet">9.8%</div>
+                    <div class="vol-disp" id="disp-usdRet">7.8%</div>
                     <div style="position: relative; display: flex; align-items: center; justify-content: flex-end;">
                         <input type="number" id="inp-usdVol" value="15.0" step="0.1" style="width: 80px; margin-right: 0.5rem;">
                         <div class="tt-container"><span class="tt-icon">i</span><span class="tt-text" style="right:0; left:auto; transform:none; margin-left:0;">Historical std dev (S&P 500 / MSCI World):<br>~13.5 pp (10-yr)<br>~15.0 pp (20-yr)<br>~15.3 pp (30-yr)</span></div>
                     </div>
 
                     <div class="vol-label">SG Equities</div>
-                    <div class="vol-disp" id="disp-sgdRet">5.0%</div>
+                    <div class="vol-disp" id="disp-sgdRet">4.0%</div>
                     <div style="position: relative; display: flex; align-items: center; justify-content: flex-end;">
                         <input type="number" id="inp-sgdVol" value="14.0" step="0.1" style="width: 80px; margin-right: 0.5rem;">
                         <div class="tt-container"><span class="tt-icon">i</span><span class="tt-text" style="right:0; left:auto; transform:none; margin-left:0;">Historical std dev (Straits Times Index):<br>~12.0 pp (10-yr)<br>~14.0 pp (20-yr)<br>~15.5 pp (30-yr)</span></div>
@@ -448,6 +460,7 @@
                 <h4 style="color: #991b1b; margin-top: 2rem;">⚠️ Limitations & Blindspots (For Beginners)</h4>
                 <p>This tool provides a strong baseline, but real life is messier than math. Do not base major life decisions on this chart without understanding its blindspots:</p>
                 <ul class="blindspots-list">
+                    <li><strong>The "Stagflation" Blindspot:</strong> The macroeconomic preset buttons pair lower market returns with higher inflation. However, real life can be much harsher. "Stagflation" occurs when inflation spikes dramatically at the exact same time markets crash (e.g., 2022 or the 1970s). The presets do not model this double-impact; you must manually type in high inflation and negative returns to stress-test a true stagflation environment.</li>
                     <li><strong>The Cash Drawdown Trap:</strong> The simulator strictly drains your cash reserve first before touching equities. While mathematically optimal, in reality, you should maintain a cash buffer to avoid selling stocks during a market crash.</li>
                     <li><strong>Invisible Tax Drag:</strong> If your global portfolio includes US-domiciled ETFs, remember that the US levies a 30% Dividend Withholding Tax on Singaporeans. A projected 8% gross return might effectively be 7.4% after this tax drag.</li>
                     <li><strong>The Retirement "Smile":</strong> The tool inflates expenses on a straight line. Real retirement spending usually "smiles"—high in early retirement (travel), lower in the middle, and spiking heavily at the end due to healthcare/nursing costs.</li>
@@ -461,6 +474,19 @@
     <script>
         let fireChart;
         let incomeStreamCount = 0;
+
+        // Dynamic Mortgage Cap Logic
+        document.getElementById('inp-mortgage').addEventListener('input', function() {
+            let max = parseFloat(this.value) || 0;
+            let oaInput = document.getElementById('inp-mortgageOA');
+            if (parseFloat(oaInput.value) > max) oaInput.value = max;
+            runSim();
+        });
+        document.getElementById('inp-mortgageOA').addEventListener('input', function() {
+            let max = parseFloat(document.getElementById('inp-mortgage').value) || 0;
+            if (parseFloat(this.value) > max) this.value = max;
+            runSim();
+        });
 
         // UI Interactions
         function setMode(mode) {
@@ -495,21 +521,21 @@
 
         function applyPreset(type) {
             let msg = "";
-            if (type === 'conservative') {
-                document.getElementById('inp-usdRet').value = '6.0';
-                document.getElementById('inp-sgdRet').value = '3.0';
+            if (type === 'highly-conservative') {
+                document.getElementById('inp-usdRet').value = '5.0';
+                document.getElementById('inp-sgdRet').value = '2.5';
+                document.getElementById('inp-inflation').value = '3.5';
+                msg = "Applied Highly Conservative: Global 5.0%, SG 2.5%, Inflation 3.5%";
+            } else if (type === 'somewhat-conservative') {
+                document.getElementById('inp-usdRet').value = '6.5';
+                document.getElementById('inp-sgdRet').value = '3.5';
                 document.getElementById('inp-inflation').value = '3.0';
-                msg = "Applied Conservative: Global 6%, SG 3%, Inflation 3.0%";
+                msg = "Applied Somewhat Conservative: Global 6.5%, SG 3.5%, Inflation 3.0%";
             } else if (type === 'balanced') {
-                document.getElementById('inp-usdRet').value = '9.8';
+                document.getElementById('inp-usdRet').value = '8.0';
                 document.getElementById('inp-sgdRet').value = '5.0';
                 document.getElementById('inp-inflation').value = '2.5';
-                msg = "Applied Balanced: Global 9.8%, SG 5%, Inflation 2.5%";
-            } else if (type === 'optimistic') {
-                document.getElementById('inp-usdRet').value = '11.0';
-                document.getElementById('inp-sgdRet').value = '7.0';
-                document.getElementById('inp-inflation').value = '2.0';
-                msg = "Applied Optimistic: Global 11%, SG 7%, Inflation 2.0%";
+                msg = "Applied Balanced: Global 8.0%, SG 5.0%, Inflation 2.5%";
             }
             
             const banner = document.getElementById('preset-banner');
@@ -734,11 +760,11 @@
 
             // Sync Display fields in Monte Carlo Grid
             if (isAdvanced) {
-                document.getElementById('disp-usdRet').innerText = document.getElementById('inp-usdRet').value + '%';
-                document.getElementById('disp-sgdRet').innerText = document.getElementById('inp-sgdRet').value + '%';
-                document.getElementById('disp-infl').innerText = document.getElementById('inp-inflation').value + '%';
-                document.getElementById('disp-fxDrift').innerText = document.getElementById('inp-fxDrift').value + '%';
-                document.getElementById('disp-mortgageRate').innerText = document.getElementById('inp-mortgageRate').value + '%';
+                document.getElementById('disp-usdRet').innerText = (document.getElementById('inp-usdRet').value || 0) + '%';
+                document.getElementById('disp-sgdRet').innerText = (document.getElementById('inp-sgdRet').value || 0) + '%';
+                document.getElementById('disp-infl').innerText = (document.getElementById('inp-inflation').value || 0) + '%';
+                document.getElementById('disp-fxDrift').innerText = (document.getElementById('inp-fxDrift').value || 0) + '%';
+                document.getElementById('disp-mortgageRate').innerText = (document.getElementById('inp-mortgageRate').value || 0) + '%';
             }
 
             const inputs = {
@@ -813,83 +839,90 @@
             let mainDesc = "";
             let finalWarnings = Array.from(sysWarnings);
             
-            for(let i=inputs.currentAge; i<=95; i++) labels.push(i);
+            // Only generate chart data if currentAge is provided, else leave empty
+            if (inputs.currentAge > 0) {
+                for(let i=inputs.currentAge; i<=95; i++) labels.push(i);
 
-            if (!isMC) {
-                let res = simulatePath(inputs, false);
-                let p1 = [], p2 = [], p3 = [];
-                
-                for(let i=0; i<res.pathData.length; i++) {
-                    let phase = res.phaseMap[i];
-                    let val = res.pathData[i].val;
+                if (!isMC) {
+                    let res = simulatePath(inputs, false);
+                    let p1 = [], p2 = [], p3 = [];
                     
-                    p1.push(phase === 1 ? val : null);
-                    p2.push(phase === 2 ? val : null);
-                    p3.push(phase === 3 ? val : null);
+                    for(let i=0; i<res.pathData.length; i++) {
+                        let phase = res.phaseMap[i];
+                        let val = res.pathData[i].val;
+                        
+                        p1.push(phase === 1 ? val : null);
+                        p2.push(phase === 2 ? val : null);
+                        p3.push(phase === 3 ? val : null);
 
-                    if(i > 0) {
-                        if(phase === 2 && res.phaseMap[i-1] === 1) p2[i-1] = res.pathData[i-1].val;
-                        if(phase === 3 && res.phaseMap[i-1] === 2) p3[i-1] = res.pathData[i-1].val;
-                        if(phase === 3 && res.phaseMap[i-1] === 1) p3[i-1] = res.pathData[i-1].val;
+                        if(i > 0) {
+                            if(phase === 2 && res.phaseMap[i-1] === 1) p2[i-1] = res.pathData[i-1].val;
+                            if(phase === 3 && res.phaseMap[i-1] === 2) p3[i-1] = res.pathData[i-1].val;
+                            if(phase === 3 && res.phaseMap[i-1] === 1) p3[i-1] = res.pathData[i-1].val;
+                        }
                     }
-                }
-                
-                datasets = [
-                    { label: 'Phase 1: Accumulation Phase', data: p1, borderColor: '#22c55e', backgroundColor: 'rgba(34, 197, 94, 0.15)', fill: true, tension: 0.2, spanGaps: true },
-                    { label: 'Phase 2: Mortgage Drawdown Phase', data: p2, borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.15)', fill: true, tension: 0.2, spanGaps: true },
-                    { label: 'Phase 3: Debt-Free Retirement Phase', data: p3, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.15)', fill: true, tension: 0.2, spanGaps: true }
-                ];
-                
-                res.warnings.forEach(w => finalWarnings.push(w));
+                    
+                    datasets = [
+                        { label: 'Phase 1: Accumulation Phase', data: p1, borderColor: '#22c55e', backgroundColor: 'rgba(34, 197, 94, 0.15)', fill: true, tension: 0.2, spanGaps: true },
+                        { label: 'Phase 2: Mortgage Drawdown Phase', data: p2, borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.15)', fill: true, tension: 0.2, spanGaps: true },
+                        { label: 'Phase 3: Debt-Free Retirement Phase', data: p3, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.15)', fill: true, tension: 0.2, spanGaps: true }
+                    ];
+                    
+                    res.warnings.forEach(w => finalWarnings.push(w));
 
-                if (res.solvent) {
-                    mainStatus = "✅ Success (Deterministic)";
-                    mainDesc = `Portfolio safely sustains lifestyle through age 95. Ending balance: $${(res.pathData[res.pathData.length-1].val/1000000).toFixed(2)}M SGD.`;
-                    setStatusStyle(true);
+                    if (res.solvent) {
+                        mainStatus = "✅ Success (Deterministic)";
+                        mainDesc = `Portfolio safely sustains lifestyle through age 95. Ending balance: $${(res.pathData[res.pathData.length-1].val/1000000).toFixed(2)}M SGD.`;
+                        setStatusStyle(true);
+                    } else {
+                        mainStatus = "⚠️ Shortfall Detected";
+                        mainDesc = `Liquid portfolio depletes completely at age ${res.depletionAge}.`;
+                        setStatusStyle(false);
+                    }
+
                 } else {
-                    mainStatus = "⚠️ Shortfall Detected";
-                    mainDesc = `Liquid portfolio depletes completely at age ${res.depletionAge}.`;
-                    setStatusStyle(false);
-                }
+                    let runs = parseInt(document.getElementById('inp-mcRuns').value) || 100;
+                    let results = [];
+                    let successes = 0;
+                    
+                    for(let i=0; i<runs; i++) {
+                        let res = simulatePath(inputs, true);
+                        results.push(res.pathData.map(d => d.val));
+                        if (res.solvent) successes++;
+                        if (i===0) res.warnings.forEach(w => finalWarnings.push(w));
+                    }
 
+                    let p10 = [], p50 = [], p90 = [];
+                    for(let y=0; y<labels.length; y++) {
+                        let yearVals = results.map(r => r[y]).sort((a,b) => a-b);
+                        p10.push(yearVals[Math.floor(runs * 0.1)]);
+                        p50.push(yearVals[Math.floor(runs * 0.5)]);
+                        p90.push(yearVals[Math.floor(runs * 0.9)]);
+                    }
+
+                    datasets = [
+                        { label: '90th Percentile (Optimistic)', data: p90, borderColor: '#10b981', borderDash: [5,5], fill: false, tension: 0.2, pointRadius: 0 },
+                        { label: 'Median Outcome', data: p50, borderColor: '#2563eb', backgroundColor: 'rgba(37, 99, 235, 0.15)', fill: true, tension: 0.2, borderWidth: 3 },
+                        { label: '10th Percentile (Pessimistic)', data: p10, borderColor: '#ef4444', borderDash: [5,5], fill: '-1', backgroundColor: 'rgba(239, 68, 68, 0.05)', tension: 0.2, pointRadius: 0 }
+                    ];
+
+                    let winRate = ((successes / runs) * 100).toFixed(1);
+                    if (winRate >= 90) {
+                        mainStatus = `✅ High Confidence (${winRate}% Success)`;
+                        setStatusStyle(true);
+                    } else if (winRate >= 70) {
+                        mainStatus = `⚠️ Moderate Risk (${winRate}% Success)`;
+                        setStatusStyle(false, true);
+                    } else {
+                        mainStatus = `🛑 High Risk (${winRate}% Success)`;
+                        setStatusStyle(false);
+                    }
+                    mainDesc = `Based on ${runs} randomized market simulations.`;
+                }
             } else {
-                let runs = parseInt(document.getElementById('inp-mcRuns').value) || 100;
-                let results = [];
-                let successes = 0;
-                
-                for(let i=0; i<runs; i++) {
-                    let res = simulatePath(inputs, true);
-                    results.push(res.pathData.map(d => d.val));
-                    if (res.solvent) successes++;
-                    if (i===0) res.warnings.forEach(w => finalWarnings.push(w));
-                }
-
-                let p10 = [], p50 = [], p90 = [];
-                for(let y=0; y<labels.length; y++) {
-                    let yearVals = results.map(r => r[y]).sort((a,b) => a-b);
-                    p10.push(yearVals[Math.floor(runs * 0.1)]);
-                    p50.push(yearVals[Math.floor(runs * 0.5)]);
-                    p90.push(yearVals[Math.floor(runs * 0.9)]);
-                }
-
-                datasets = [
-                    { label: '90th Percentile (Optimistic)', data: p90, borderColor: '#10b981', borderDash: [5,5], fill: false, tension: 0.2, pointRadius: 0 },
-                    { label: 'Median Outcome', data: p50, borderColor: '#2563eb', backgroundColor: 'rgba(37, 99, 235, 0.15)', fill: true, tension: 0.2, borderWidth: 3 },
-                    { label: '10th Percentile (Pessimistic)', data: p10, borderColor: '#ef4444', borderDash: [5,5], fill: '-1', backgroundColor: 'rgba(239, 68, 68, 0.05)', tension: 0.2, pointRadius: 0 }
-                ];
-
-                let winRate = ((successes / runs) * 100).toFixed(1);
-                if (winRate >= 90) {
-                    mainStatus = `✅ High Confidence (${winRate}% Success)`;
-                    setStatusStyle(true);
-                } else if (winRate >= 70) {
-                    mainStatus = `⚠️ Moderate Risk (${winRate}% Success)`;
-                    setStatusStyle(false, true);
-                } else {
-                    mainStatus = `🛑 High Risk (${winRate}% Success)`;
-                    setStatusStyle(false);
-                }
-                mainDesc = `Based on ${runs} randomized market simulations.`;
+                mainStatus = "Ready to Calculate";
+                mainDesc = "Enter your current age to begin.";
+                setStatusStyle(true);
             }
 
             document.getElementById('statusTitle').innerText = mainStatus;
