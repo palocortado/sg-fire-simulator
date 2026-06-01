@@ -3,7 +3,7 @@ FIRE (financial independence, retire early) simulator for Singapore residents
 
 
 # future changes
-<!-- 
+
 =================================================
 V2 ROADMAP & NEXT-LEVEL UPGRADES
 =================================================
@@ -11,7 +11,8 @@ V2 ROADMAP & NEXT-LEVEL UPGRADES
 2. Invisible Auto-Save: Implement HTML5 localStorage so the user's browser automatically remembers their last inputs across sessions.
 3. Institutional Vault (Export/Import): Add buttons to download the JSON State Object as a backup file, and an upload button to restore it, protecting data against browser cache clears and code updates.
 =================================================
--->
+
+<!-- 
 ### saving inputs / state
 
 1. The Invisible Auto-Save (Browser localStorage)
@@ -84,5 +85,5 @@ I suggest we implement both Auto-Save (LocalStorage) and Manual Export/Import (J
 The UX: As you type, the app silently auto-saves to your browser. You can close the tab and return tomorrow without missing a beat.
 
 The Backup: When you are about to make major changes to the code, or if you want to test the tool on your phone, you click "Export Data" to generate a hard backup file.
-
+-->
 
