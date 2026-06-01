@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FIRE Simulator for Singapore residents</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.1.0/dist/chartjs-plugin-annotation.min.js"></script>
     <style>
         :root {
             --primary: #2563eb;
@@ -24,10 +25,12 @@
         /* Header & Top Controls */
         .header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1.5rem; }
         .header-container h1 { margin: 0; font-size: 1.8rem; color: #1e293b; }
-        .top-controls { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+        .top-controls { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
         
         .btn-sample { background: #10b981; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2); }
         .btn-sample:hover { background: #059669; }
+        .btn-clear { background: #fff1f2; color: #e11d48; border: 1px solid #fda4af; padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        .btn-clear:hover { background: #ffe4e6; }
 
         .mode-slider { position: relative; display: flex; background: #e2e8f0; border-radius: 30px; padding: 4px; width: 280px; }
         .mode-slider input { display: none; }
@@ -44,12 +47,19 @@
         .preset-banner { display: none; align-items: center; justify-content: space-between; background: #dbeafe; color: #1e40af; padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.85rem; font-weight: 600; margin-bottom: 1.5rem; border: 1px solid #bfdbfe; animation: fadeIn 0.3s; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Main Layout - FIXED BLOWOUT ISSUE */
+        /* Main Layout */
         .grid { display: grid; grid-template-columns: 480px minmax(0, 1fr); gap: 2rem; align-items: start; }
         
-        /* Accordions (Progressive Disclosure) */
+        /* Accordions (Progressive Disclosure & Color Mapping) */
         .inputs-panel { display: flex; flex-direction: column; gap: 1rem; }
         details.accordion { background: var(--panel); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.02); overflow: hidden; }
+        
+        /* Color Mapping Borders */
+        details.acc-green { border-left: 4px solid #10b981; }
+        details.acc-orange { border-left: 4px solid #f59e0b; }
+        details.acc-blue { border-left: 4px solid #3b82f6; }
+        details.acc-gray { border-left: 4px solid #64748b; }
+
         details.accordion summary { list-style: none; padding: 1.25rem 1.5rem; font-weight: 700; font-size: 1.1rem; cursor: pointer; background: #ffffff; display: flex; justify-content: space-between; align-items: center; user-select: none; }
         details.accordion summary::-webkit-details-marker { display: none; }
         details.accordion summary::after { content: '+'; font-size: 1.5rem; color: var(--primary); font-weight: normal; line-height: 1; transition: transform 0.2s; }
@@ -73,17 +83,20 @@
         .asset-header input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary); }
         .asset-body { padding-left: 0.75rem; border-left: 2px solid #e2e8f0; margin-left: 0.5rem; margin-bottom: 1.5rem; }
 
-        /* Tooltips */
-        .tt-container { position: relative; display: inline-flex; cursor: help; align-items: center; justify-content: center; }
-        .tt-icon { background: #e2e8f0; color: #64748b; border-radius: 50%; font-size: 11px; width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; }
+        /* Mobile-Optimized Tooltips */
+        .tt-container { position: relative; display: inline-flex; cursor: pointer; align-items: center; justify-content: center; }
+        .tt-icon { background: #e2e8f0; color: #64748b; border-radius: 50%; font-size: 11px; width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; user-select: none; }
         .tt-text { visibility: hidden; width: 280px; background-color: #1e293b; color: #fff; text-align: left; padding: 0.75rem; border-radius: 6px; position: absolute; z-index: 50; bottom: 130%; left: 50%; transform: translateX(-50%); opacity: 0; transition: opacity 0.2s; font-size: 0.75rem; font-weight: normal; line-height: 1.4; box-shadow: 0 4px 6px rgba(0,0,0,0.2); pointer-events: none; }
         .tt-text::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #1e293b transparent transparent transparent; }
-        .tt-container:hover .tt-text, .tt-container:active .tt-text { visibility: visible; opacity: 1; z-index: 999; }
+        
+        /* Desktop Hover + Mobile Click */
+        @media (hover: hover) { .tt-container:hover .tt-text { visibility: visible; opacity: 1; z-index: 999; } }
+        .tt-container.active .tt-text { visibility: visible; opacity: 1; z-index: 999; }
 
         /* Dynamic Mortgage Readout */
         .mortgage-readout { background: #eff6ff; border: 1px dashed #bfdbfe; padding: 0.75rem; border-radius: 6px; text-align: center; color: #1e40af; font-weight: 600; font-size: 0.95rem; margin-bottom: 1.5rem; }
 
-        /* Right Panel (Sticky Hero + Chart) - FIXED BLOWOUT ISSUE */
+        /* Right Panel (Sticky Hero + Chart) */
         .right-panel { position: sticky; top: 2rem; display: flex; flex-direction: column; gap: 1.5rem; min-width: 0; }
         
         .hero-dashboard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
@@ -95,7 +108,6 @@
         .hero-value { font-size: 1.4rem; font-weight: 800; color: var(--text-main); }
         .hero-subtext { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; }
 
-        /* FIXED BLOWOUT ISSUE */
         .chart-container { background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.02); position: relative; height: 500px; width: 100%; min-width: 0; }
 
         .warnings-container { display: flex; flex-direction: column; gap: 0.5rem; }
@@ -110,6 +122,16 @@
         details.guide { background: #f8fafc; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); }
         details.guide summary { font-weight: 700; font-size: 1.1rem; cursor: pointer; color: var(--primary); }
         
+        .income-stream { display: grid; grid-template-columns: 1fr 100px 70px 70px 30px; gap: 0.5rem; margin-bottom: 0.5rem; align-items: center; }
+        .income-stream input[type="text"] { width: 100%; text-align: left; }
+        .income-stream input[type="number"] { width: 100%; }
+        .btn-remove { background: #fee2e2; color: #991b1b; border: none; padding: 0.4rem; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-add { width: 100%; padding: 0.5rem; margin-top: 0.5rem; background: #f0fdf4; color: #166534; border: 1px dashed #bbf7d0; border-radius: 6px; cursor: pointer; font-weight: 600; }
+
+        .blindspots-list { margin-top: 0.75rem; color: #4b5563; font-size: 0.95rem; line-height: 1.6; padding-left: 1.25rem; }
+        .blindspots-list li { margin-bottom: 0.75rem; }
+        .blindspots-list strong { color: #1f2937; }
+
         @media (max-width: 1000px) {
             .grid { grid-template-columns: 1fr; }
             .right-panel { position: static; }
@@ -129,7 +151,8 @@
     <div class="header-container">
         <h1>Institutional FIRE Simulator</h1>
         <div class="top-controls">
-            <button class="btn-sample" onclick="loadSampleProfile()">Not sure where to start? Load Sample Profile</button>
+            <button class="btn-sample" onclick="loadSampleProfile()">Load Sample Profile</button>
+            <button class="btn-clear" onclick="clearAllInputs()">Clear All</button>
             <div class="mode-slider">
                 <input type="radio" id="mode-simple" name="mode" value="simple" checked onchange="setMode('simple')">
                 <label for="mode-simple">Simple Mode</label>
@@ -141,11 +164,12 @@
     </div>
 
     <div class="grid">
+        <!-- LEFT PANEL: ACCORDION INPUTS -->
         <div class="inputs-panel">
             
             <div class="simple-only" style="margin-bottom: 0.5rem;">
                 <div style="font-size: 1rem; font-weight: 700; margin-bottom: 0.25rem;">Macroeconomic Scenarios</div>
-                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0; margin-bottom: 0.75rem;">Test how your plan holds up under different market conditions. (Note: Retirement planning should prioritize conservativeness, so all of these options, including 'balanced' are more conservative than 20-year historical averages).</p>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0; margin-bottom: 0.75rem;">Test how your plan holds up under different market conditions. (Note: Retirement planning should prioritize conservativeness, so all options prioritize safety over historical averages).</p>
                 <div class="preset-group">
                     <button class="preset-btn" onclick="applyPreset('highly-conservative')">Highly Conservative</button>
                     <button class="preset-btn" onclick="applyPreset('somewhat-conservative')">Somewhat Conservative</button>
@@ -158,7 +182,8 @@
                 <button class="preset-close" onclick="document.getElementById('preset-banner').style.display='none'">✕</button>
             </div>
 
-            <details class="accordion" open>
+            <!-- Accordion 1: Timeline & Inflation (Green) -->
+            <details class="accordion acc-green" open>
                 <summary>Timeline & Inflation</summary>
                 <div class="accordion-content">
                     <div class="input-group">
@@ -187,7 +212,8 @@
                 </div>
             </details>
 
-            <details class="accordion">
+            <!-- Accordion 2: Asset Classes (Green) -->
+            <details class="accordion acc-green">
                 <summary>Asset Classes</summary>
                 <div class="accordion-content">
                     
@@ -267,12 +293,10 @@
                 </div>
             </details>
 
-            <details class="accordion">
+            <!-- Accordion 3: Mortgage & Housing (Orange) -->
+            <details class="accordion acc-orange">
                 <summary>Mortgage & Housing</summary>
                 <div class="accordion-content">
-                    <p class="simple-only" style="font-size: 0.85rem; color: #64748b; margin-top: 0; margin-bottom: 1.25rem; font-style: italic;">
-                        * Simple Mode assumes your CPF OA mathematically covers your mortgage while working. Switch to Advanced Mode to unlock dynamic loan amortization, interest rates, and precise CPF OA shielding.
-                    </p>
                     
                     <label class="asset-header">
                         <input type="checkbox" id="toggle-mortgage" onchange="toggleAsset('mortgage'); calcLiveMortgage();"> 
@@ -281,48 +305,68 @@
                     
                     <div id="asset-mortgage" class="asset-body" style="display: none;">
                         
-                        <div class="advanced-only" style="margin-bottom: 1.5rem;">
-                            <div class="label-wrapper" style="margin-bottom: 0.5rem;">Loan Type</div>
-                            <div style="display: flex; gap: 1rem; background: #f1f5f9; padding: 0.5rem; border-radius: 8px;">
-                                <label style="flex:1; display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; font-weight:600; cursor:pointer;">
-                                    <input type="radio" name="loanType" id="loan-hdb" value="hdb" checked onchange="calcLiveMortgage()"> HDB Concessionary
-                                </label>
-                                <label style="flex:1; display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; font-weight:600; cursor:pointer;">
-                                    <input type="radio" name="loanType" id="loan-bank" value="bank" onchange="calcLiveMortgage()"> Bank Loan (Floating)
-                                </label>
+                        <!-- Simple Mode Mortgage Inputs -->
+                        <div class="simple-only">
+                            <p style="font-size: 0.85rem; color: #64748b; margin-top: 0; margin-bottom: 1.25rem;">
+                                Assumes a fixed interest rate and that your monthly CPF OA completely covers your mortgage during working years. Switch to Advanced Mode to unlock dynamic loan amortization, interest rates, and precise CPF OA shielding.
+                            </p>
+                            <div class="input-group">
+                                <div class="input-header">
+                                    <div class="label-wrapper">Monthly Mortgage Payment (SGD)</div>
+                                    <input type="text" class="num-format" id="inp-mortgageSimple" placeholder="0" oninput="runSim()">
+                                </div>
                             </div>
                         </div>
 
-                        <div class="input-group">
-                            <div class="input-header">
-                                <div class="label-wrapper">Remaining Loan Principal (SGD)</div>
-                                <input type="text" class="num-format" id="inp-mortgagePrincipal" placeholder="0" oninput="calcLiveMortgage()">
+                        <!-- Advanced Mode Mortgage Inputs -->
+                        <div class="advanced-only">
+                            <div style="margin-bottom: 1.5rem;">
+                                <div class="label-wrapper" style="margin-bottom: 0.5rem;">Loan Type</div>
+                                <div style="display: flex; gap: 1rem; background: #f1f5f9; padding: 0.5rem; border-radius: 8px;">
+                                    <label style="flex:1; display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; font-weight:600; cursor:pointer;">
+                                        <input type="radio" name="loanType" id="loan-hdb" value="hdb" checked onchange="calcLiveMortgage()"> HDB Concessionary
+                                    </label>
+                                    <label style="flex:1; display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; font-weight:600; cursor:pointer;">
+                                        <input type="radio" name="loanType" id="loan-bank" value="bank" onchange="calcLiveMortgage()"> Bank Loan (Floating)
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="input-group">
+                                <div class="input-header">
+                                    <div class="label-wrapper">Remaining Loan Principal (SGD)</div>
+                                    <input type="text" class="num-format" id="inp-mortgagePrincipal" placeholder="0" oninput="calcLiveMortgage()">
+                                </div>
                             </div>
                         </div>
+
+                        <!-- Shared Input: Years Remaining -->
                         <div class="input-group">
                             <div class="input-header">
                                 <div class="label-wrapper">Years Remaining on Loan</div>
-                                <input type="text" class="num-format" id="inp-loanYrs" placeholder="0" oninput="calcLiveMortgage()">
+                                <input type="text" class="num-format" id="inp-loanYrs" placeholder="0" oninput="calcLiveMortgage(); runSim();">
                             </div>
                         </div>
                         
-                        <div class="advanced-only input-group">
-                            <div class="input-header">
-                                <div class="label-wrapper">Current Interest Rate (%) <div class="tt-container" id="tt-mortgageRate"><span class="tt-icon">?</span><span class="tt-text" id="tt-text-mortgageRate">HDB rate is pegged at 0.1% above prevailing CPF OA interest rate.</span></div></div>
-                                <input type="text" class="num-format" id="inp-mortgageRate" value="2.6" disabled oninput="calcLiveMortgage()">
-                            </div>
-                        </div>
-
-                        <div class="mortgage-readout" id="mortgage-readout-box">
-                            Calculated Monthly Installment: <span id="disp-calc-pmt">$0</span>
-                        </div>
-                        
+                        <!-- Advanced Mode Additional Inputs -->
                         <div class="advanced-only">
+                            <div class="input-group">
+                                <div class="input-header">
+                                    <div class="label-wrapper">Current Interest Rate (%) <div class="tt-container" id="tt-mortgageRate"><span class="tt-icon">?</span><span class="tt-text" id="tt-text-mortgageRate">HDB rate is pegged at 0.1% above prevailing CPF OA interest rate.</span></div></div>
+                                    <input type="text" class="num-format" id="inp-mortgageRate" value="2.6" disabled oninput="calcLiveMortgage()">
+                                </div>
+                            </div>
+
+                            <!-- Dynamic Readout -->
+                            <div class="mortgage-readout" id="mortgage-readout-box">
+                                Calculated Monthly Installment: <span id="disp-calc-pmt">$0</span>
+                            </div>
+                            
                             <hr style="border: 0; border-top: 1px solid var(--border); margin: 1.5rem 0;">
                             <div class="input-group">
                                 <div class="input-header">
-                                    <div class="label-wrapper">Gross Monthly OA Contrib. (from salary)</div>
-                                    <input type="text" class="num-format" id="inp-oaContrib" placeholder="0">
+                                    <div class="label-wrapper">Gross monthly CPF OA contributions (from employment) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">The gross inflow to your OA from your monthly salary.</span></div></div>
+                                    <input type="text" class="num-format" id="inp-oaContrib" placeholder="e.g., 1000">
                                 </div>
                             </div>
                             <div class="input-group"><div class="input-header"><div class="label-wrapper">Current CPF OA Balance (SGD)</div><input type="text" class="num-format" id="inp-oaStart" placeholder="0"></div></div>
@@ -334,7 +378,7 @@
                                 </div>
                                 <div id="custom-oa-cap" style="display: none; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
                                     <div class="input-header" style="margin-bottom:0;">
-                                        <div class="label-wrapper">Custom Monthly OA Cap (SGD) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">The maximum amount of OA you allow to be drained monthly. Any mortgage shortfall beyond this cap will be paid in cash.</span></div></div>
+                                        <div class="label-wrapper">Custom cap on monthly CPF OA utilization for mortgage (SGD) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">The maximum amount of OA you allow to be drained monthly. Any mortgage shortfall beyond this cap will be paid in cash.</span></div></div>
                                         <input type="text" class="num-format" id="inp-customOACap" value="0">
                                     </div>
                                 </div>
@@ -345,7 +389,8 @@
                 </div>
             </details>
 
-            <details class="accordion">
+            <!-- Accordion 4: Retirement Expenses (Blue) -->
+            <details class="accordion acc-blue">
                 <summary>Retirement & CPF LIFE</summary>
                 <div class="accordion-content">
                     <div class="input-group">
@@ -385,7 +430,8 @@
                 </div>
             </details>
 
-            <details class="accordion advanced-only">
+            <!-- Accordion 5: Monte Carlo (Advanced Only) (Gray) -->
+            <details class="accordion acc-gray advanced-only">
                 <summary>Monte Carlo Simulation</summary>
                 <div class="accordion-content">
                     <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0; margin-bottom: 1.5rem;">
@@ -461,6 +507,7 @@
 
         </div>
 
+        <!-- RIGHT PANEL: HERO DASHBOARD & CHART -->
         <div class="right-panel">
             
             <div class="hero-dashboard">
@@ -525,6 +572,16 @@
         let fireChart;
         let incomeStreamCount = 0;
 
+        // --- Mobile Tooltips (Tap Outside to Close) ---
+        document.addEventListener('click', function(e) {
+            document.querySelectorAll('.tt-container').forEach(el => el.classList.remove('active'));
+            if (e.target.classList.contains('tt-icon')) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.target.parentElement.classList.toggle('active');
+            }
+        });
+
         // --- UI & Formatting Utilities ---
         function getVal(id) {
             let el = document.getElementById(id);
@@ -535,21 +592,22 @@
         function setVal(id, val) {
             let el = document.getElementById(id);
             if (!el) return;
-            // Format if it's a large dollar amount, otherwise keep standard for rates/ages
-            if (Math.abs(val) >= 1000 || el.placeholder === "0" || el.id.includes("Start") || el.id.includes("Contrib") || el.id.includes("Principal") || el.id.includes("expenses")) {
+            if (val === '') {
+                el.value = '';
+                return;
+            }
+            if (Math.abs(val) >= 1000 || el.placeholder === "0" || el.id.includes("Start") || el.id.includes("Contrib") || el.id.includes("Principal") || el.id.includes("expenses") || el.id.includes("mortgageSimple")) {
                 el.value = Math.round(val).toLocaleString('en-US');
             } else {
                 el.value = val;
             }
         }
 
-        // Attach comma formatting to num-format class
         document.querySelectorAll('.num-format').forEach(el => {
             el.addEventListener('blur', function() {
                 if(this.value === '') { runSim(); return; }
                 let val = parseFloat(this.value.replace(/,/g, ''));
                 if(!isNaN(val)) {
-                    // Don't format small decimals like rates
                     if (this.id.includes('Ret') || this.id.includes('Yield') || this.id.includes('Rate') || this.id.includes('Drift') || this.id.includes('Vol') || this.id.includes('fx')) {
                         this.value = val; 
                     } else {
@@ -563,7 +621,6 @@
             });
         });
 
-        // Sync Sliders and Inputs
         document.querySelectorAll('.sync-input').forEach(input => {
             input.addEventListener('input', function() {
                 let slider = document.getElementById(this.getAttribute('data-slider'));
@@ -598,6 +655,45 @@
         function toggleCustomOA() {
             const isMax = document.getElementById('inp-maxOA').checked;
             document.getElementById('custom-oa-cap').style.display = isMax ? 'none' : 'block';
+            if (!isMax) {
+                // Preset to calculated installment
+                let calc = document.getElementById('disp-calc-pmt').innerText.replace(/[$,]/g, '');
+                setVal('inp-customOACap', parseFloat(calc) || 0);
+            }
+            runSim();
+        }
+
+        // --- Clear All Inputs ---
+        function clearAllInputs() {
+            document.querySelectorAll('input[type="text"]').forEach(el => el.value = '');
+            
+            // Reset toggles to default
+            document.getElementById('toggle-global').checked = true; toggleAsset('global');
+            document.getElementById('toggle-sg').checked = false; toggleAsset('sg');
+            document.getElementById('toggle-cash').checked = true; toggleAsset('cash');
+            document.getElementById('toggle-mortgage').checked = false; toggleAsset('mortgage');
+            document.getElementById('inp-maxOA').checked = true; toggleCustomOA();
+            document.getElementById('inp-cpfToggle').checked = false; toggleCpfSettings();
+            document.getElementById('inp-inflateContribs').checked = false;
+            
+            if(document.body.className.includes('advanced-mode')) {
+                 document.getElementById('inp-blackSwan').checked = false;
+                 document.getElementById('inp-mcToggle').checked = false;
+            }
+            
+            // Remove extra income streams
+            document.getElementById('income-streams-container').innerHTML = '';
+            document.getElementById('disp-calc-pmt').innerText = '$0';
+            
+            // Reset baseline scenario numbers
+            setVal('inp-inflation', 3.0); document.getElementById('slide-inflation').value = 3.0;
+            setVal('inp-usdRet', 7.8); document.getElementById('slide-usdRet').value = 7.8;
+            setVal('inp-sgdRet', 4.0); document.getElementById('slide-sgdRet').value = 4.0;
+            setVal('inp-fx', 1.35);
+            setVal('inp-fxDrift', -0.8);
+            setVal('inp-cashYield', 0.05);
+            setVal('inp-mortgageRate', 2.6);
+
             runSim();
         }
 
@@ -613,36 +709,32 @@
         function calcLiveMortgage() {
             let isAdvanced = document.body.className.includes('advanced-mode');
             let hasMortgage = document.getElementById('toggle-mortgage').checked;
-            if(!hasMortgage) {
+            
+            if(!hasMortgage || !isAdvanced) {
                 document.getElementById('disp-calc-pmt').innerText = '$0';
-                runSim();
                 return;
             }
 
-            if(isAdvanced) {
-                let isHdb = document.getElementById('loan-hdb').checked;
-                let rateInput = document.getElementById('inp-mortgageRate');
-                let ttText = document.getElementById('tt-text-mortgageRate');
+            let isHdb = document.getElementById('loan-hdb').checked;
+            let rateInput = document.getElementById('inp-mortgageRate');
+            let ttText = document.getElementById('tt-text-mortgageRate');
 
-                if(isHdb) {
-                    rateInput.value = '2.6';
-                    rateInput.disabled = true;
-                    ttText.innerText = "The HDB concessionary rate is pegged at 0.1% above the prevailing CPF OA interest rate.";
-                } else {
-                    rateInput.disabled = false;
-                    // Only overwrite with default if switching newly to Bank and it was 2.6
-                    if(rateInput.value === '2.6') rateInput.value = '1.8';
-                    ttText.innerText = "Defaulted to 1.8%, reflecting the ~20-year historical average of the 3-Month SIBOR/SORA. (10-yr average: ~1.6% | 30-yr average: ~2.2%).";
-                }
-
-                let p = getVal('inp-mortgagePrincipal');
-                let y = getVal('inp-loanYrs');
-                let r = getVal('inp-mortgageRate') / 100;
-                
-                let pmt = calcPmt(p, r, y);
-                document.getElementById('disp-calc-pmt').innerText = '$' + Math.round(pmt).toLocaleString();
+            if(isHdb) {
+                rateInput.value = '2.6';
+                rateInput.disabled = true;
+                ttText.innerText = "The HDB concessionary rate is pegged at 0.1% above the prevailing CPF OA interest rate.";
+            } else {
+                rateInput.disabled = false;
+                if(rateInput.value === '2.6') rateInput.value = '1.8';
+                ttText.innerText = "Defaulted to 1.8%, reflecting the ~20-year historical average of the 3-Month SIBOR/SORA. (10-yr average: ~1.6% | 30-yr average: ~2.2%).";
             }
-            runSim();
+
+            let p = getVal('inp-mortgagePrincipal');
+            let y = getVal('inp-loanYrs');
+            let r = getVal('inp-mortgageRate') / 100;
+            
+            let pmt = calcPmt(p, r, y);
+            document.getElementById('disp-calc-pmt').innerText = '$' + Math.round(pmt).toLocaleString();
         }
 
         function addIncomeStream(name = '', amt = '', start = 50, end = 95) {
@@ -683,6 +775,11 @@
 
             document.getElementById('toggle-mortgage').checked = true; toggleAsset('mortgage');
             document.getElementById('loan-hdb').checked = true;
+            
+            // Simple mode mortgage logic
+            setVal('inp-mortgageSimple', 1886);
+
+            // Advanced mode mortgage logic
             setVal('inp-mortgagePrincipal', 350000);
             setVal('inp-loanYrs', 20);
             document.getElementById('inp-maxOA').checked = true; toggleCustomOA();
@@ -838,8 +935,15 @@
                                 remPrincipal = Math.max(0, remPrincipal - (currentMonthlyMortgage - interestPayment));
                             }
 
+                            // Calculate OA cover vs Shortfall
                             let targetOaPay = currentMonthlyMortgage;
-                            if (isAdvanced && !isMaxOA) targetOaPay = Math.min(customOACap, currentMonthlyMortgage);
+                            
+                            // In Simple mode, assume OA perfectly covers the flat mortgage
+                            if (!isAdvanced) {
+                                oaBal += currentMonthlyMortgage; // artificial infinite OA
+                            } else if (!isMaxOA) {
+                                targetOaPay = Math.min(customOACap, currentMonthlyMortgage);
+                            }
                             
                             if (oaBal >= targetOaPay) {
                                 oaBal -= targetOaPay;
@@ -976,7 +1080,7 @@
                 cashYield: getVal('inp-cashYield') / 100,
                 
                 hasMortgage: hasMortgage,
-                simpleMortgage: getVal('inp-mortgage'),
+                simpleMortgage: getVal('inp-mortgageSimple'),
                 mortgagePrincipal: getVal('inp-mortgagePrincipal'),
                 mortgageRate: getVal('inp-mortgageRate') / 100,
                 mortgageVol: isAdvanced ? getVal('inp-mortgageVol') / 100 : 0,
@@ -985,7 +1089,7 @@
                 isMaxOA: isAdvanced ? document.getElementById('inp-maxOA').checked : true,
                 customOACap: isAdvanced ? getVal('inp-customOACap') : 0,
                 oaStart: isAdvanced ? getVal('inp-oaStart') : 0,
-                oaContrib: isAdvanced ? getVal('inp-oaContrib') : getVal('inp-mortgage'),
+                oaContrib: isAdvanced ? getVal('inp-oaContrib') : 0,
                 
                 expenses: getVal('inp-expenses'),
                 cpfEnabled: isAdvanced ? document.getElementById('inp-cpfToggle').checked : false,
@@ -1126,12 +1230,30 @@
             let wHtml = finalWarnings.map(w => `<div class="warning-alert">${w}</div>`).join('');
             document.getElementById('warningsBox').innerHTML = wHtml;
 
-            renderChart(labels, datasets);
+            renderChart(labels, datasets, inputs);
         }
 
-        function renderChart(labels, datasets) {
+        function renderChart(labels, datasets, inputs) {
             const ctx = document.getElementById('fireChart').getContext('2d');
             if (fireChart) fireChart.destroy();
+            
+            // Build Annotations
+            let chartAnnotations = {};
+            if (inputs && inputs.retireAge > inputs.currentAge && inputs.retireAge <= 95) {
+                chartAnnotations.lineRetire = {
+                    type: 'line', xMin: inputs.retireAge, xMax: inputs.retireAge,
+                    borderColor: '#f59e0b', borderDash: [5, 5], borderWidth: 2,
+                    label: { display: true, content: 'Retirement', position: 'start', backgroundColor: '#f59e0b', color: '#fff', font: {size: 11} }
+                };
+            }
+            if (inputs && inputs.cpfEnabled && 55 >= inputs.currentAge && 55 <= 95) {
+                chartAnnotations.lineCpf = {
+                    type: 'line', xMin: 55, xMax: 55,
+                    borderColor: '#3b82f6', borderDash: [5, 5], borderWidth: 2,
+                    label: { display: true, content: 'CPF RA Deduction', position: 'start', yAdjust: 30, backgroundColor: '#3b82f6', color: '#fff', font: {size: 11} }
+                };
+            }
+
             fireChart = new Chart(ctx, {
                 type: 'line',
                 data: { labels: labels, datasets: datasets },
@@ -1141,7 +1263,10 @@
                     scales: {
                         y: { title: { display: true, text: 'Portfolio Value (SGD)' }, ticks: { callback: v => '$' + (v / 1000000).toFixed(1) + 'M' } }
                     },
-                    plugins: { tooltip: { callbacks: { label: c => c.dataset.label + ': $' + Math.round(c.raw).toLocaleString() } } }
+                    plugins: { 
+                        tooltip: { callbacks: { label: c => c.dataset.label + ': $' + Math.round(c.raw).toLocaleString() } },
+                        annotation: { annotations: chartAnnotations }
+                    }
                 }
             });
         }
