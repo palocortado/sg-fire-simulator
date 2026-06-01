@@ -63,18 +63,19 @@
         /* Custom Tooltip */
         .tt-container { position: relative; display: inline-flex; cursor: help; align-items: center; justify-content: center; }
         .tt-icon { background: #e5e7eb; color: #6b7280; border-radius: 50%; font-size: 11px; width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; }
-        .tt-text { visibility: hidden; width: 260px; background-color: #1f2937; color: #fff; text-align: left; padding: 0.75rem; border-radius: 6px; position: absolute; z-index: 50; bottom: 130%; left: 50%; transform: translateX(-50%); opacity: 0; transition: opacity 0.2s ease-in-out; font-size: 0.75rem; font-weight: normal; line-height: 1.4; box-shadow: 0 4px 6px rgba(0,0,0,0.2); pointer-events: none; }
+        .tt-text { visibility: hidden; width: 280px; background-color: #1f2937; color: #fff; text-align: left; padding: 0.75rem; border-radius: 6px; position: absolute; z-index: 50; bottom: 130%; left: 50%; transform: translateX(-50%); opacity: 0; transition: opacity 0.2s ease-in-out; font-size: 0.75rem; font-weight: normal; line-height: 1.4; box-shadow: 0 4px 6px rgba(0,0,0,0.2); pointer-events: none; }
         .tt-text::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #1f2937 transparent transparent transparent; }
         .tt-container:hover .tt-text, .tt-container:active .tt-text { visibility: visible; opacity: 1; z-index: 999; }
 
-        input[type="number"] { width: 110px; padding: 0.4rem; border: 1px solid var(--border); border-radius: 6px; font-family: inherit; font-size: 0.9rem; text-align: right; }
-        input[type="number"]:focus { outline: 2px solid var(--primary); border-color: transparent; }
+        input[type="number"], input[type="text"] { width: 110px; padding: 0.4rem; border: 1px solid var(--border); border-radius: 6px; font-family: inherit; font-size: 0.9rem; text-align: right; }
+        input[type="number"]:focus, input[type="text"]:focus { outline: 2px solid var(--primary); border-color: transparent; }
+        input::placeholder { color: #9ca3af; }
         
         .toggle-row { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; font-weight: 600; font-size: 0.9rem; padding: 0.75rem; background: #f8fafc; border-radius: 6px; border: 1px solid var(--border); }
         .toggle-row input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary); }
 
         .income-stream { display: grid; grid-template-columns: 1fr 100px 70px 70px 30px; gap: 0.5rem; margin-bottom: 0.5rem; align-items: center; }
-        .income-stream input[type="text"] { padding: 0.4rem; border: 1px solid var(--border); border-radius: 4px; font-size: 0.85rem; }
+        .income-stream input[type="text"] { width: 100%; text-align: left; }
         .income-stream input[type="number"] { width: 100%; }
         .btn-remove { background: #fee2e2; color: #991b1b; border: none; padding: 0.4rem; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .btn-add { width: 100%; padding: 0.5rem; margin-top: 0.5rem; background: #f0fdf4; color: #166534; border: 1px dashed #bbf7d0; border-radius: 6px; cursor: pointer; font-weight: 600; }
@@ -179,7 +180,6 @@
                 <div class="section-title" style="margin-bottom: 0.5rem;">Asset Classes</div>
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0; margin-bottom: 1.5rem;">Enable the asset classes you currently hold.</p>
                 
-                <!-- Global Portfolio -->
                 <label class="asset-header">
                     <input type="checkbox" id="toggle-global" checked onchange="toggleAsset('global')"> 
                     Global (outside Singapore) investments (in USD)
@@ -207,7 +207,6 @@
                     </div>
                 </div>
 
-                <!-- SG Portfolio -->
                 <label class="asset-header">
                     <input type="checkbox" id="toggle-sg" onchange="toggleAsset('sg')"> 
                     SG investments (in SGD)
@@ -223,7 +222,6 @@
                     </div>
                 </div>
 
-                <!-- Cash Reserve -->
                 <label class="asset-header">
                     <input type="checkbox" id="toggle-cash" checked onchange="toggleAsset('cash')"> 
                     Cash Reserve (in SGD)
@@ -350,10 +348,10 @@
                     <div class="input-group">
                         <div class="input-header">
                             <div class="label-wrapper">Age 55 RA Set-Aside (SGD) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">A one-time deduction from your OA balance at age 55 to fund your Retirement Account. This accurately models the sudden loss of OA liquidity.</span></div></div>
-                            <input type="number" id="inp-raSetAside" value="205800">
+                            <input type="number" id="inp-raSetAside" value="" placeholder="e.g., 205800">
                         </div>
                     </div>
-                    <div class="input-group"><div class="input-header"><div class="label-wrapper">CPF LIFE Monthly Payout (SGD)</div><input type="number" id="inp-cpfPayout" value="2500"></div></div>
+                    <div class="input-group"><div class="input-header"><div class="label-wrapper">CPF LIFE Monthly Payout (SGD)</div><input type="number" id="inp-cpfPayout" value="" placeholder="0"></div></div>
                     <div class="input-group"><div class="input-header"><div class="label-wrapper">CPF LIFE Start Age</div><input type="number" id="inp-cpfStartAge" value="65" min="65" max="70"></div></div>
                 </div>
             </div>
@@ -411,6 +409,20 @@
                         <div class="tt-container"><span class="tt-icon">i</span><span class="tt-text" style="right:0; left:auto; transform:none; margin-left:0;">Historical std dev (SG 3-Month SIBOR/SORA):<br>~1.2 pp (10-yr)<br>~1.5 pp (20-yr)<br>~2.0 pp (30-yr)</span></div>
                     </div>
                 </div>
+
+                <div class="input-group" style="margin-top: 1rem;">
+                    <div class="toggle-row" style="background: #fffbeb; border-color: #fde68a;">
+                        <input type="checkbox" id="inp-blackSwan" onchange="runSim()">
+                        <label for="inp-blackSwan" style="color: #92400e; display: flex; align-items: center; gap: 0.5rem;">
+                            Enable "Black Swan" Market Risk
+                            <div class="tt-container">
+                                <span class="tt-icon" style="background: #fcd34d; color: #92400e;">?</span>
+                                <span class="tt-text">A 'Black Swan' is a rare, unpredictable event with severe financial consequences (e.g., the 2008 financial crisis or the 2020 pandemic). A standard bell curve assumes these events are almost impossible. Checking this box replaces the bell curve with a "fat-tailed" distribution (Student's t-distribution, df=5), which mathematically increases the frequency of extreme market crashes in the simulation for a much more rigorous stress test.</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
             </div>
 
             <div class="simple-only advanced-callout">
@@ -420,7 +432,7 @@
                     <li><strong style="color: #1e40af;">Floating Mortgages:</strong> Use your remaining principal and current interest rate to dynamically model amortization and SORA rate swings.</li>
                     <li><strong style="color: #1e40af;">Currency Risk:</strong> Map the long-term trend of the SGD appreciating against the USD.</li>
                     <li><strong style="color: #1e40af;">CPF OA Shielding:</strong> Track your actual OA balance and salary contributions to see how long your CPF can shield your portfolio from the mortgage in retirement.</li>
-                    <li><strong style="color: #1e40af;">Monte Carlo Engine:</strong> Stress-test your timeline with randomized market crashes based on your portfolio's specific empirical volatility.</li>
+                    <li><strong style="color: #1e40af;">Monte Carlo Engine:</strong> Stress-test your timeline with randomized market crashes based on your portfolio's specific empirical volatility and extreme tail risks.</li>
                 </ul>
             </div>
 
@@ -465,7 +477,7 @@
                     <li><strong>Invisible Tax Drag:</strong> If your global portfolio includes US-domiciled ETFs, remember that the US levies a 30% Dividend Withholding Tax on Singaporeans. A projected 8% gross return might effectively be 7.4% after this tax drag.</li>
                     <li><strong>The Retirement "Smile":</strong> The tool inflates expenses on a straight line. Real retirement spending usually "smiles"—high in early retirement (travel), lower in the middle, and spiking heavily at the end due to healthcare/nursing costs.</li>
                     <li><strong>CPF Simplification:</strong> At age 55, the tool deducts your entire Retirement Account (RA) set-aside from your OA. In reality, your Special Account (SA) funds this first, meaning your actual OA might not drop as drastically as simulated here.</li>
-                    <li><strong>Monte Carlo Limits:</strong> The simulation assumes market returns follow a standard "bell curve." It systematically underestimates the frequency of massive, multi-year "Black Swan" crashes.</li>
+                    <li><strong>Monte Carlo Limits:</strong> Unless the "Black Swan" fat-tailed risk is enabled, the simulation assumes market returns follow a standard "bell curve." A standard normal distribution systematically underestimates the frequency of massive, multi-year market crashes.</li>
                 </ul>
             </details>
         </div>
@@ -549,11 +561,26 @@
             el.addEventListener('input', runSim);
         });
 
+        // Math Engine: Randomizer
         function randn_bm() {
             let u = 0, v = 0;
             while(u === 0) u = Math.random();
             while(v === 0) v = Math.random();
             return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+        }
+
+        // Student's t-distribution approximation (df=5) scaled to maintain variance = 1
+        function rand_t5_scaled() {
+            let z = randn_bm();
+            // Chi-square with 5 degrees of freedom
+            let v = Math.pow(randn_bm(), 2) + Math.pow(randn_bm(), 2) + Math.pow(randn_bm(), 2) + Math.pow(randn_bm(), 2) + Math.pow(randn_bm(), 2);
+            let t = z / Math.sqrt(v / 5);
+            // Scale the result so standard deviation remains accurate to user inputs
+            return t * Math.sqrt(3/5); 
+        }
+
+        function getRand(isBlackSwan) {
+            return isBlackSwan ? rand_t5_scaled() : randn_bm();
         }
 
         // Standard Loan Amortization Formula
@@ -572,7 +599,7 @@
                   hasSG, sgdStart, sgdContrib, sgdRet, sgdVol,
                   hasCash, cashStart, cashYield, 
                   hasMortgage, simpleMortgage, mortgagePrincipal, mortgageRate, mortgageVol, mortgageOA, loanYrs, oaStart, oaContrib,
-                  expenses, cpfEnabled, raSetAside, cpfPayout, cpfStartAge, incomeStreams, isAdvanced } = inputs;
+                  expenses, cpfEnabled, raSetAside, cpfPayout, cpfStartAge, incomeStreams, isAdvanced, isBlackSwan } = inputs;
             
             let usdPort = hasGlobal ? usdStart : 0;
             let sgdPort = hasSG ? sgdStart : 0;
@@ -603,11 +630,11 @@
                 let actualMortgageRate = mortgageRate;
 
                 if (isMonteCarlo) {
-                    actualInfl = inflation + (randn_bm() * inflVol);
-                    actualUsdRet = usdRet + (randn_bm() * usdVol);
-                    actualSgdRet = sgdRet + (randn_bm() * sgdVol);
-                    actualFxDrift = fxDrift + (randn_bm() * fxVol);
-                    actualMortgageRate = Math.max(0, mortgageRate + (randn_bm() * mortgageVol)); // Prevent negative mortgage rates
+                    actualInfl = inflation + (getRand(isBlackSwan) * inflVol);
+                    actualUsdRet = usdRet + (getRand(isBlackSwan) * usdVol);
+                    actualSgdRet = sgdRet + (getRand(isBlackSwan) * sgdVol);
+                    actualFxDrift = fxDrift + (getRand(isBlackSwan) * fxVol);
+                    actualMortgageRate = Math.max(0, mortgageRate + (getRand(isBlackSwan) * mortgageVol)); // Prevent negative mortgage rates
                 }
 
                 if (age > currentAge) {
@@ -757,6 +784,7 @@
             const hasSG = document.getElementById('toggle-sg').checked;
             const hasCash = document.getElementById('toggle-cash').checked;
             const hasMortgage = document.getElementById('toggle-mortgage').checked;
+            const isBlackSwan = isAdvanced ? document.getElementById('inp-blackSwan').checked : false;
 
             // Sync Display fields in Monte Carlo Grid
             if (isAdvanced) {
@@ -769,6 +797,7 @@
 
             const inputs = {
                 isAdvanced: isAdvanced,
+                isBlackSwan: isBlackSwan,
                 currentAge: parseFloat(document.getElementById('inp-currentAge').value) || 0,
                 retireAge: parseFloat(document.getElementById('inp-retireAge').value) || 0,
                 
