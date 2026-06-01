@@ -44,8 +44,8 @@
         .preset-banner { display: none; align-items: center; justify-content: space-between; background: #dbeafe; color: #1e40af; padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.85rem; font-weight: 600; margin-bottom: 1.5rem; border: 1px solid #bfdbfe; animation: fadeIn 0.3s; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Main Layout */
-        .grid { display: grid; grid-template-columns: 480px 1fr; gap: 2rem; align-items: start; }
+        /* Main Layout - FIXED BLOWOUT ISSUE */
+        .grid { display: grid; grid-template-columns: 480px minmax(0, 1fr); gap: 2rem; align-items: start; }
         
         /* Accordions (Progressive Disclosure) */
         .inputs-panel { display: flex; flex-direction: column; gap: 1rem; }
@@ -83,8 +83,8 @@
         /* Dynamic Mortgage Readout */
         .mortgage-readout { background: #eff6ff; border: 1px dashed #bfdbfe; padding: 0.75rem; border-radius: 6px; text-align: center; color: #1e40af; font-weight: 600; font-size: 0.95rem; margin-bottom: 1.5rem; }
 
-        /* Right Panel (Sticky Hero + Chart) */
-        .right-panel { position: sticky; top: 2rem; display: flex; flex-direction: column; gap: 1.5rem; }
+        /* Right Panel (Sticky Hero + Chart) - FIXED BLOWOUT ISSUE */
+        .right-panel { position: sticky; top: 2rem; display: flex; flex-direction: column; gap: 1.5rem; min-width: 0; }
         
         .hero-dashboard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
         .hero-card { background: white; padding: 1.25rem; border-radius: 12px; border: 1px solid var(--border); text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
@@ -95,7 +95,8 @@
         .hero-value { font-size: 1.4rem; font-weight: 800; color: var(--text-main); }
         .hero-subtext { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; }
 
-        .chart-container { background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.02); position: relative; height: 500px; width: 100%; }
+        /* FIXED BLOWOUT ISSUE */
+        .chart-container { background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.02); position: relative; height: 500px; width: 100%; min-width: 0; }
 
         .warnings-container { display: flex; flex-direction: column; gap: 0.5rem; }
         .warning-alert { background: #fffbeb; border-left: 4px solid #f59e0b; padding: 0.75rem; font-size: 0.85rem; color: #92400e; border-radius: 0 6px 6px 0; }
@@ -512,6 +513,7 @@
                     <li><strong>The Cash Drawdown Trap:</strong> The simulator strictly drains your cash reserve first. While mathematically optimal on paper, in reality, you should maintain a dynamic cash buffer to avoid selling stocks during a market crash.</li>
                     <li><strong>Invisible Tax Drag:</strong> If your global portfolio includes US-domiciled ETFs, the US levies a 30% Dividend Withholding Tax on Singaporeans. A projected 8% gross return might effectively be 7.4% after this tax drag.</li>
                     <li><strong>The Retirement "Smile":</strong> The tool inflates expenses on a straight line. Real retirement spending usually "smiles"—high early on (travel), lower in the middle, and spiking heavily at the end (healthcare).</li>
+                    <li><strong>CPF Simplification:</strong> At age 55, the tool deducts your entire Retirement Account (RA) set-aside from your OA. In reality, your Special Account (SA) funds this first, meaning your actual OA might not drop as drastically as simulated here.</li>
                     <li><strong>Monte Carlo Limits:</strong> Unless the "Black Swan" fat-tailed risk is enabled, the simulation assumes market returns follow a standard "bell curve," systematically underestimating the frequency of massive, multi-year crashes.</li>
                 </ul>
             </details>
