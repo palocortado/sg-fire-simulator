@@ -23,12 +23,17 @@
         body { font-family: system-ui, -apple-system, sans-serif; max-width: 1500px; margin: 0 auto; padding: 2rem 1rem; background: var(--bg); color: var(--text-main); line-height: 1.5; }
         
         /* Header & Top Controls */
-        .header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1.5rem; }
+        .header-container { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; flex-wrap: wrap; gap: 1.5rem; }
         .header-container h1 { margin: 0; font-size: 1.8rem; color: #1e293b; }
+        .top-controls-wrapper { display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem; }
         .top-controls { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
         
         .btn-sample { background: #10b981; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2); pointer-events: auto; }
         .btn-sample:hover { background: #059669; }
+        
+        .btn-action { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-action:hover { background: #e2e8f0; color: #0f172a; }
+
         .btn-clear { background: #fff1f2; color: #e11d48; border: 1px solid #fda4af; padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
         .btn-clear:hover { background: #ffe4e6; }
 
@@ -145,18 +150,26 @@
 
     <div class="header-container">
         <h1>Institutional FIRE Simulator</h1>
-        <div class="top-controls">
-            <div class="tt-container">
-                <button class="btn-sample" onclick="loadSampleProfile()">Load Sample Profile</button>
-                <span class="tt-text" style="width: 250px; bottom: -60px; right: 0; left: auto; transform: none; margin-left: 0;">This profile loads a median middle-class baseline (e.g., retiring at 60, $2,500/mo expenses, standard HDB loan). It serves as a realistic starting point to begin tweaking.</span>
+        <div class="top-controls-wrapper">
+            <div class="top-controls">
+                <div class="tt-container">
+                    <button class="btn-sample" onclick="loadSampleProfile()">Load Sample Profile</button>
+                    <span class="tt-text" style="width: 250px; bottom: -60px; right: 0; left: auto; transform: none; margin-left: 0;">This profile loads a median middle-class baseline (e.g., retiring at 60, $2,500/mo expenses, standard HDB loan). It serves as a realistic starting point to begin tweaking.</span>
+                </div>
+                <button class="btn-action" onclick="exportPlan()">Export Plan</button>
+                <button class="btn-action" onclick="document.getElementById('file-import').click()">Import Plan</button>
+                <input type="file" id="file-import" style="display:none" accept=".json" onchange="importPlan(event)">
+                <button class="btn-clear" onclick="clearAllInputs()">Clear All</button>
+                <div class="mode-slider">
+                    <input type="radio" id="mode-simple" name="mode" value="simple" checked onchange="setMode('simple')">
+                    <label for="mode-simple">Simple Mode</label>
+                    <input type="radio" id="mode-advanced" name="mode" value="advanced" onchange="setMode('advanced')">
+                    <label for="mode-advanced">Advanced Mode</label>
+                    <div class="slider-bg"></div>
+                </div>
             </div>
-            <button class="btn-clear" onclick="clearAllInputs()">Clear All</button>
-            <div class="mode-slider">
-                <input type="radio" id="mode-simple" name="mode" value="simple" checked onchange="setMode('simple')">
-                <label for="mode-simple">Simple Mode</label>
-                <input type="radio" id="mode-advanced" name="mode" value="advanced" onchange="setMode('advanced')">
-                <label for="mode-advanced">Advanced Mode</label>
-                <div class="slider-bg"></div>
+            <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;">
+                <em>Data auto-saves to your browser. Use "Clear All" on shared devices.</em>
             </div>
         </div>
     </div>
@@ -579,6 +592,8 @@
     <script>
         let fireChart;
         let incomeStreamCount = 0;
+        let isLoading = true;
+        const APP_VERSION = "2.0";
 
         // --- Mobile Tooltips (Tap Outside to Close) ---
         document.addEventListener('click', function(e) {
@@ -612,7 +627,6 @@
                 el.value = val;
             }
             
-            // Sync slider if exists
             let slider = document.getElementById('slide-' + id.replace('inp-', ''));
             if (slider) slider.value = parseFloat(val);
         }
@@ -641,24 +655,171 @@
                 let input = document.getElementById(this.getAttribute('data-input'));
                 if(input) { 
                     setVal(input.id, this.value); 
-                    
                     if (input.id === 'inp-mortgageShare') calcLiveMortgage();
                     runSim(); 
                 }
             });
         });
 
+        // --- State Management (Scooper & Loader) ---
+        function getState() {
+            let inputs = {
+                mode: document.querySelector('input[name="mode"]:checked').value,
+                
+                currentAge: getVal('inp-currentAge'),
+                retireAge: getVal('inp-retireAge'),
+                inflation: getVal('inp-inflation'),
+                inflVol: getVal('inp-inflVol'),
+                inflateContribs: document.getElementById('inp-inflateContribs').checked,
+                
+                hasGlobal: document.getElementById('toggle-global').checked,
+                usdStart: getVal('inp-usdStart'),
+                usdContrib: getVal('inp-usdContrib'),
+                usdRet: getVal('inp-usdRet'),
+                usdVol: getVal('inp-usdVol'),
+                fx: getVal('inp-fx'),
+                fxDrift: getVal('inp-fxDrift'),
+                fxVol: getVal('inp-fxVol'),
+
+                hasSG: document.getElementById('toggle-sg').checked,
+                sgdStart: getVal('inp-sgdStart'),
+                sgdContrib: getVal('inp-sgdContrib'),
+                sgdRet: getVal('inp-sgdRet'),
+                sgdVol: getVal('inp-sgdVol'),
+
+                hasCash: document.getElementById('toggle-cash').checked,
+                cashStart: getVal('inp-cashStart'),
+                cashYield: getVal('inp-cashYield'),
+
+                hasMortgage: document.getElementById('toggle-mortgage').checked,
+                hasMortgagePartner: document.getElementById('toggle-mortgage-partner').checked,
+                isHdb: document.getElementById('loan-hdb').checked,
+                isBank: document.getElementById('loan-bank').checked,
+                mortgageSimple: getVal('inp-mortgageSimple'),
+                mortgagePrincipal: getVal('inp-mortgagePrincipal'),
+                loanYrs: getVal('inp-loanYrs'),
+                mortgageRate: getVal('inp-mortgageRate'),
+                mortgageVol: getVal('inp-mortgageVol'),
+                mortgageShare: getVal('inp-mortgageShare'),
+                
+                isMaxOA: document.getElementById('inp-maxOA').checked,
+                customOACap: getVal('inp-customOACap'),
+                oaStart: getVal('inp-oaStart'),
+                oaContrib: getVal('inp-oaContrib'),
+
+                hasExpensePartner: document.getElementById('toggle-expense-partner').checked,
+                expenses: getVal('inp-expenses'),
+                expenseShare: getVal('inp-expenseShare'),
+
+                isMC: document.getElementById('inp-mcToggle').checked,
+                mcRuns: getVal('inp-mcRuns'),
+                isBlackSwan: document.getElementById('inp-blackSwan').checked,
+
+                incomeStreams: []
+            };
+
+            document.querySelectorAll('.income-stream').forEach(row => {
+                inputs.incomeStreams.push({
+                    name: row.querySelector('.is-name').value,
+                    amt: getVal(row.querySelector('.is-amt').id) || parseFloat(row.querySelector('.is-amt').value.replace(/,/g, '')) || 0,
+                    start: parseFloat(row.querySelector('.is-start').value) || 0,
+                    end: parseFloat(row.querySelector('.is-end').value) || 0
+                });
+            });
+
+            return {
+                version: APP_VERSION,
+                last_saved: new Date().toISOString(),
+                inputs: inputs
+            };
+        }
+
+        function loadState(state) {
+            if (!state || !state.inputs) return;
+            let p = state.inputs;
+            
+            if (p.mode) {
+                let r = document.getElementById('mode-' + p.mode);
+                if (r) { r.checked = true; setMode(p.mode); }
+            }
+
+            const fields = ['currentAge', 'retireAge', 'inflation', 'inflVol', 'usdStart', 'usdContrib', 'usdRet', 'usdVol', 'fx', 'fxDrift', 'fxVol', 'sgdStart', 'sgdContrib', 'sgdRet', 'sgdVol', 'cashStart', 'cashYield', 'mortgageSimple', 'mortgagePrincipal', 'loanYrs', 'mortgageRate', 'mortgageVol', 'mortgageShare', 'oaContrib', 'oaStart', 'customOACap', 'expenses', 'expenseShare', 'mcRuns'];
+            fields.forEach(f => {
+                if (p[f] !== undefined) setVal('inp-' + f, p[f]);
+            });
+
+            const toggles = ['global', 'sg', 'cash', 'mortgage'];
+            toggles.forEach(t => {
+                let el = document.getElementById('toggle-' + t);
+                let key = 'has' + t.charAt(0).toUpperCase() + t.slice(1);
+                if (p[key] !== undefined && el) {
+                    el.checked = p[key];
+                    toggleAsset(t);
+                }
+            });
+
+            if (p.inflateContribs !== undefined) document.getElementById('inp-inflateContribs').checked = p.inflateContribs;
+            if (p.isMaxOA !== undefined) document.getElementById('inp-maxOA').checked = p.isMaxOA;
+            if (p.hasMortgagePartner !== undefined) document.getElementById('toggle-mortgage-partner').checked = p.hasMortgagePartner;
+            if (p.hasExpensePartner !== undefined) document.getElementById('toggle-expense-partner').checked = p.hasExpensePartner;
+            if (p.isBlackSwan !== undefined) document.getElementById('inp-blackSwan').checked = p.isBlackSwan;
+            if (p.isMC !== undefined) document.getElementById('inp-mcToggle').checked = p.isMC;
+            if (p.isHdb !== undefined) document.getElementById('loan-hdb').checked = p.isHdb;
+            if (p.isBank !== undefined) document.getElementById('loan-bank').checked = p.isBank;
+
+            document.getElementById('income-streams-container').innerHTML = '';
+            if (p.incomeStreams && Array.isArray(p.incomeStreams)) {
+                p.incomeStreams.forEach(st => addIncomeStream(st.name, st.amt, st.start, st.end));
+            }
+
+            toggleMortgagePartner();
+            toggleExpensePartner();
+            toggleCustomOA();
+            calcLiveMortgage();
+        }
+
+        // --- Export / Import ---
+        function exportPlan() {
+            const state = getState();
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
+            const anchor = document.createElement('a');
+            anchor.setAttribute("href", dataStr);
+            anchor.setAttribute("download", "fire-plan-v" + APP_VERSION + ".json");
+            document.body.appendChild(anchor);
+            anchor.click();
+            anchor.remove();
+        }
+
+        function importPlan(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const state = JSON.parse(e.target.result);
+                    isLoading = true;
+                    loadState(state);
+                    isLoading = false;
+                    runSim();
+                } catch (err) {
+                    alert("Invalid save file.");
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = ''; // Reset
+        }
+
         // --- Logic Toggles ---
         function setMode(mode) {
             document.body.className = mode + '-mode';
             calcLiveMortgage();
-            runSim();
+            if(!isLoading) runSim();
         }
 
         function toggleAsset(asset) {
             const isChecked = document.getElementById(`toggle-${asset}`).checked;
             document.getElementById(`asset-${asset}`).style.display = isChecked ? 'block' : 'none';
-            runSim();
+            if(!isLoading) runSim();
         }
         
         function toggleMortgagePartner() {
@@ -677,24 +838,21 @@
             const isMax = document.getElementById('inp-maxOA').checked;
             document.getElementById('custom-oa-cap').style.display = isMax ? 'none' : 'block';
             if (!isMax) {
-                // Pre-fill with the personal liability portion
                 let share = document.getElementById('toggle-mortgage-partner').checked ? getVal('inp-mortgageShare') : 100;
                 let p = getVal('inp-mortgagePrincipal');
                 let y = getVal('inp-loanYrs');
                 let r = getVal('inp-mortgageRate') / 100;
                 let totalPmt = calcPmt(p, r, y);
                 let personalPmt = totalPmt * (share / 100);
-                
                 setVal('inp-customOACap', Math.round(personalPmt) || 0);
             }
-            runSim();
+            if(!isLoading) runSim();
         }
 
         // --- Clear All Inputs ---
         function clearAllInputs() {
             document.querySelectorAll('input[type="text"]').forEach(el => setVal(el.id, ''));
             
-            // Reset toggles to default
             document.getElementById('toggle-global').checked = true; toggleAsset('global');
             document.getElementById('toggle-sg').checked = false; toggleAsset('sg');
             document.getElementById('toggle-cash').checked = true; toggleAsset('cash');
@@ -711,11 +869,9 @@
                  document.getElementById('inp-mcToggle').checked = false;
             }
             
-            // Remove extra income streams
             document.getElementById('income-streams-container').innerHTML = '';
             document.getElementById('mortgage-readout-box').style.display = 'none';
             
-            // Reset baseline scenario numbers
             setVal('inp-inflation', 3.0); 
             setVal('inp-usdRet', 7.0); 
             setVal('inp-sgdRet', 4.0); 
@@ -726,11 +882,11 @@
             setVal('inp-mortgageShare', 100);
             setVal('inp-expenseShare', 100);
 
-            // Re-disable mortgage slider if HDB is checked
             if(document.getElementById('loan-hdb').checked) {
                 document.getElementById('slide-mortgageRate').disabled = true;
             }
 
+            localStorage.removeItem('fireSimState');
             runSim();
         }
 
@@ -789,9 +945,9 @@
             const html = `
                 <div class="income-stream" id="stream-${id}">
                     <input type="text" class="is-name" placeholder="Name" value="${name}">
-                    <input type="text" class="num-format is-amt" placeholder="0" value="${amt}">
-                    <input type="number" class="is-start" value="${start}">
-                    <input type="number" class="is-end" value="${end}">
+                    <input type="text" class="num-format is-amt" placeholder="0" value="${amt}" onblur="runSim()">
+                    <input type="number" class="is-start" value="${start}" onchange="runSim()">
+                    <input type="number" class="is-end" value="${end}" onchange="runSim()">
                     <button class="btn-remove" onclick="document.getElementById('stream-${id}').remove(); runSim();">X</button>
                 </div>
             `;
@@ -800,6 +956,7 @@
 
         // --- Presets & Loading ---
         function loadSampleProfile() {
+            isLoading = true;
             setVal('inp-currentAge', 35); 
             setVal('inp-retireAge', 60); 
             setVal('inp-inflation', 3.0); 
@@ -823,23 +980,21 @@
             document.getElementById('toggle-mortgage').checked = true; toggleAsset('mortgage');
             document.getElementById('loan-hdb').checked = true;
             
-            // Simple mode mortgage logic (350k, 20 yrs, 2.6% amortized = 1872)
             setVal('inp-mortgageSimple', 1872);
 
-            // Advanced mode mortgage logic
             setVal('inp-mortgagePrincipal', 350000);
             setVal('inp-loanYrs', 20);
             document.getElementById('inp-maxOA').checked = true; toggleCustomOA();
             setVal('inp-oaStart', 25000);
-            setVal('inp-oaContrib', 1872); // Mathematically syncs chart on toggle
+            setVal('inp-oaContrib', 1872); 
             calcLiveMortgage();
 
             setVal('inp-expenses', 2500);
             
-            // Set Spousal Sharing to 100% (Individual assumed baseline)
             document.getElementById('toggle-mortgage-partner').checked = false; toggleMortgagePartner();
             document.getElementById('toggle-expense-partner').checked = false; toggleExpensePartner();
             
+            isLoading = false;
             runSim();
         }
 
@@ -979,7 +1134,7 @@
                             let targetOaPay = currentPersonalMortgage;
                             
                             if (!isAdvanced) {
-                                oaBal += currentPersonalMortgage; // artificial infinite OA buffer for simple mode during working years
+                                oaBal += currentPersonalMortgage; 
                             } else if (!isMaxOA) {
                                 targetOaPay = Math.min(customOACap, currentPersonalMortgage);
                             }
@@ -1035,7 +1190,6 @@
                         if (netWithdrawal > 0) {
                             let totalLiquidSGD = cashRes + sgdPort + (usdPort * currentFx);
                             if (totalLiquidSGD >= netWithdrawal) {
-                                // Proportional Drawdown Strategy
                                 let cashRatio = cashRes / totalLiquidSGD;
                                 let sgdRatio = sgdPort / totalLiquidSGD;
                                 let usdRatio = (usdPort * currentFx) / totalLiquidSGD;
@@ -1074,6 +1228,8 @@
         }
 
         function runSim() {
+            if (isLoading) return;
+
             const isAdvanced = document.body.className.includes('advanced-mode');
             const hasGlobal = document.getElementById('toggle-global').checked;
             const hasSG = document.getElementById('toggle-sg').checked;
@@ -1084,7 +1240,6 @@
             const hasMortgagePartner = document.getElementById('toggle-mortgage-partner').checked;
             const hasExpensePartner = document.getElementById('toggle-expense-partner').checked;
 
-            // Sync Display fields in Monte Carlo Grid
             if (isAdvanced) {
                 document.getElementById('disp-usdRet').innerText = (getVal('inp-usdRet') || 0) + '%';
                 document.getElementById('disp-sgdRet').innerText = (getVal('inp-sgdRet') || 0) + '%';
@@ -1141,7 +1296,6 @@
                 incomeStreams: []
             };
 
-            // Update Expense Readout UI
             let effectiveExpenses = inputs.expenses * (inputs.expenseShare / 100);
             document.getElementById('expense-share-readout').innerText = 'The simulator will draw down: $' + Math.round(effectiveExpenses).toLocaleString() + '/mo';
 
@@ -1164,17 +1318,13 @@
             let datasets = [];
             let finalWarnings = Array.from(sysWarnings);
             
-            // Hero Dashboard Elements
             let elTargetAge = document.getElementById('val-targetAge');
             let elHeroExp = document.getElementById('val-heroExp');
             let elPeak = document.getElementById('val-peak');
             let elStatus = document.getElementById('val-statusText');
             let elStatusSub = document.getElementById('val-statusSub');
-            let cardTarget = document.getElementById('hero-target');
-            let cardPeak = document.getElementById('hero-peak');
             let cardStatus = document.getElementById('hero-status');
 
-            // Reset Hero Dashboard
             elTargetAge.innerText = inputs.retireAge > 0 ? 'Age ' + inputs.retireAge : '--';
             elHeroExp.innerText = '$' + Math.round(effectiveExpenses).toLocaleString();
             
@@ -1275,6 +1425,9 @@
             document.getElementById('warningsBox').innerHTML = wHtml;
 
             renderChart(labels, datasets, inputs);
+
+            // AUTO-SAVE: Write State Object to local storage at the end of every successful run
+            localStorage.setItem('fireSimState', JSON.stringify(getState()));
         }
 
         function renderChart(labels, datasets, inputs) {
@@ -1310,7 +1463,18 @@
             });
         }
 
+        // --- Initialization on Load ---
+        let savedState = localStorage.getItem('fireSimState');
+        if (savedState) {
+            try {
+                loadState(JSON.parse(savedState));
+            } catch(e) {
+                console.error("Failed to parse saved state", e);
+            }
+        }
+        isLoading = false;
         runSim();
+
     </script>
     
 </body>
