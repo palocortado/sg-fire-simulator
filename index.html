@@ -79,9 +79,7 @@
         input[type="text"], input[type="number"] { width: 120px; padding: 0.4rem 0.5rem; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit; font-size: 0.95rem; text-align: right; color: #0f172a; font-weight: 500; transition: border-color 0.2s; }
         input[type="text"]:focus, input[type="number"]:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
         input::placeholder { color: #94a3b8; font-weight: 400; }
-        .vol-grid input.num-format {
-        width: 80px;
-        }
+        
         .slider-container { display: flex; align-items: center; gap: 1rem; }
         input[type="range"] { flex: 1; accent-color: var(--primary); cursor: pointer; }
 
@@ -103,7 +101,7 @@
         /* Right Panel */
         .right-panel { position: sticky; top: 2rem; display: flex; flex-direction: column; gap: 1.5rem; min-width: 0; }
         
-        .hero-dashboard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+        .hero-dashboard { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
         .hero-card { background: white; padding: 1.25rem; border-radius: 12px; border: 1px solid var(--border); text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
         .hero-card.success { border-bottom: 4px solid #10b981; }
         .hero-card.warning { border-bottom: 4px solid #f59e0b; }
@@ -133,11 +131,16 @@
         .blindspots-list { margin-top: 0.75rem; color: #4b5563; font-size: 0.95rem; line-height: 1.6; padding-left: 1.25rem; }
         .blindspots-list li { margin-bottom: 0.75rem; }
         .blindspots-list strong { color: #1f2937; }
+        
+        .vol-grid input.num-format { width: 80px; }
 
         @media (max-width: 1000px) {
             .grid { grid-template-columns: 1fr; }
             .right-panel { position: static; }
             .hero-dashboard { position: sticky; top: 0; z-index: 100; padding-top: 1rem; background: var(--bg); margin-top: -1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+        }
+        @media (max-width: 800px) {
+            .hero-dashboard { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
         }
         @media (max-width: 600px) {
             .hero-dashboard { grid-template-columns: 1fr; gap: 0.5rem; }
@@ -455,6 +458,16 @@
                         </div>
                         <div class="slider-container"><input type="range" id="slide-expenses" min="0" max="20000" step="100" value="0" class="sync-slider" data-input="inp-expenses"></div>
                     </div>
+
+                    <div class="advanced-only" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border);">
+                        <div class="input-group" style="margin-bottom: 0;">
+                            <div class="input-header">
+                                <div class="label-wrapper">Target Withdrawal Multiple (FIRE Number) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">The multiple of your annual expenses needed to retire. 25x equals the standard 4% Safe Withdrawal Rate. Higher multiples (e.g., 33x = 3% SWR) are more conservative against prolonged market crashes.</span></div></div>
+                                <input type="text" class="num-format sync-input" id="inp-swrMultiple" data-slider="slide-swrMultiple" value="25">
+                            </div>
+                            <div class="slider-container"><input type="range" id="slide-swrMultiple" min="15" max="50" step="1" value="25" class="sync-slider" data-input="inp-swrMultiple"></div>
+                        </div>
+                    </div>
                     
                     <div class="advanced-only" style="margin-top: 2rem;">
                         <div class="section-title" style="font-size: 1rem;">Passive Income Streams (SGD/mo)</div>
@@ -538,6 +551,11 @@
                     <div class="hero-value" id="val-targetAge">--</div>
                     <div class="hero-subtext">Personal Exp: <span id="val-heroExp">$0</span></div>
                 </div>
+                <div class="hero-card" id="hero-fire">
+                    <div class="hero-label">Target FIRE Number</div>
+                    <div class="hero-value" id="val-fireNumber">$0</div>
+                    <div class="hero-subtext">Inflated to Age <span id="val-fireAge">--</span></div>
+                </div>
                 <div class="hero-card" id="hero-peak">
                     <div class="hero-label">Peak Nest Egg</div>
                     <div class="hero-value" id="val-peak">$0</div>
@@ -557,6 +575,10 @@
 
             <details class="guide">
                 <summary>Assumptions & Beginner Blindspots Guide</summary>
+                
+                <h4 style="margin-top: 1rem;">The Dynamic FIRE Number & 25x Rule</h4>
+                <p>Your <strong>Target FIRE Number</strong> is the absolute portfolio valuation required to retire comfortably, independent of your age. The simulator calculates this by taking your personal share of monthly expenses, inflating them to your Target Retirement Age, annualizing them, and multiplying by a Safe Withdrawal Rate (SWR) factor.</p>
+                <p>By default (and locked in Simple Mode), it uses the industry-standard <strong>25x Rule</strong> (equivalent to a 4% SWR). Advanced users can adjust this multiple using the slider in the Retirement accordions. A higher multiple (e.g., 33x = 3% SWR) offers a more conservative margin of safety against sequence of returns risk.</p>
                 
                 <h4 style="margin-top: 1rem; color: #166534;">🛡️ The CPF LIFE "Margin of Safety"</h4>
                 <p>This simulator deliberately excludes CPF LIFE payouts and the Age 55 Retirement Account (RA) deduction. We recommend treating your eventual CPF LIFE payouts as a pure "margin of safety" rather than relying on it to fund your base FIRE calculations. For conceptual planning, the <strong>2026 CPF cohort benchmarks</strong> (in <em>today's dollars</em>, which will automatically inflate for future cohorts) are:</p>
@@ -595,7 +617,7 @@
         let fireChart;
         let incomeStreamCount = 0;
         let isLoading = true;
-        const APP_VERSION = "2.0";
+        const APP_VERSION = "3.0";
 
         // --- Mobile Tooltips (Tap Outside to Close) ---
         document.addEventListener('click', function(e) {
@@ -712,6 +734,7 @@
                 hasExpensePartner: document.getElementById('toggle-expense-partner').checked,
                 expenses: getVal('inp-expenses'),
                 expenseShare: getVal('inp-expenseShare'),
+                swrMultiple: getVal('inp-swrMultiple'),
 
                 isMC: document.getElementById('inp-mcToggle').checked,
                 mcRuns: getVal('inp-mcRuns'),
@@ -745,7 +768,7 @@
                 if (r) { r.checked = true; setMode(p.mode); }
             }
 
-            const fields = ['currentAge', 'retireAge', 'inflation', 'inflVol', 'usdStart', 'usdContrib', 'usdRet', 'usdVol', 'fx', 'fxDrift', 'fxVol', 'sgdStart', 'sgdContrib', 'sgdRet', 'sgdVol', 'cashStart', 'cashYield', 'mortgageSimple', 'mortgagePrincipal', 'loanYrs', 'mortgageRate', 'mortgageVol', 'mortgageShare', 'oaContrib', 'oaStart', 'customOACap', 'expenses', 'expenseShare', 'mcRuns'];
+            const fields = ['currentAge', 'retireAge', 'inflation', 'inflVol', 'usdStart', 'usdContrib', 'usdRet', 'usdVol', 'fx', 'fxDrift', 'fxVol', 'sgdStart', 'sgdContrib', 'sgdRet', 'sgdVol', 'cashStart', 'cashYield', 'mortgageSimple', 'mortgagePrincipal', 'loanYrs', 'mortgageRate', 'mortgageVol', 'mortgageShare', 'oaContrib', 'oaStart', 'customOACap', 'expenses', 'expenseShare', 'swrMultiple', 'mcRuns'];
             fields.forEach(f => {
                 if (p[f] !== undefined) setVal('inp-' + f, p[f]);
             });
@@ -773,6 +796,9 @@
             if (p.incomeStreams && Array.isArray(p.incomeStreams)) {
                 p.incomeStreams.forEach(st => addIncomeStream(st.name, st.amt, st.start, st.end));
             }
+
+            // Defaults for V3 fields if loading older saves
+            if (p.swrMultiple === undefined) setVal('inp-swrMultiple', 25);
 
             toggleMortgagePartner();
             toggleExpensePartner();
@@ -808,7 +834,7 @@
                 }
             };
             reader.readAsText(file);
-            event.target.value = ''; // Reset
+            event.target.value = '';
         }
 
         // --- Logic Toggles ---
@@ -883,6 +909,7 @@
             setVal('inp-mortgageRate', 2.6);
             setVal('inp-mortgageShare', 100);
             setVal('inp-expenseShare', 100);
+            setVal('inp-swrMultiple', 25);
 
             if(document.getElementById('loan-hdb').checked) {
                 document.getElementById('slide-mortgageRate').disabled = true;
@@ -992,6 +1019,7 @@
             calcLiveMortgage();
 
             setVal('inp-expenses', 2500);
+            setVal('inp-swrMultiple', 25);
             
             document.getElementById('toggle-mortgage-partner').checked = false; toggleMortgagePartner();
             document.getElementById('toggle-expense-partner').checked = false; toggleExpensePartner();
@@ -1295,11 +1323,18 @@
                 
                 expenses: getVal('inp-expenses'),
                 expenseShare: hasExpensePartner ? getVal('inp-expenseShare') : 100,
+                swrMultiple: isAdvanced ? (getVal('inp-swrMultiple') || 25) : 25,
                 incomeStreams: []
             };
 
             let effectiveExpenses = inputs.expenses * (inputs.expenseShare / 100);
             document.getElementById('expense-share-readout').innerText = 'The simulator will draw down: $' + Math.round(effectiveExpenses).toLocaleString() + '/mo';
+
+            // Calculate the Target FIRE Number (Inflated to target age)
+            let yearsToRetire = Math.max(0, inputs.retireAge - inputs.currentAge);
+            let inflatedMonthlyExpenses = inputs.expenses * Math.pow(1 + inputs.inflation, yearsToRetire);
+            let effectiveInflatedMonthly = inflatedMonthlyExpenses * (inputs.expenseShare / 100);
+            let fireTarget = (effectiveInflatedMonthly * 12) * inputs.swrMultiple;
 
             if(isAdvanced) {
                 document.querySelectorAll('.income-stream').forEach(row => {
@@ -1322,6 +1357,8 @@
             
             let elTargetAge = document.getElementById('val-targetAge');
             let elHeroExp = document.getElementById('val-heroExp');
+            let elFireNumber = document.getElementById('val-fireNumber');
+            let elFireAge = document.getElementById('val-fireAge');
             let elPeak = document.getElementById('val-peak');
             let elStatus = document.getElementById('val-statusText');
             let elStatusSub = document.getElementById('val-statusSub');
@@ -1329,6 +1366,8 @@
 
             elTargetAge.innerText = inputs.retireAge > 0 ? 'Age ' + inputs.retireAge : '--';
             elHeroExp.innerText = '$' + Math.round(effectiveExpenses).toLocaleString();
+            elFireNumber.innerText = '$' + (fireTarget / 1000000).toFixed(2) + 'M';
+            elFireAge.innerText = inputs.retireAge;
             
             if (inputs.currentAge > 0) {
                 for(let i=inputs.currentAge; i<=95; i++) labels.push(i);
@@ -1426,17 +1465,17 @@
             let wHtml = finalWarnings.map(w => `<div class="warning-alert">${w}</div>`).join('');
             document.getElementById('warningsBox').innerHTML = wHtml;
 
-            renderChart(labels, datasets, inputs);
+            renderChart(labels, datasets, inputs, fireTarget);
 
-            // AUTO-SAVE: Write State Object to local storage at the end of every successful run
             localStorage.setItem('fireSimState', JSON.stringify(getState()));
         }
 
-        function renderChart(labels, datasets, inputs) {
+        function renderChart(labels, datasets, inputs, fireTarget) {
             const ctx = document.getElementById('fireChart').getContext('2d');
             if (fireChart) fireChart.destroy();
             
             let chartAnnotations = {};
+            
             if (inputs && inputs.retireAge > inputs.currentAge && inputs.retireAge <= 95) {
                 let retireIndex = inputs.retireAge - inputs.currentAge;
                 if (retireIndex >= 0 && retireIndex < labels.length) {
@@ -1446,6 +1485,14 @@
                         label: { display: true, content: 'Retirement Age', position: 'start', backgroundColor: '#f59e0b', color: '#fff', font: {size: 11} }
                     };
                 }
+            }
+            
+            if (fireTarget > 0) {
+                chartAnnotations.lineFIRE = {
+                    type: 'line', yMin: fireTarget, yMax: fireTarget,
+                    borderColor: '#10b981', borderDash: [5, 5], borderWidth: 2,
+                    label: { display: true, content: 'Target FIRE Number', position: 'end', backgroundColor: '#10b981', color: '#fff', font: {size: 11} }
+                };
             }
 
             fireChart = new Chart(ctx, {
