@@ -107,7 +107,7 @@
         .hero-card.success { border-bottom: 4px solid #10b981; }
         .hero-card.warning { border-bottom: 4px solid #f59e0b; }
         .hero-card.danger { border-bottom: 4px solid #ef4444; }
-        .hero-label { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem; }
+        .hero-label { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem; display: flex; align-items: center; justify-content: center; gap: 4px; }
         .hero-value { font-size: 1.4rem; font-weight: 800; color: var(--text-main); }
         .hero-subtext { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; }
 
@@ -314,35 +314,37 @@
                         </div>
                     </div>
 
-                    <!-- New: CPF Special Account Integration -->
-                    <label class="asset-header">
-                        <input type="checkbox" id="toggle-sa" checked onchange="toggleAsset('sa')"> 
-                        CPF Special Account (SA)
-                    </label>
-                    <div id="asset-sa" class="asset-body">
-                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0; margin-bottom: 1rem; line-height: 1.4;">Compounded at the statutory 4.0% floor to visually track progress toward your Full Retirement Sum. (Modeled as an illiquid asset until age 55).</p>
-                        <div class="input-group">
-                            <div class="input-header">
-                                <div class="label-wrapper">Current SA Balance (SGD)</div>
-                                <input type="text" class="num-format" id="inp-saStart" placeholder="0">
+                    <!-- Moved to Advanced Only for Simplicity -->
+                    <div class="advanced-only">
+                        <label class="asset-header">
+                            <input type="checkbox" id="toggle-sa" onchange="toggleAsset('sa')"> 
+                            CPF Special Account (SA)
+                        </label>
+                        <div id="asset-sa" class="asset-body" style="display: none;">
+                            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0; margin-bottom: 1rem; line-height: 1.4;">Compounded at the statutory 4.0% floor to visually track progress toward your Full Retirement Sum. (Modeled as an illiquid asset until age 55).</p>
+                            <div class="input-group">
+                                <div class="input-header">
+                                    <div class="label-wrapper">Current SA Balance (SGD)</div>
+                                    <input type="text" class="num-format" id="inp-saStart" placeholder="0">
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <div class="input-header">
+                                    <div class="label-wrapper">Monthly Contribution (SGD) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Gross monthly inflow from employment or mandatory contributions.</span></div></div>
+                                    <input type="text" class="num-format" id="inp-saContrib" placeholder="0">
+                                </div>
                             </div>
                         </div>
-                        <div class="input-group">
-                            <div class="input-header">
-                                <div class="label-wrapper">Monthly Contribution (SGD) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Gross monthly inflow from employment or mandatory contributions.</span></div></div>
-                                <input type="text" class="num-format" id="inp-saContrib" placeholder="0">
-                            </div>
-                        </div>
-                    </div>
 
-                    <div style="margin-top: 1.5rem; padding: 1rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px;">
-                        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.25rem;">
-                            <input type="checkbox" id="inp-inflateContribs" onchange="runSim()" style="width:18px; height:18px; accent-color:#d97706;">
-                            <label for="inp-inflateContribs" style="font-size: 0.85rem; font-weight:600; color: #92400e; cursor:pointer;">Increase contributions with inflation</label>
+                        <div style="margin-top: 1.5rem; padding: 1rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.25rem;">
+                                <input type="checkbox" id="inp-inflateContribs" onchange="runSim()" style="width:18px; height:18px; accent-color:#d97706;">
+                                <label for="inp-inflateContribs" style="font-size: 0.85rem; font-weight:600; color: #92400e; cursor:pointer;">Increase contributions with inflation</label>
+                            </div>
+                            <p style="font-size: 0.8rem; color: #92400e; margin: 0; padding-left: 1.8rem; line-height: 1.4;">
+                                Check this if you expect your salary to grow in tandem with inflation AND your lifestyle to remain completely unchanged. Note: This level of discipline is uncommon.
+                            </p>
                         </div>
-                        <p style="font-size: 0.8rem; color: #92400e; margin: 0; padding-left: 1.8rem; line-height: 1.4;">
-                            Check this if you expect your salary to grow in tandem with inflation AND your lifestyle to remain completely unchanged. Note: This level of discipline is uncommon.
-                        </p>
                     </div>
 
                 </div>
@@ -487,6 +489,13 @@
                         <div class="slider-container"><input type="range" id="slide-expenses" min="0" max="20000" step="100" value="0" class="sync-slider" data-input="inp-expenses"></div>
                     </div>
 
+                    <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border);">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 600; cursor: pointer; color: var(--text-main);">
+                            <input type="checkbox" id="inp-showFireCurve" checked onchange="runSim()" style="width: 16px; height: 16px; accent-color: var(--primary);"> 
+                            Show "Finish Line" FIRE Curve on chart
+                        </label>
+                    </div>
+
                     <!-- Dynamic FIRE Target Multiple & Override -->
                     <div class="advanced-only" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border);">
                         
@@ -502,7 +511,7 @@
 
                         <div class="input-group" style="margin-bottom: 0;">
                             <div class="input-header">
-                                <div class="label-wrapper">Target Withdrawal Multiple (FIRE Number) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">25x equals the standard 4% SWR. Higher multiples (e.g., 33x = 3% SWR) are more conservative against prolonged market crashes.</span></div></div>
+                                <div class="label-wrapper">Target Withdrawal Multiple <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">25x equals the standard 4% SWR. Higher multiples (e.g., 33x = 3% SWR) are more conservative against prolonged market crashes.</span></div></div>
                                 <input type="text" class="num-format sync-input" id="inp-swrMultiple" data-slider="slide-swrMultiple" value="25" disabled>
                             </div>
                             <div class="slider-container"><input type="range" id="slide-swrMultiple" min="15" max="50" step="1" value="25" class="sync-slider" data-input="inp-swrMultiple" disabled></div>
@@ -604,7 +613,7 @@
                     <div class="hero-subtext">Personal Exp: <span id="val-heroExp">$0</span></div>
                 </div>
                 <div class="hero-card" id="hero-fire">
-                    <div class="hero-label">Target FIRE Number</div>
+                    <div class="hero-label">Target FIRE Number <div class="tt-container"><span class="tt-icon" style="width:12px; height:12px; font-size:9px;">?</span><span class="tt-text" style="width: 200px; bottom: 130%; right: -100px; left: auto; transform: none; margin-left: 0;">Your 'Financial Finish Line'. The exact portfolio value you need to safely stop working.</span></div></div>
                     <div class="hero-value" id="val-fireNumber">$0</div>
                     <div class="hero-subtext">Dynamic target at Age <span id="val-fireAge">--</span></div>
                 </div>
@@ -628,9 +637,9 @@
             <details class="guide">
                 <summary>Assumptions & Beginner Blindspots Guide</summary>
                 
-                <h4 style="margin-top: 1rem;">The Escape Velocity Curve (Dynamic FIRE Number)</h4>
-                <p>The standard 25x rule is a blunt instrument. It ignores the spread between asset growth and inflation (your real return), and it fails to account for finite, heavy liabilities like a declining mortgage. Instead of plotting a flat horizontal line, this engine plots your <strong>FIRE Requirement</strong> as a dynamic curve.</p>
-                <p>By determining your blended Real Return and specific retirement duration, it utilizes a Present Value of an Annuity formula to calculate the mathematically precise SWR Multiple. The exact year your projected Portfolio line crosses <em>above</em> this dynamically compounding Escape Velocity curve is the true moment you achieve Financial Independence.</p>
+                <h4 style="margin-top: 1rem;">The Financial Finish Line (Dynamic FIRE Number)</h4>
+                <p>Think of this number as your financial finish line. Because things cost more in the future (inflation) and you may eventually pay off large debts (mortgages), the finish line moves every single year.</p>
+                <p>Instead of plotting a static target, this engine plots your <strong>FIRE Requirement</strong> as a dynamic, dotted curve on the chart. It calculates exactly how much money you need for any given year based on that year's specific inflation and remaining debt. Once your compounding portfolio (the green area) catches up and crosses <em>above</em> the dotted red line, you have achieved Financial Independence.</p>
                 
                 <h4 style="margin-top: 1rem; color: #166534;">🛡️ The CPF LIFE "Margin of Safety"</h4>
                 <p>This simulator deliberately excludes CPF LIFE payouts and the Age 55 Retirement Account (RA) deduction. We recommend treating your eventual CPF LIFE payouts as a pure "margin of safety" rather than relying on it to fund your base FIRE calculations.</p>
@@ -765,6 +774,7 @@
                 hasExpensePartner: document.getElementById('toggle-expense-partner').checked,
                 expenses: getVal('inp-expenses'),
                 expenseShare: getVal('inp-expenseShare'),
+                showFireCurve: document.getElementById('inp-showFireCurve').checked,
                 swrOverride: document.getElementById('inp-swrOverride').checked,
                 swrMultiple: getVal('inp-swrMultiple'),
 
@@ -833,6 +843,7 @@
             if (p.isHdb !== undefined) document.getElementById('loan-hdb').checked = p.isHdb;
             if (p.isBank !== undefined) document.getElementById('loan-bank').checked = p.isBank;
             if (p.swrOverride !== undefined) document.getElementById('inp-swrOverride').checked = p.swrOverride;
+            if (p.showFireCurve !== undefined) document.getElementById('inp-showFireCurve').checked = p.showFireCurve;
 
             document.getElementById('income-streams-container').innerHTML = '';
             if (p.incomeStreams && Array.isArray(p.incomeStreams)) {
@@ -936,11 +947,14 @@
             document.getElementById('toggle-global').checked = true; toggleAsset('global');
             document.getElementById('toggle-sg').checked = false; toggleAsset('sg');
             document.getElementById('toggle-cash').checked = true; toggleAsset('cash');
-            document.getElementById('toggle-sa').checked = true; toggleAsset('sa');
+            
+            document.getElementById('toggle-sa').checked = false; toggleAsset('sa'); // Hidden in simple by default
             document.getElementById('toggle-mortgage').checked = false; toggleAsset('mortgage');
             
             document.getElementById('toggle-mortgage-partner').checked = false; toggleMortgagePartner();
             document.getElementById('toggle-expense-partner').checked = false; toggleExpensePartner();
+            
+            document.getElementById('inp-showFireCurve').checked = true;
             document.getElementById('inp-swrOverride').checked = false; toggleSwrOverride();
             
             document.getElementById('inp-maxOA').checked = true; toggleCustomOA();
@@ -1074,9 +1088,7 @@
             setVal('inp-cashStart', 40000);
             setVal('inp-cashYield', 0.05);
 
-            document.getElementById('toggle-sa').checked = true; toggleAsset('sa');
-            setVal('inp-saStart', 35000);
-            setVal('inp-saContrib', 350);
+            document.getElementById('toggle-sa').checked = false; toggleAsset('sa');
 
             document.getElementById('toggle-mortgage').checked = true; toggleAsset('mortgage');
             document.getElementById('loan-hdb').checked = true;
@@ -1091,11 +1103,13 @@
             calcLiveMortgage();
 
             setVal('inp-expenses', 2500);
-            setVal('inp-swrMultiple', 25);
             
             document.getElementById('toggle-mortgage-partner').checked = false; toggleMortgagePartner();
             document.getElementById('toggle-expense-partner').checked = false; toggleExpensePartner();
+            
+            document.getElementById('inp-showFireCurve').checked = true;
             document.getElementById('inp-swrOverride').checked = false; toggleSwrOverride();
+            setVal('inp-swrMultiple', 25);
             
             isLoading = false;
             runSim();
@@ -1321,7 +1335,6 @@
                         let netWithdrawal = Math.max(0, grossSpending - retirementIncome);
 
                         if (netWithdrawal > 0) {
-                            // Only include SA in proportional draw if age >= 55
                             let includeSA = age >= 55;
                             let totalLiquidSGD = cashRes + sgdPort + (usdPort * currentFx) + (includeSA ? saBal : 0);
                             
@@ -1437,6 +1450,7 @@
                 
                 expenses: getVal('inp-expenses'),
                 expenseShare: hasExpensePartner ? getVal('inp-expenseShare') : 100,
+                showFireCurve: document.getElementById('inp-showFireCurve').checked,
                 swrOverride: isAdvanced ? document.getElementById('inp-swrOverride').checked : false,
                 swrMultiple: isAdvanced ? (getVal('inp-swrMultiple') || 25) : 25,
                 incomeStreams: [],
@@ -1571,9 +1585,12 @@
                     datasets = [
                         { label: 'Accumulation Phase', data: p1, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.2, spanGaps: true },
                         { label: 'Mortgage Drawdown', data: p2, borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.1)', fill: true, tension: 0.2, spanGaps: true },
-                        { label: 'Debt-Free Retirement', data: p3, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.2, spanGaps: true },
-                        { label: 'FIRE Requirement (Escape Velocity)', data: fireCurveData, borderColor: '#ef4444', borderDash: [5,5], fill: false, tension: 0.2, pointRadius: 0 }
+                        { label: 'Debt-Free Retirement', data: p3, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.2, spanGaps: true }
                     ];
+
+                    if (inputs.showFireCurve) {
+                        datasets.push({ label: 'FIRE Requirement (Finish Line)', data: fireCurveData, borderColor: '#ef4444', borderDash: [2, 4], fill: false, tension: 0.2, pointRadius: 0, borderWidth: 1 });
+                    }
                     
                     res.warnings.forEach(w => finalWarnings.push(w));
 
@@ -1615,9 +1632,12 @@
                     datasets = [
                         { label: '90th Percentile (Optimistic)', data: p90, borderColor: '#10b981', borderDash: [5,5], fill: false, tension: 0.2, pointRadius: 0 },
                         { label: 'Median Outcome', data: p50, borderColor: '#2563eb', backgroundColor: 'rgba(37, 99, 235, 0.1)', fill: true, tension: 0.2, borderWidth: 3 },
-                        { label: '10th Percentile (Pessimistic)', data: p10, borderColor: '#f59e0b', borderDash: [5,5], fill: '-1', backgroundColor: 'rgba(245, 158, 11, 0.05)', tension: 0.2, pointRadius: 0 },
-                        { label: 'FIRE Requirement (Escape Velocity)', data: fireCurveData, borderColor: '#ef4444', borderDash: [5,5], fill: false, tension: 0.2, pointRadius: 0, borderWidth: 2 }
+                        { label: '10th Percentile (Pessimistic)', data: p10, borderColor: '#f59e0b', borderDash: [5,5], fill: '-1', backgroundColor: 'rgba(245, 158, 11, 0.05)', tension: 0.2, pointRadius: 0 }
                     ];
+
+                    if (inputs.showFireCurve) {
+                        datasets.push({ label: 'FIRE Requirement (Finish Line)', data: fireCurveData, borderColor: '#ef4444', borderDash: [2, 4], fill: false, tension: 0.2, pointRadius: 0, borderWidth: 1 });
+                    }
 
                     elPeak.innerText = '$' + (medianPeak / 1000000).toFixed(2) + 'M';
 
