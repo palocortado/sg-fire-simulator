@@ -103,7 +103,7 @@
         .right-panel { position: sticky; top: 2rem; display: flex; flex-direction: column; gap: 1.5rem; min-width: 0; }
         
         .hero-dashboard { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
-        .hero-card { background: white; padding: 1.25rem; border-radius: 12px; border: 1px solid var(--border); text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        .hero-card { background: white; padding: 1.25rem; border-radius: 12px; border: 1px solid var(--border); text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
         .hero-card.success { border-bottom: 4px solid #10b981; }
         .hero-card.warning { border-bottom: 4px solid #f59e0b; }
         .hero-card.danger { border-bottom: 4px solid #ef4444; }
@@ -150,10 +150,12 @@
         }
         @media (max-width: 600px) {
             .hero-dashboard { grid-template-columns: 1fr; gap: 0.5rem; }
-            .hero-card { padding: 0.75rem; display: flex; justify-content: space-between; align-items: center; border-bottom: none; border-left: 4px solid transparent; }
+            .hero-card { padding: 0.75rem; flex-direction: row; justify-content: space-between; align-items: center; border-bottom: none; border-left: 4px solid transparent; }
             .hero-card.success { border-left-color: #10b981; }
             .hero-label { margin-bottom: 0; }
             .hero-subtext { display: none; }
+            #hero-fire { flex-direction: column; align-items: flex-start; }
+            #hero-fire .hero-value { align-self: flex-end; }
         }
     </style>
 </head>
@@ -489,13 +491,6 @@
                         <div class="slider-container"><input type="range" id="slide-expenses" min="0" max="20000" step="100" value="0" class="sync-slider" data-input="inp-expenses"></div>
                     </div>
 
-                    <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border);">
-                        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 600; cursor: pointer; color: var(--text-main);">
-                            <input type="checkbox" id="inp-showFireCurve" checked onchange="runSim()" style="width: 16px; height: 16px; accent-color: var(--primary);"> 
-                            Show "Finish Line" FIRE Curve on chart
-                        </label>
-                    </div>
-
                     <!-- Dynamic FIRE Target Multiple & Override -->
                     <div class="advanced-only" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border);">
                         
@@ -616,6 +611,10 @@
                     <div class="hero-label">Target FIRE Number <div class="tt-container"><span class="tt-icon" style="width:12px; height:12px; font-size:9px;">?</span><span class="tt-text" style="width: 200px; bottom: 130%; right: -100px; left: auto; transform: none; margin-left: 0;">Your 'Financial Finish Line'. The exact portfolio value you need to safely stop working.</span></div></div>
                     <div class="hero-value" id="val-fireNumber">$0</div>
                     <div class="hero-subtext">Dynamic target at Age <span id="val-fireAge">--</span></div>
+                    <label style="display: inline-flex; align-items: center; justify-content: center; gap: 4px; font-size: 0.7rem; font-weight: 600; color: var(--primary); cursor: pointer; margin-top: 8px; padding: 4px 8px; background: #eff6ff; border-radius: 4px; border: 1px solid #bfdbfe;">
+                        <input type="checkbox" id="inp-showFireCurve" checked onchange="runSim()" style="width: 12px; height: 12px; accent-color: var(--primary); margin: 0;"> 
+                        Show curve on chart
+                    </label>
                 </div>
                 <div class="hero-card" id="hero-peak">
                     <div class="hero-label">Peak Nest Egg</div>
