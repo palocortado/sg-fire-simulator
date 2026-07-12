@@ -82,6 +82,7 @@
         
         .slider-container { display: flex; align-items: center; gap: 1rem; }
         input[type="range"] { flex: 1; accent-color: var(--primary); cursor: pointer; }
+        input[type="range"]:disabled { opacity: 0.5; cursor: not-allowed; }
 
         .asset-header { display: flex; align-items: center; gap: 0.5rem; font-size: 1rem; font-weight: 700; color: var(--text-main); margin: 0 0 1rem 0; padding: 0.75rem; background: #f1f5f9; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; }
         .asset-header input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary); }
@@ -122,9 +123,14 @@
         details.guide { background: #f8fafc; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); }
         details.guide summary { font-weight: 700; font-size: 1.1rem; cursor: pointer; color: var(--primary); }
         
-        .income-stream { display: grid; grid-template-columns: 1fr 100px 70px 70px 30px; gap: 0.5rem; margin-bottom: 0.5rem; align-items: center; }
-        .income-stream input[type="text"] { width: 100%; text-align: left; }
-        .income-stream input[type="number"] { width: 100%; }
+        .list-stream { display: grid; grid-template-columns: 1fr 100px 70px 70px 30px; gap: 0.5rem; margin-bottom: 0.5rem; align-items: center; }
+        .list-stream input[type="text"] { width: 100%; text-align: left; }
+        .list-stream input[type="number"] { width: 100%; }
+        
+        .milestone-stream { display: grid; grid-template-columns: 1fr 100px 70px 30px; gap: 0.5rem; margin-bottom: 0.5rem; align-items: center; }
+        .milestone-stream input[type="text"] { width: 100%; text-align: left; }
+        .milestone-stream input[type="number"] { width: 100%; }
+
         .btn-remove { background: #fee2e2; color: #991b1b; border: none; padding: 0.4rem; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .btn-add { width: 100%; padding: 0.5rem; margin-top: 0.5rem; background: #f0fdf4; color: #166534; border: 1px dashed #bbf7d0; border-radius: 6px; cursor: pointer; font-weight: 600; }
 
@@ -180,11 +186,12 @@
     </div>
 
     <div class="grid">
+        <!-- LEFT PANEL: ACCORDION INPUTS -->
         <div class="inputs-panel">
             
             <div class="simple-only" style="margin-bottom: 0.5rem;">
                 <div style="font-size: 1rem; font-weight: 700; margin-bottom: 0.25rem;">Macroeconomic Scenarios</div>
-                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0; margin-bottom: 0.75rem;">Test how your plan holds up under different market conditions. (Note: Retirement planning should prioritize conservativeness, so all options prioritize safety over historical averages).</p>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0; margin-bottom: 0.75rem;">Test how your plan holds up under different market conditions.</p>
                 <div class="preset-group">
                     <button class="preset-btn" onclick="applyPreset('highly-conservative')">Highly Conservative</button>
                     <button class="preset-btn" onclick="applyPreset('somewhat-conservative')">Somewhat Conservative</button>
@@ -197,6 +204,7 @@
                 <button class="preset-close" onclick="document.getElementById('preset-banner').style.display='none'">✕</button>
             </div>
 
+            <!-- Accordion 1: Timeline & Inflation (Green) -->
             <details class="accordion acc-green" open>
                 <summary>Timeline & Inflation</summary>
                 <div class="accordion-content">
@@ -226,6 +234,7 @@
                 </div>
             </details>
 
+            <!-- Accordion 2: Asset Classes (Green) -->
             <details class="accordion acc-green">
                 <summary>Asset Classes</summary>
                 <div class="accordion-content">
@@ -258,7 +267,7 @@
                         </div>
                         <div class="input-group advanced-only">
                             <div class="input-header">
-                                <div class="label-wrapper">Expected Currency Trend (%) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Defaulted to 0% for simplicity. Historically, the MAS actively strengthens the SGD against the USD to fight inflation, so an assumption of -0.8% is often used as a historical baseline.</span></div></div>
+                                <div class="label-wrapper">Expected Currency Trend (%) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Historically, the MAS actively strengthens the SGD against the USD to fight inflation, so an assumption of -0.8% is often used as a historical baseline.</span></div></div>
                                 <input type="text" class="num-format" id="inp-fxDrift" value="0.0">
                             </div>
                         </div>
@@ -299,8 +308,29 @@
                         </div>
                         <div class="input-group">
                             <div class="input-header">
-                                <div class="label-wrapper">Annual Yield (%) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Defaulted to 0.05%, reflecting typical base savings account interest rates in Singapore.</span></div></div>
+                                <div class="label-wrapper">Annual Yield (%)</div>
                                 <input type="text" class="num-format" id="inp-cashYield" value="0.05">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- New: CPF Special Account Integration -->
+                    <label class="asset-header">
+                        <input type="checkbox" id="toggle-sa" checked onchange="toggleAsset('sa')"> 
+                        CPF Special Account (SA)
+                    </label>
+                    <div id="asset-sa" class="asset-body">
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0; margin-bottom: 1rem; line-height: 1.4;">Compounded at the statutory 4.0% floor to visually track progress toward your Full Retirement Sum. (Modeled as an illiquid asset until age 55).</p>
+                        <div class="input-group">
+                            <div class="input-header">
+                                <div class="label-wrapper">Current SA Balance (SGD)</div>
+                                <input type="text" class="num-format" id="inp-saStart" placeholder="0">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <div class="input-header">
+                                <div class="label-wrapper">Monthly Contribution (SGD) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Gross monthly inflow from employment or mandatory contributions.</span></div></div>
+                                <input type="text" class="num-format" id="inp-saContrib" placeholder="0">
                             </div>
                         </div>
                     </div>
@@ -318,6 +348,7 @@
                 </div>
             </details>
 
+            <!-- Accordion 3: Mortgage & Housing (Orange) -->
             <details class="accordion acc-orange">
                 <summary>Mortgage & Housing</summary>
                 <div class="accordion-content">
@@ -329,6 +360,7 @@
                     
                     <div id="asset-mortgage" class="asset-body" style="display: none;">
                         
+                        <!-- Partner Mortgage Offset Toggle -->
                         <div style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border);">
                             <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700; cursor: pointer; color: var(--text-main);">
                                 <input type="checkbox" id="toggle-mortgage-partner" onchange="toggleMortgagePartner(); calcLiveMortgage(); runSim();" style="width: 16px; height: 16px; accent-color: var(--primary);"> 
@@ -338,19 +370,15 @@
                             <div id="mortgage-partner-panel" style="display: none; margin-top: 1rem; padding: 1rem; background: #f8fafc; border-radius: 8px; border: 1px solid var(--border);">
                                 <div class="input-group" style="margin-bottom: 0;">
                                     <div class="input-header">
-                                        <div class="label-wrapper">Your Share of Mortgage Installment (%) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Your partner's share is assumed to be paid via their own CPF or cash. This simulator will only attack your personal CPF and cash balances for your exact personal liability.</span></div></div>
+                                        <div class="label-wrapper">Your Share of Mortgage Installment (%)</div>
                                         <input type="text" class="num-format sync-input" id="inp-mortgageShare" data-slider="slide-mortgageShare" value="100" oninput="calcLiveMortgage(); runSim();">
                                     </div>
                                     <div class="slider-container"><input type="range" id="slide-mortgageShare" min="0" max="100" step="1" value="100" class="sync-slider" data-input="inp-mortgageShare"></div>
-                                    <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem; margin-bottom: 0;">Defaulted to 100% as a conservative baseline. Adjust downward to reflect your actual personal liability.</p>
                                 </div>
                             </div>
                         </div>
 
                         <div class="simple-only">
-                            <p style="font-size: 0.85rem; color: #64748b; margin-top: 0; margin-bottom: 1.25rem; font-style: italic;">
-                                Assumes a fixed interest rate and that your monthly CPF OA perfectly covers this mortgage during your working years. Any mortgage years that extend into retirement will be paid in cash.
-                            </p>
                             <div class="input-group">
                                 <div class="input-header">
                                     <div class="label-wrapper">Total Monthly Mortgage Payment (SGD)</div>
@@ -404,7 +432,7 @@
                             <hr style="border: 0; border-top: 1px solid var(--border); margin: 1.5rem 0;">
                             <div class="input-group">
                                 <div class="input-header">
-                                    <div class="label-wrapper">Gross monthly CPF OA contributions (from employment) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">The gross inflow to your OA from your monthly salary.</span></div></div>
+                                    <div class="label-wrapper">Gross monthly CPF OA contributions (from employment)</div>
                                     <input type="text" class="num-format" id="inp-oaContrib" placeholder="e.g., 1000">
                                 </div>
                             </div>
@@ -417,7 +445,7 @@
                                 </div>
                                 <div id="custom-oa-cap" style="display: none; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
                                     <div class="input-header" style="margin-bottom:0;">
-                                        <div class="label-wrapper">Custom cap on monthly CPF OA utilization for mortgage (SGD) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">The maximum amount of OA you allow to be drained monthly. Any mortgage shortfall beyond this cap will be paid in cash.</span></div></div>
+                                        <div class="label-wrapper">Custom cap on monthly CPF OA utilization for mortgage (SGD)</div>
                                         <input type="text" class="num-format" id="inp-customOACap" value="0">
                                     </div>
                                 </div>
@@ -428,8 +456,9 @@
                 </div>
             </details>
 
+            <!-- Accordion 4: Retirement Expenses & Targets (Blue) -->
             <details class="accordion acc-blue">
-                <summary>Retirement Income & Expenses</summary>
+                <summary>Retirement Income & Targets</summary>
                 <div class="accordion-content">
                     
                     <div style="margin-bottom: 1.5rem;">
@@ -445,7 +474,6 @@
                                     <input type="text" class="num-format sync-input" id="inp-expenseShare" data-slider="slide-expenseShare" value="100" oninput="runSim();">
                                 </div>
                                 <div class="slider-container"><input type="range" id="slide-expenseShare" min="0" max="100" step="1" value="100" class="sync-slider" data-input="inp-expenseShare"></div>
-                                <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem; margin-bottom: 0;">Defaulted to 100% as a conservative baseline. Adjust this slider downward to reflect the actual percentage of household expenses your personal portfolio is responsible for.</p>
                                 <div id="expense-share-readout" style="margin-top: 0.75rem; font-weight: 600; color: #1d4ed8; font-size: 0.85rem;">The simulator will draw down: $0/mo</div>
                             </div>
                         </div>
@@ -459,34 +487,57 @@
                         <div class="slider-container"><input type="range" id="slide-expenses" min="0" max="20000" step="100" value="0" class="sync-slider" data-input="inp-expenses"></div>
                     </div>
 
+                    <!-- Dynamic FIRE Target Multiple & Override -->
                     <div class="advanced-only" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border);">
+                        
+                        <div style="margin-bottom: 1rem; padding: 0.75rem; background: #eff6ff; border: 1px dashed #bfdbfe; border-radius: 6px;">
+                            <div style="font-weight: 700; color: #1e40af; font-size: 0.85rem; margin-bottom: 0.25rem;">Dynamic SWR Engine Active</div>
+                            <div id="swr-readout" style="font-size: 0.85rem; color: #3b82f6;">Calculated Multiple: --x (Based on your real return)</div>
+                        </div>
+
+                        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 600; cursor: pointer; color: var(--text-main); margin-bottom: 0.75rem;">
+                            <input type="checkbox" id="inp-swrOverride" onchange="toggleSwrOverride(); runSim();" style="width: 16px; height: 16px; accent-color: var(--primary);"> 
+                            Override with custom withdrawal multiple
+                        </label>
+
                         <div class="input-group" style="margin-bottom: 0;">
                             <div class="input-header">
-                                <div class="label-wrapper">Target Withdrawal Multiple (FIRE Number) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">The multiple of your annual expenses needed to retire. 25x equals the standard 4% Safe Withdrawal Rate. Higher multiples (e.g., 33x = 3% SWR) are more conservative against prolonged market crashes.</span></div></div>
-                                <input type="text" class="num-format sync-input" id="inp-swrMultiple" data-slider="slide-swrMultiple" value="25">
+                                <div class="label-wrapper">Target Withdrawal Multiple (FIRE Number) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">25x equals the standard 4% SWR. Higher multiples (e.g., 33x = 3% SWR) are more conservative against prolonged market crashes.</span></div></div>
+                                <input type="text" class="num-format sync-input" id="inp-swrMultiple" data-slider="slide-swrMultiple" value="25" disabled>
                             </div>
-                            <div class="slider-container"><input type="range" id="slide-swrMultiple" min="15" max="50" step="1" value="25" class="sync-slider" data-input="inp-swrMultiple"></div>
+                            <div class="slider-container"><input type="range" id="slide-swrMultiple" min="15" max="50" step="1" value="25" class="sync-slider" data-input="inp-swrMultiple" disabled></div>
                         </div>
                     </div>
                     
                     <div class="advanced-only" style="margin-top: 2rem;">
+                        <div class="section-title" style="font-size: 1rem;">Milestone Capital Events (SGD)</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">Model one-off lumpsums at specific ages. Use negative numbers (-) for heavy expenses (renovations, travel) and positive numbers for windfalls (inheritance, downsizing).</div>
+                        <div style="display: grid; grid-template-columns: 1fr 100px 70px 30px; gap: 0.5rem; font-size: 0.75rem; font-weight: bold; color: var(--text-muted); margin-bottom: 0.25rem;">
+                            <div>Description</div><div>Amt (SGD)</div><div>Age</div><div></div>
+                        </div>
+                        <div id="milestones-container"></div>
+                        <button class="btn-add" onclick="addMilestone()">+ Add Milestone Event</button>
+                    </div>
+
+                    <div class="advanced-only" style="margin-top: 2rem;">
                         <div class="section-title" style="font-size: 1rem;">Passive Income Streams (SGD/mo)</div>
-                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">Only active during retirement. Nominal values (does not inflate).<br><em>Examples: rental income on property you own, annuity payouts, CPF LIFE, or <strong>temporary financial support from a partner who plans to retire later than you.</strong></em></div>
-                        
+                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">Only active during retirement. Nominal values (does not inflate).</div>
                         <div style="display: grid; grid-template-columns: 1fr 100px 70px 70px 30px; gap: 0.5rem; font-size: 0.75rem; font-weight: bold; color: var(--text-muted); margin-bottom: 0.25rem;">
                             <div>Name</div><div>Amt (mo)</div><div>Start Age</div><div>End Age</div><div></div>
                         </div>
                         <div id="income-streams-container"></div>
                         <button class="btn-add" onclick="addIncomeStream()">+ Add Income Stream</button>
                     </div>
+
                 </div>
             </details>
 
+            <!-- Accordion 5: Monte Carlo (Advanced Only) (Gray) -->
             <details class="accordion acc-gray advanced-only">
                 <summary>Monte Carlo Simulation</summary>
                 <div class="accordion-content">
                     <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0; margin-bottom: 1.5rem;">
-                        Real markets don't move in a straight line. Instead of assuming perfect average returns every year, this engine runs hundreds of alternate realities with randomized market booms and crashes to stress-test your plan. It helps you see the probability of success, rather than just a single best guess.
+                        Real markets don't move in a straight line. Instead of assuming perfect average returns every year, this engine runs hundreds of alternate realities with randomized market booms and crashes to stress-test your plan.
                     </p>
 
                     <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid var(--border);">
@@ -533,7 +584,7 @@
                             <label for="inp-blackSwan" style="font-weight:700; color:#92400e; cursor:pointer;">Enable "Black Swan" Market Risk</label>
                             <div class="tt-container">
                                 <span class="tt-icon" style="background: #fcd34d; color: #92400e;">?</span>
-                                <span class="tt-text" style="right:0; left:auto; transform:none; margin-left:0;">A 'Black Swan' is a rare, unpredictable event with severe financial consequences. Checking this box replaces the standard bell curve with a "fat-tailed" distribution (Student's t-distribution, df=5), drastically increasing the simulated frequency of extreme market crashes for a rigorous stress test.</span>
+                                <span class="tt-text" style="right:0; left:auto; transform:none; margin-left:0;">A 'Black Swan' replaces the standard bell curve with a "fat-tailed" distribution, drastically increasing the simulated frequency of extreme market crashes.</span>
                             </div>
                         </div>
                     </div>
@@ -543,6 +594,7 @@
 
         </div>
 
+        <!-- RIGHT PANEL: HERO DASHBOARD & CHART -->
         <div class="right-panel">
             
             <div class="hero-dashboard">
@@ -554,7 +606,7 @@
                 <div class="hero-card" id="hero-fire">
                     <div class="hero-label">Target FIRE Number</div>
                     <div class="hero-value" id="val-fireNumber">$0</div>
-                    <div class="hero-subtext">Inflated to Age <span id="val-fireAge">--</span></div>
+                    <div class="hero-subtext">Dynamic target at Age <span id="val-fireAge">--</span></div>
                 </div>
                 <div class="hero-card" id="hero-peak">
                     <div class="hero-label">Peak Nest Egg</div>
@@ -576,38 +628,12 @@
             <details class="guide">
                 <summary>Assumptions & Beginner Blindspots Guide</summary>
                 
-                <h4 style="margin-top: 1rem;">The Dynamic FIRE Number & 25x Rule</h4>
-                <p>Your <strong>Target FIRE Number</strong> is the absolute portfolio valuation required to retire comfortably, independent of your age. The simulator calculates this by taking your personal share of monthly expenses, inflating them to your Target Retirement Age, annualizing them, and multiplying by a Safe Withdrawal Rate (SWR) factor.</p>
-                <p>By default (and locked in Simple Mode), it uses the industry-standard <strong>25x Rule</strong> (equivalent to a 4% SWR). Advanced users can adjust this multiple using the slider in the Retirement accordions. A higher multiple (e.g., 33x = 3% SWR) offers a more conservative margin of safety against sequence of returns risk.</p>
+                <h4 style="margin-top: 1rem;">The Escape Velocity Curve (Dynamic FIRE Number)</h4>
+                <p>The standard 25x rule is a blunt instrument. It ignores the spread between asset growth and inflation (your real return), and it fails to account for finite, heavy liabilities like a declining mortgage. Instead of plotting a flat horizontal line, this engine plots your <strong>FIRE Requirement</strong> as a dynamic curve.</p>
+                <p>By determining your blended Real Return and specific retirement duration, it utilizes a Present Value of an Annuity formula to calculate the mathematically precise SWR Multiple. The exact year your projected Portfolio line crosses <em>above</em> this dynamically compounding Escape Velocity curve is the true moment you achieve Financial Independence.</p>
                 
                 <h4 style="margin-top: 1rem; color: #166534;">🛡️ The CPF LIFE "Margin of Safety"</h4>
-                <p>This simulator deliberately excludes CPF LIFE payouts and the Age 55 Retirement Account (RA) deduction. We recommend treating your eventual CPF LIFE payouts as a pure "margin of safety" rather than relying on it to fund your base FIRE calculations. For conceptual planning, the <strong>2026 CPF cohort benchmarks</strong> (in <em>today's dollars</em>, which will automatically inflate for future cohorts) are:</p>
-                <ul style="margin-top: 0; padding-left: 1.25rem; font-size: 0.95rem; color: var(--text-muted);">
-                    <li><strong>Basic Retirement Sum (BRS):</strong> $110,200 yielding ~$890 to $930/mo.</li>
-                    <li><strong>Full Retirement Sum (FRS):</strong> $220,400 yielding ~$1,640 to $1,750/mo.</li>
-                </ul>
-                <p style="font-size: 0.85rem; color: #64748b; font-style: italic;">* Note: These payouts begin at age 65.</p>
-
-                <hr style="border: 0; border-top: 1px solid var(--border); margin: 1.5rem 0;">
-
-                <h4>Historical Global Returns & Margin of Safety</h4>
-                <p>When projecting global equity returns, history offers a guide. Over the last 20-30 years, US-only indices (like the S&P 500) have annualized roughly 10-10.5%, while globally diversified indices (like the MSCI ACWI) have annualized roughly 8-8.5%. This simulator defaults to <strong>7.0%</strong>, applying an intentional ~20% "margin of safety" haircut to account for future uncertainties and potential lower-growth decades.</p>
-
-                <h4>Expected Currency Trend & Currency Risk</h4>
-                <p>The MAS uses exchange rate policy to manage inflation, meaning the SGD has historically appreciated against the USD. An "Expected Currency Trend" assumption (e.g., -0.8%) models this depreciation of the US Dollar, gradually reducing the local SGD purchasing power of your global portfolio over decades. For simplicity, the preset starts at 0%.</p>
-
-                <h4>Architecture & Withdrawals in Retirement</h4>
-                <p>When you retire and expenses exceed income, capital must be drawn down. This simulator uses a <strong>Proportional Drawdown</strong> method, meaning it withdraws from your Cash, SG Equities, and Global Equities concurrently, based on the percentage size of each asset class within your overall portfolio.</p>
-                <p><strong>Real-World Best Practice (Dynamic Drawdown):</strong> In reality, financial planners recommend dynamic strategies like the <em>Guyton-Klinger rules</em>. Instead of proportional selling, you maintain a "cash tent" (1-3 years of expenses). When markets are up, you sell stocks to live and refill the cash. When markets crash, you stop selling stocks entirely and live off the cash buffer until recovery. The proportional drawdown modeled here is a mathematical simplification and does not offer the full protection of a true dynamic cash-tent strategy.</p>
-                
-                <h4 style="color: #991b1b; margin-top: 2rem;">⚠️ Limitations & Blindspots (For Beginners)</h4>
-                <p>Real life is messier than math. Do not base major life decisions on this chart without understanding its blindspots:</p>
-                <ul class="blindspots-list">
-                    <li><strong>Sequence of Returns Risk (SORR) & Cash Buffers:</strong> Because the simulator draws down proportionally, it assumes you continue selling equities even during a market crash. In reality, you should actively manage a cash buffer (as described above) to avoid locking in losses when the market is down.</li>
-                    <li><strong>The "Stagflation" Blindspot:</strong> The macroeconomic preset buttons pair lower market returns with higher inflation. However, real life can feature "Stagflation" where inflation spikes dramatically at the exact same time markets crash (e.g., 2022). You must manually type in high inflation and negative returns to stress-test this.</li>
-                    <li><strong>Invisible Tax Drag:</strong> If your global portfolio includes US-domiciled ETFs, the US levies a 30% Dividend Withholding Tax on Singaporeans. A projected 8% gross return might effectively be 7.4% after this tax drag.</li>
-                    <li><strong>The Retirement "Smile":</strong> The tool inflates expenses on a straight line. Real retirement spending usually "smiles"—high early on (travel), lower in the middle, and spiking heavily at the end (healthcare).</li>
-                </ul>
+                <p>This simulator deliberately excludes CPF LIFE payouts and the Age 55 Retirement Account (RA) deduction. We recommend treating your eventual CPF LIFE payouts as a pure "margin of safety" rather than relying on it to fund your base FIRE calculations.</p>
             </details>
 
         </div>
@@ -616,8 +642,9 @@
     <script>
         let fireChart;
         let incomeStreamCount = 0;
+        let milestoneCount = 0;
         let isLoading = true;
-        const APP_VERSION = "3.0";
+        const APP_VERSION = "4.0";
 
         // --- Mobile Tooltips (Tap Outside to Close) ---
         document.addEventListener('click', function(e) {
@@ -715,6 +742,10 @@
                 cashStart: getVal('inp-cashStart'),
                 cashYield: getVal('inp-cashYield'),
 
+                hasSA: document.getElementById('toggle-sa').checked,
+                saStart: getVal('inp-saStart'),
+                saContrib: getVal('inp-saContrib'),
+
                 hasMortgage: document.getElementById('toggle-mortgage').checked,
                 hasMortgagePartner: document.getElementById('toggle-mortgage-partner').checked,
                 isHdb: document.getElementById('loan-hdb').checked,
@@ -734,13 +765,15 @@
                 hasExpensePartner: document.getElementById('toggle-expense-partner').checked,
                 expenses: getVal('inp-expenses'),
                 expenseShare: getVal('inp-expenseShare'),
+                swrOverride: document.getElementById('inp-swrOverride').checked,
                 swrMultiple: getVal('inp-swrMultiple'),
 
                 isMC: document.getElementById('inp-mcToggle').checked,
                 mcRuns: getVal('inp-mcRuns'),
                 isBlackSwan: document.getElementById('inp-blackSwan').checked,
 
-                incomeStreams: []
+                incomeStreams: [],
+                milestones: []
             };
 
             document.querySelectorAll('.income-stream').forEach(row => {
@@ -749,6 +782,14 @@
                     amt: getVal(row.querySelector('.is-amt').id) || parseFloat(row.querySelector('.is-amt').value.replace(/,/g, '')) || 0,
                     start: parseFloat(row.querySelector('.is-start').value) || 0,
                     end: parseFloat(row.querySelector('.is-end').value) || 0
+                });
+            });
+
+            document.querySelectorAll('.milestone-stream').forEach(row => {
+                inputs.milestones.push({
+                    name: row.querySelector('.ms-name').value,
+                    amt: getVal(row.querySelector('.ms-amt').id) || parseFloat(row.querySelector('.ms-amt').value.replace(/,/g, '')) || 0,
+                    age: parseFloat(row.querySelector('.ms-age').value) || 0
                 });
             });
 
@@ -768,12 +809,12 @@
                 if (r) { r.checked = true; setMode(p.mode); }
             }
 
-            const fields = ['currentAge', 'retireAge', 'inflation', 'inflVol', 'usdStart', 'usdContrib', 'usdRet', 'usdVol', 'fx', 'fxDrift', 'fxVol', 'sgdStart', 'sgdContrib', 'sgdRet', 'sgdVol', 'cashStart', 'cashYield', 'mortgageSimple', 'mortgagePrincipal', 'loanYrs', 'mortgageRate', 'mortgageVol', 'mortgageShare', 'oaContrib', 'oaStart', 'customOACap', 'expenses', 'expenseShare', 'swrMultiple', 'mcRuns'];
+            const fields = ['currentAge', 'retireAge', 'inflation', 'inflVol', 'usdStart', 'usdContrib', 'usdRet', 'usdVol', 'fx', 'fxDrift', 'fxVol', 'sgdStart', 'sgdContrib', 'sgdRet', 'sgdVol', 'cashStart', 'cashYield', 'saStart', 'saContrib', 'mortgageSimple', 'mortgagePrincipal', 'loanYrs', 'mortgageRate', 'mortgageVol', 'mortgageShare', 'oaContrib', 'oaStart', 'customOACap', 'expenses', 'expenseShare', 'swrMultiple', 'mcRuns'];
             fields.forEach(f => {
                 if (p[f] !== undefined) setVal('inp-' + f, p[f]);
             });
 
-            const toggles = ['global', 'sg', 'cash', 'mortgage'];
+            const toggles = ['global', 'sg', 'cash', 'sa', 'mortgage'];
             toggles.forEach(t => {
                 let el = document.getElementById('toggle-' + t);
                 let key = 'has' + t.charAt(0).toUpperCase() + t.slice(1);
@@ -791,18 +832,24 @@
             if (p.isMC !== undefined) document.getElementById('inp-mcToggle').checked = p.isMC;
             if (p.isHdb !== undefined) document.getElementById('loan-hdb').checked = p.isHdb;
             if (p.isBank !== undefined) document.getElementById('loan-bank').checked = p.isBank;
+            if (p.swrOverride !== undefined) document.getElementById('inp-swrOverride').checked = p.swrOverride;
 
             document.getElementById('income-streams-container').innerHTML = '';
             if (p.incomeStreams && Array.isArray(p.incomeStreams)) {
                 p.incomeStreams.forEach(st => addIncomeStream(st.name, st.amt, st.start, st.end));
             }
 
-            // Defaults for V3 fields if loading older saves
+            document.getElementById('milestones-container').innerHTML = '';
+            if (p.milestones && Array.isArray(p.milestones)) {
+                p.milestones.forEach(m => addMilestone(m.name, m.amt, m.age));
+            }
+
             if (p.swrMultiple === undefined) setVal('inp-swrMultiple', 25);
 
             toggleMortgagePartner();
             toggleExpensePartner();
             toggleCustomOA();
+            toggleSwrOverride();
             calcLiveMortgage();
         }
 
@@ -862,6 +909,12 @@
             if (!isChecked) setVal('inp-expenseShare', 100);
         }
 
+        function toggleSwrOverride() {
+            const isChecked = document.getElementById('inp-swrOverride').checked;
+            document.getElementById('inp-swrMultiple').disabled = !isChecked;
+            document.getElementById('slide-swrMultiple').disabled = !isChecked;
+        }
+
         function toggleCustomOA() {
             const isMax = document.getElementById('inp-maxOA').checked;
             document.getElementById('custom-oa-cap').style.display = isMax ? 'none' : 'block';
@@ -877,17 +930,18 @@
             if(!isLoading) runSim();
         }
 
-        // --- Clear All Inputs ---
         function clearAllInputs() {
             document.querySelectorAll('input[type="text"]').forEach(el => setVal(el.id, ''));
             
             document.getElementById('toggle-global').checked = true; toggleAsset('global');
             document.getElementById('toggle-sg').checked = false; toggleAsset('sg');
             document.getElementById('toggle-cash').checked = true; toggleAsset('cash');
+            document.getElementById('toggle-sa').checked = true; toggleAsset('sa');
             document.getElementById('toggle-mortgage').checked = false; toggleAsset('mortgage');
             
             document.getElementById('toggle-mortgage-partner').checked = false; toggleMortgagePartner();
             document.getElementById('toggle-expense-partner').checked = false; toggleExpensePartner();
+            document.getElementById('inp-swrOverride').checked = false; toggleSwrOverride();
             
             document.getElementById('inp-maxOA').checked = true; toggleCustomOA();
             document.getElementById('inp-inflateContribs').checked = false;
@@ -898,6 +952,7 @@
             }
             
             document.getElementById('income-streams-container').innerHTML = '';
+            document.getElementById('milestones-container').innerHTML = '';
             document.getElementById('mortgage-readout-box').style.display = 'none';
             
             setVal('inp-inflation', 3.0); 
@@ -972,15 +1027,28 @@
         function addIncomeStream(name = '', amt = '', start = 60, end = 95) {
             const id = incomeStreamCount++;
             const html = `
-                <div class="income-stream" id="stream-${id}">
+                <div class="list-stream income-stream" id="stream-${id}">
                     <input type="text" class="is-name" placeholder="Name" value="${name}">
-                    <input type="text" class="num-format is-amt" placeholder="0" value="${amt}" onblur="runSim()">
+                    <input type="text" class="num-format is-amt" id="inp-str-${id}" placeholder="0" value="${amt}" onblur="runSim()">
                     <input type="number" class="is-start" value="${start}" onchange="runSim()">
                     <input type="number" class="is-end" value="${end}" onchange="runSim()">
                     <button class="btn-remove" onclick="document.getElementById('stream-${id}').remove(); runSim();">X</button>
                 </div>
             `;
             document.getElementById('income-streams-container').insertAdjacentHTML('beforeend', html);
+        }
+
+        function addMilestone(name = '', amt = '', age = 60) {
+            const id = milestoneCount++;
+            const html = `
+                <div class="milestone-stream" id="milestone-${id}">
+                    <input type="text" class="ms-name" placeholder="Description" value="${name}">
+                    <input type="text" class="num-format ms-amt" id="inp-ms-${id}" placeholder="0" value="${amt}" onblur="runSim()">
+                    <input type="number" class="ms-age" value="${age}" onchange="runSim()">
+                    <button class="btn-remove" onclick="document.getElementById('milestone-${id}').remove(); runSim();">X</button>
+                </div>
+            `;
+            document.getElementById('milestones-container').insertAdjacentHTML('beforeend', html);
         }
 
         // --- Presets & Loading ---
@@ -1006,6 +1074,10 @@
             setVal('inp-cashStart', 40000);
             setVal('inp-cashYield', 0.05);
 
+            document.getElementById('toggle-sa').checked = true; toggleAsset('sa');
+            setVal('inp-saStart', 35000);
+            setVal('inp-saContrib', 350);
+
             document.getElementById('toggle-mortgage').checked = true; toggleAsset('mortgage');
             document.getElementById('loan-hdb').checked = true;
             
@@ -1023,6 +1095,7 @@
             
             document.getElementById('toggle-mortgage-partner').checked = false; toggleMortgagePartner();
             document.getElementById('toggle-expense-partner').checked = false; toggleExpensePartner();
+            document.getElementById('inp-swrOverride').checked = false; toggleSwrOverride();
             
             isLoading = false;
             runSim();
@@ -1079,18 +1152,21 @@
                   hasGlobal, usdStart, usdContrib, usdRet, usdVol,
                   hasSG, sgdStart, sgdContrib, sgdRet, sgdVol,
                   hasCash, cashStart, cashYield, 
+                  hasSA, saStart, saContrib,
                   hasMortgage, simpleMortgage, mortgagePrincipal, mortgageRate, mortgageVol, mortgageShare, isMaxOA, customOACap, loanYrs, oaStart, oaContrib,
-                  expenses, expenseShare, incomeStreams, isAdvanced, isBlackSwan } = inputs;
+                  expenses, expenseShare, incomeStreams, milestones, isAdvanced, isBlackSwan } = inputs;
             
             let usdPort = hasGlobal ? usdStart : 0;
             let sgdPort = hasSG ? sgdStart : 0;
             let cashRes = hasCash ? cashStart : 0;
+            let saBal = hasSA ? saStart : 0;
             let oaBal = oaStart;
             
             let mortgageEndAge = currentAge + loanYrs;
             let currentUsdContrib = hasGlobal ? usdContrib : 0;
             let currentSgdContrib = hasSG ? sgdContrib : 0;
             let currentOaContrib = oaContrib; 
+            let currentSaContrib = hasSA ? saContrib : 0;
             let currentExpenses = expenses;
             let currentFx = fx;
             
@@ -1125,7 +1201,10 @@
                     if (inflateContribs) {
                         currentUsdContrib *= (1 + actualInfl);
                         currentSgdContrib *= (1 + actualInfl);
-                        if (isAdvanced) currentOaContrib *= (1 + actualInfl);
+                        if (isAdvanced) {
+                            currentOaContrib *= (1 + actualInfl);
+                            currentSaContrib *= (1 + actualInfl);
+                        }
                     }
                 }
 
@@ -1144,16 +1223,40 @@
                     currentPersonalMortgage = currentTotalMortgage * (mortgageShare / 100);
                 }
 
+                // Process Milestone Events at start of year
+                milestones.forEach(m => {
+                    if (age === m.age) {
+                        if (m.amt > 0) { // Windfall
+                            cashRes += m.amt;
+                        } else if (m.amt < 0) { // Expense
+                            let draw = Math.abs(m.amt);
+                            let liquid = cashRes + sgdPort + (usdPort * currentFx);
+                            if (liquid >= draw) {
+                                let cRatio = cashRes / liquid;
+                                let sRatio = sgdPort / liquid;
+                                let uRatio = (usdPort * currentFx) / liquid;
+                                cashRes -= draw * cRatio;
+                                sgdPort -= draw * sRatio;
+                                usdPort -= (draw * uRatio) / currentFx;
+                            } else {
+                                cashRes = 0; sgdPort = 0; usdPort = 0;
+                            }
+                        }
+                    }
+                });
+
                 for (let m = 1; m <= 12; m++) {
                     usdPort *= (1 + (actualUsdRet / 12));
                     sgdPort *= (1 + (actualSgdRet / 12));
                     cashRes *= (1 + (cashYield / 12));
+                    saBal *= (1 + (0.04 / 12)); // Statutory 4% floor
                     oaBal *= (1 + (0.025 / 12));
 
                     let mortgageShortfall = 0;
 
                     if (isWorking) {
                         oaBal += currentOaContrib;
+                        saBal += currentSaContrib;
                         
                         if (isMortgageActive && currentTotalMortgage > 0) {
                             if (isAdvanced) {
@@ -1183,7 +1286,7 @@
                         if (mortgageShortfall > totalContribSGD) {
                             let excessShortfall = mortgageShortfall - totalContribSGD;
                             cashRes -= excessShortfall;
-                            if (totalContribSGD > 0 && isAdvanced) warnings.add("Mortgage spike completely consumed monthly investments. Dipping into cash reserves.");
+                            if (totalContribSGD > 0 && isAdvanced) warnings.add("Mortgage completely consumed monthly investments. Dipping into cash reserves.");
                         } else if (totalContribSGD > 0) {
                             let effectiveContribSGD = totalContribSGD - mortgageShortfall;
                             let usdRatio = (currentUsdContrib * currentFx) / totalContribSGD;
@@ -1218,38 +1321,44 @@
                         let netWithdrawal = Math.max(0, grossSpending - retirementIncome);
 
                         if (netWithdrawal > 0) {
-                            let totalLiquidSGD = cashRes + sgdPort + (usdPort * currentFx);
+                            // Only include SA in proportional draw if age >= 55
+                            let includeSA = age >= 55;
+                            let totalLiquidSGD = cashRes + sgdPort + (usdPort * currentFx) + (includeSA ? saBal : 0);
+                            
                             if (totalLiquidSGD >= netWithdrawal) {
                                 let cashRatio = cashRes / totalLiquidSGD;
                                 let sgdRatio = sgdPort / totalLiquidSGD;
                                 let usdRatio = (usdPort * currentFx) / totalLiquidSGD;
+                                let saRatio = includeSA ? (saBal / totalLiquidSGD) : 0;
 
                                 cashRes -= netWithdrawal * cashRatio;
                                 sgdPort -= netWithdrawal * sgdRatio;
                                 usdPort -= (netWithdrawal * usdRatio) / currentFx;
+                                if (includeSA) saBal -= netWithdrawal * saRatio;
                             } else {
                                 cashRes = 0;
                                 sgdPort = 0;
                                 usdPort = 0;
+                                if (includeSA) saBal = 0;
                             }
                         }
                     }
                     
-                    let totalLiquid = cashRes + sgdPort + (usdPort * currentFx);
+                    let totalLiquid = cashRes + sgdPort + (usdPort * currentFx) + saBal;
                     if (totalLiquid > peakNW) peakNW = totalLiquid;
                     
                     if (totalLiquid < 0 && solvent) {
                         solvent = false;
                         depletionAge = age;
                     }
-                    if (!solvent) { cashRes = 0; sgdPort = 0; usdPort = 0; }
+                    if (!solvent) { cashRes = 0; sgdPort = 0; usdPort = 0; saBal = 0; }
                 }
 
                 let phase = 1;
                 if (!isWorking && isMortgageActive && (isAdvanced ? remPrincipal > 0 : simpleMortgage > 0)) phase = 2; 
                 if (!isWorking && (!isMortgageActive || (isAdvanced ? remPrincipal <= 0 : simpleMortgage === 0))) phase = 3; 
 
-                let totalLiquidSGD = cashRes + sgdPort + (usdPort * currentFx);
+                let totalLiquidSGD = cashRes + sgdPort + (usdPort * currentFx) + saBal;
                 pathData.push({ age, val: totalLiquidSGD });
                 phaseMap.push(phase);
             }
@@ -1264,6 +1373,7 @@
             const hasGlobal = document.getElementById('toggle-global').checked;
             const hasSG = document.getElementById('toggle-sg').checked;
             const hasCash = document.getElementById('toggle-cash').checked;
+            const hasSA = document.getElementById('toggle-sa').checked;
             const hasMortgage = document.getElementById('toggle-mortgage').checked;
             const isBlackSwan = isAdvanced ? document.getElementById('inp-blackSwan').checked : false;
             
@@ -1307,6 +1417,10 @@
                 hasCash: hasCash,
                 cashStart: getVal('inp-cashStart'),
                 cashYield: getVal('inp-cashYield') / 100,
+
+                hasSA: hasSA,
+                saStart: getVal('inp-saStart'),
+                saContrib: getVal('inp-saContrib'),
                 
                 hasMortgage: hasMortgage,
                 simpleMortgage: getVal('inp-mortgageSimple'),
@@ -1323,18 +1437,14 @@
                 
                 expenses: getVal('inp-expenses'),
                 expenseShare: hasExpensePartner ? getVal('inp-expenseShare') : 100,
+                swrOverride: isAdvanced ? document.getElementById('inp-swrOverride').checked : false,
                 swrMultiple: isAdvanced ? (getVal('inp-swrMultiple') || 25) : 25,
-                incomeStreams: []
+                incomeStreams: [],
+                milestones: []
             };
 
             let effectiveExpenses = inputs.expenses * (inputs.expenseShare / 100);
             document.getElementById('expense-share-readout').innerText = 'The simulator will draw down: $' + Math.round(effectiveExpenses).toLocaleString() + '/mo';
-
-            // Calculate the Target FIRE Number (Inflated to target age)
-            let yearsToRetire = Math.max(0, inputs.retireAge - inputs.currentAge);
-            let inflatedMonthlyExpenses = inputs.expenses * Math.pow(1 + inputs.inflation, yearsToRetire);
-            let effectiveInflatedMonthly = inflatedMonthlyExpenses * (inputs.expenseShare / 100);
-            let fireTarget = (effectiveInflatedMonthly * 12) * inputs.swrMultiple;
 
             if(isAdvanced) {
                 document.querySelectorAll('.income-stream').forEach(row => {
@@ -1344,6 +1454,73 @@
                         end: parseFloat(row.querySelector('.is-end').value) || 0
                     });
                 });
+                document.querySelectorAll('.milestone-stream').forEach(row => {
+                    inputs.milestones.push({
+                        amt: getVal(row.querySelector('.ms-amt').id) || parseFloat(row.querySelector('.ms-amt').value.replace(/,/g, '')) || 0,
+                        age: parseFloat(row.querySelector('.ms-age').value) || 0
+                    });
+                });
+            }
+
+            // --- Dynamic SWR Engine ---
+            let totalBal = (inputs.hasGlobal ? inputs.usdStart * inputs.fx : 0) + 
+                           (inputs.hasSG ? inputs.sgdStart : 0) + 
+                           (inputs.hasCash ? inputs.cashStart : 0) + 
+                           (inputs.hasSA ? inputs.saStart : 0);
+            
+            let nomRet = 0;
+            if (totalBal > 0) {
+                nomRet = (
+                    ((inputs.hasGlobal ? inputs.usdStart * inputs.fx : 0) / totalBal) * inputs.usdRet +
+                    ((inputs.hasSG ? inputs.sgdStart : 0) / totalBal) * inputs.sgdRet +
+                    ((inputs.hasCash ? inputs.cashStart : 0) / totalBal) * inputs.cashYield +
+                    ((inputs.hasSA ? inputs.saStart : 0) / totalBal) * 0.04
+                );
+            } else {
+                nomRet = inputs.usdRet;
+            }
+
+            let realRet = (1 + nomRet) / (1 + inputs.inflation) - 1;
+            let duration = Math.max(1, 95 - inputs.retireAge);
+            
+            let calcMultiple = 0;
+            if (Math.abs(realRet) < 0.0001) {
+                calcMultiple = duration;
+            } else {
+                calcMultiple = (1 - Math.pow(1 + realRet, -duration)) / realRet;
+            }
+            
+            let targetMultiple = inputs.swrOverride ? inputs.swrMultiple : calcMultiple;
+            
+            // UI Readout Update
+            document.getElementById('swr-readout').innerText = `Calculated Multiple: ${calcMultiple.toFixed(1)}x (Based on your ${(realRet*100).toFixed(1)}% Real Return over ${duration} years)`;
+
+            // --- Generate Escape Velocity Curve ---
+            let fireCurveData = [];
+            let targetAtRetirement = 0;
+
+            for (let age = inputs.currentAge; age <= 95; age++) {
+                let yrs = Math.max(0, age - inputs.currentAge);
+                let infExp = inputs.expenses * Math.pow(1 + inputs.inflation, yrs);
+                let effExpMonthly = infExp * (inputs.expenseShare / 100);
+                
+                let remPrincipal = 0;
+                if (inputs.hasMortgage && age < inputs.currentAge + inputs.loanYrs) {
+                    let mYrs = (inputs.currentAge + inputs.loanYrs) - age;
+                    if (inputs.isAdvanced) {
+                        let r = inputs.mortgageRate / 12;
+                        let pmt = calcPmt(inputs.mortgagePrincipal, inputs.mortgageRate, inputs.loanYrs);
+                        remPrincipal = r === 0 ? pmt * (mYrs * 12) : (pmt / r) * (1 - Math.pow(1+r, -(mYrs * 12)));
+                    } else {
+                        remPrincipal = (inputs.simpleMortgage) * (mYrs * 12); 
+                    }
+                }
+                
+                let personalRemPrincipal = remPrincipal * (inputs.mortgageShare / 100);
+                let target = (effExpMonthly * 12 * targetMultiple) + personalRemPrincipal;
+                
+                if (age === inputs.retireAge) targetAtRetirement = target;
+                fireCurveData.push(target);
             }
 
             let sysWarnings = new Set();
@@ -1366,7 +1543,7 @@
 
             elTargetAge.innerText = inputs.retireAge > 0 ? 'Age ' + inputs.retireAge : '--';
             elHeroExp.innerText = '$' + Math.round(effectiveExpenses).toLocaleString();
-            elFireNumber.innerText = '$' + (fireTarget / 1000000).toFixed(2) + 'M';
+            elFireNumber.innerText = '$' + (targetAtRetirement / 1000000).toFixed(2) + 'M';
             elFireAge.innerText = inputs.retireAge;
             
             if (inputs.currentAge > 0) {
@@ -1394,7 +1571,8 @@
                     datasets = [
                         { label: 'Accumulation Phase', data: p1, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.2, spanGaps: true },
                         { label: 'Mortgage Drawdown', data: p2, borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.1)', fill: true, tension: 0.2, spanGaps: true },
-                        { label: 'Debt-Free Retirement', data: p3, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.2, spanGaps: true }
+                        { label: 'Debt-Free Retirement', data: p3, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.2, spanGaps: true },
+                        { label: 'FIRE Requirement (Escape Velocity)', data: fireCurveData, borderColor: '#ef4444', borderDash: [5,5], fill: false, tension: 0.2, pointRadius: 0 }
                     ];
                     
                     res.warnings.forEach(w => finalWarnings.push(w));
@@ -1437,7 +1615,8 @@
                     datasets = [
                         { label: '90th Percentile (Optimistic)', data: p90, borderColor: '#10b981', borderDash: [5,5], fill: false, tension: 0.2, pointRadius: 0 },
                         { label: 'Median Outcome', data: p50, borderColor: '#2563eb', backgroundColor: 'rgba(37, 99, 235, 0.1)', fill: true, tension: 0.2, borderWidth: 3 },
-                        { label: '10th Percentile (Pessimistic)', data: p10, borderColor: '#ef4444', borderDash: [5,5], fill: '-1', backgroundColor: 'rgba(239, 68, 68, 0.05)', tension: 0.2, pointRadius: 0 }
+                        { label: '10th Percentile (Pessimistic)', data: p10, borderColor: '#f59e0b', borderDash: [5,5], fill: '-1', backgroundColor: 'rgba(245, 158, 11, 0.05)', tension: 0.2, pointRadius: 0 },
+                        { label: 'FIRE Requirement (Escape Velocity)', data: fireCurveData, borderColor: '#ef4444', borderDash: [5,5], fill: false, tension: 0.2, pointRadius: 0, borderWidth: 2 }
                     ];
 
                     elPeak.innerText = '$' + (medianPeak / 1000000).toFixed(2) + 'M';
@@ -1465,12 +1644,12 @@
             let wHtml = finalWarnings.map(w => `<div class="warning-alert">${w}</div>`).join('');
             document.getElementById('warningsBox').innerHTML = wHtml;
 
-            renderChart(labels, datasets, inputs, fireTarget);
+            renderChart(labels, datasets, inputs);
 
             localStorage.setItem('fireSimState', JSON.stringify(getState()));
         }
 
-        function renderChart(labels, datasets, inputs, fireTarget) {
+        function renderChart(labels, datasets, inputs) {
             const ctx = document.getElementById('fireChart').getContext('2d');
             if (fireChart) fireChart.destroy();
             
@@ -1485,14 +1664,6 @@
                         label: { display: true, content: 'Retirement Age', position: 'start', backgroundColor: '#f59e0b', color: '#fff', font: {size: 11} }
                     };
                 }
-            }
-            
-            if (fireTarget > 0) {
-                chartAnnotations.lineFIRE = {
-                    type: 'line', yMin: fireTarget, yMax: fireTarget,
-                    borderColor: '#10b981', borderDash: [5, 5], borderWidth: 2,
-                    label: { display: true, content: 'Target FIRE Number', position: 'end', backgroundColor: '#10b981', color: '#fff', font: {size: 11} }
-                };
             }
 
             fireChart = new Chart(ctx, {
@@ -1525,6 +1696,5 @@
         runSim();
 
     </script>
-    
 </body>
 </html>
