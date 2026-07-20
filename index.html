@@ -15,8 +15,8 @@
             --text-main: #0f172a;
             --text-muted: #64748b;
             --border: #e2e8f0;
-            --warning-bg: #fef2f2;
-            --warning-text: #991b1b;
+            --warning-bg: #fffbeb;
+            --warning-text: #92400e;
             --success-bg: #f0fdf4;
             --success-text: #166534;
             --acc-green: #10b981;
@@ -33,8 +33,8 @@
         .top-controls-wrapper { display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem; }
         .top-controls { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
         
-        .btn-sample { background: var(--acc-green); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2); pointer-events: auto; }
-        .btn-sample:hover { background: #059669; }
+        select.btn-sample { background: var(--acc-green); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2); outline: none; text-align: center; font-family: inherit; font-size: 0.9rem; }
+        select.btn-sample:hover { background: #059669; }
         
         .btn-action { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
         .btn-action:hover { background: #e2e8f0; color: #0f172a; }
@@ -54,13 +54,11 @@
         .preset-group { display: flex; gap: 0.5rem; background: #ffffff; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 1.5rem; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
         .preset-btn { flex: 1; cursor: pointer; padding: 0.5rem 1rem; border-radius: 6px; border: 1px solid #cbd5e1; background: #f8fafc; font-weight: 600; font-size: 0.85rem; color: #475569; transition: all 0.2s; text-align: center; }
         .preset-btn:hover { background: #e2e8f0; color: #0f172a; }
-        .preset-banner { display: none; align-items: center; justify-content: space-between; background: #dbeafe; color: #1e40af; padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.85rem; font-weight: 600; margin-bottom: 1.5rem; border: 1px solid #bfdbfe; animation: fadeIn 0.3s; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Main Layout */
         .grid { display: grid; grid-template-columns: 480px minmax(0, 1fr); gap: 2rem; align-items: start; }
         
-        /* Accordions - overflow visible to prevent tooltip clipping */
+        /* Accordions */
         .inputs-panel { display: flex; flex-direction: column; gap: 1rem; }
         details.accordion { background: var(--panel); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.02); overflow: visible; }
         
@@ -100,9 +98,11 @@
         input[type="text"]:focus, input[type="number"]:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
         input::placeholder { color: #94a3b8; font-weight: 400; }
         
-        .slider-container { display: flex; align-items: center; gap: 1rem; }
+        .slider-container { display: flex; flex-direction: column; gap: 0.25rem; }
+        .slider-row { display: flex; align-items: center; gap: 1rem; width: 100%; }
         input[type="range"] { flex: 1; cursor: pointer; }
         input[type="range"]:disabled { opacity: 0.5; cursor: not-allowed; }
+        .slider-context { font-size: 0.75rem; color: var(--text-muted); font-style: italic; text-align: right; width: 100%; min-height: 18px; transition: color 0.3s; }
 
         .asset-header { display: flex; align-items: center; gap: 0.5rem; font-size: 1rem; font-weight: 700; color: var(--text-main); margin: 0 0 1rem 0; padding: 0.75rem; background: #f1f5f9; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; }
         .asset-header input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
@@ -123,7 +123,7 @@
         .right-panel { position: sticky; top: 2rem; display: flex; flex-direction: column; gap: 1.5rem; min-width: 0; }
         
         .hero-dashboard { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
-        .hero-card { background: white; padding: 1.25rem; border-radius: 12px; border: 1px solid var(--border); text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; border-top: 4px solid #e2e8f0; }
+        .hero-card { background: white; padding: 1.25rem; border-radius: 12px; border: 1px solid var(--border); text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; border-top: 4px solid #e2e8f0; transition: all 0.3s ease; }
         
         #hero-target { border-top-color: var(--acc-purple); }
         #hero-fire { border-top-color: #ef4444; }
@@ -136,6 +136,19 @@
         .hero-label { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem; display: flex; align-items: center; justify-content: center; gap: 4px; }
         .hero-value { font-size: 1.4rem; font-weight: 800; color: var(--text-main); }
         .hero-subtext { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; }
+
+        /* Diagnostic & Auto-Solver UI */
+        #diagnostic-panel { grid-column: span 4; background: var(--warning-bg); border: 1px solid #fde68a; border-radius: 8px; padding: 1rem; text-align: left; display: none; animation: fadeIn 0.4s ease; }
+        .diag-title { font-weight: 800; color: var(--warning-text); font-size: 0.95rem; margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.5rem; }
+        .diag-text { font-size: 0.85rem; color: #78350f; margin-bottom: 0.75rem; }
+        .btn-solve { background: #d97706; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.85rem; transition: background 0.2s; }
+        .btn-solve:hover { background: #b45309; }
+        
+        #autosolver-results { display: none; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #fcd34d; }
+        .solver-option { display: flex; justify-content: space-between; align-items: center; background: white; padding: 0.75rem; border-radius: 6px; margin-bottom: 0.5rem; border: 1px solid #fde68a; box-shadow: 0 1px 2px rgba(0,0,0,0.02); cursor: pointer; transition: border-color 0.2s; }
+        .solver-option:hover { border-color: #d97706; }
+        .solver-opt-text { font-size: 0.85rem; font-weight: 600; color: #92400e; }
+        .solver-opt-btn { font-size: 0.75rem; font-weight: 700; color: var(--primary); background: #eff6ff; padding: 0.25rem 0.5rem; border-radius: 4px; }
 
         .chart-container { background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.02); position: relative; height: 500px; width: 100%; min-width: 0; }
 
@@ -170,6 +183,7 @@
             .grid { grid-template-columns: 1fr; }
             .right-panel { position: static; }
             .hero-dashboard { position: sticky; top: 0; z-index: 100; padding-top: 1rem; background: var(--bg); margin-top: -1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+            #diagnostic-panel { grid-column: span 2; }
         }
         @media (max-width: 800px) {
             .hero-dashboard { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
@@ -181,10 +195,12 @@
             #hero-fire { border-left-color: #ef4444; }
             #hero-peak { border-left-color: var(--acc-green); }
             .hero-card.success { border-left-color: #10b981; }
+            .hero-card.danger { border-left-color: #ef4444; }
             .hero-label { margin-bottom: 0; }
             .hero-subtext { display: none; }
             #hero-fire { flex-direction: column; align-items: flex-start; }
             #hero-fire .hero-value { align-self: flex-end; }
+            #diagnostic-panel { grid-column: span 1; }
         }
     </style>
 </head>
@@ -195,8 +211,14 @@
         <div class="top-controls-wrapper">
             <div class="top-controls">
                 <div class="tt-container">
-                    <button class="btn-sample" onclick="loadSampleProfile()">Load Sample Profile</button>
-                    <span class="tt-text" style="width: 250px; bottom: -60px; right: 0; left: auto; transform: none; margin-left: 0;">This profile loads a median middle-class baseline (e.g., retiring at 60, $2,500/mo expenses, standard HDB loan). It serves as a realistic starting point to begin tweaking.</span>
+                    <select id="profile-select" onchange="if(this.value) { loadProfile(this.value); this.value=''; }" class="btn-sample">
+                        <option value="">Load Persona...</option>
+                        <option value="median">Median Baseline</option>
+                        <option value="coast">Coast FIRE Single</option>
+                        <option value="dink">DINK Upgraders</option>
+                        <option value="conservative">Conservative Family</option>
+                    </select>
+                    <span class="tt-text" style="width: 250px; bottom: -60px; right: 0; left: auto; transform: none; margin-left: 0;">Beginners learn best by seeing themselves reflected in data. Select a relatable archetype to see how different lifestyle choices play out.</span>
                 </div>
                 <button class="btn-action" onclick="exportPlan()">Export Plan</button>
                 <button class="btn-action" onclick="document.getElementById('file-import').click()">Import Plan</button>
@@ -229,11 +251,6 @@
                     <button class="preset-btn" onclick="applyPreset('balanced')">Balanced</button>
                 </div>
             </div>
-            
-            <div id="preset-banner" class="preset-banner">
-                <span id="preset-banner-text" class="preset-banner-text"></span>
-                <button class="preset-close" onclick="document.getElementById('preset-banner').style.display='none'">✕</button>
-            </div>
 
             <!-- Accordion 1: Timeline & Inflation (Green) -->
             <details class="accordion acc-green" open>
@@ -244,7 +261,9 @@
                             <div class="label-wrapper">Current Age <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Your age today, used as the starting point for compounding.</span></div></div>
                             <input type="text" class="num-format sync-input" id="inp-currentAge" data-slider="slide-currentAge" placeholder="e.g., 35">
                         </div>
-                        <div class="slider-container"><input type="range" id="slide-currentAge" min="20" max="80" value="35" class="sync-slider" data-input="inp-currentAge"></div>
+                        <div class="slider-container">
+                            <div class="slider-row"><input type="range" id="slide-currentAge" min="20" max="80" value="35" class="sync-slider" data-input="inp-currentAge"></div>
+                        </div>
                     </div>
                     
                     <div class="input-group">
@@ -252,7 +271,10 @@
                             <div class="label-wrapper">Target Retirement Age <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">The age your monthly investment contributions stop and you begin drawing down your portfolio.</span></div></div>
                             <input type="text" class="num-format sync-input" id="inp-retireAge" data-slider="slide-retireAge" placeholder="e.g., 60">
                         </div>
-                        <div class="slider-container"><input type="range" id="slide-retireAge" min="30" max="80" value="60" class="sync-slider" data-input="inp-retireAge"></div>
+                        <div class="slider-container">
+                            <div class="slider-row"><input type="range" id="slide-retireAge" min="30" max="80" value="60" class="sync-slider" data-input="inp-retireAge"></div>
+                            <div id="ctx-retireAge" class="slider-context"></div>
+                        </div>
                     </div>
 
                     <div class="input-group" style="margin-top: 1.5rem;">
@@ -260,7 +282,10 @@
                             <div class="label-wrapper">Inflation Rate (%) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">The assumed annual increase in your living expenses.</span></div></div>
                             <input type="text" class="num-format sync-input" id="inp-inflation" data-slider="slide-inflation" value="3.0">
                         </div>
-                        <div class="slider-container"><input type="range" id="slide-inflation" min="0" max="10" step="0.1" value="3.0" class="sync-slider" data-input="inp-inflation"></div>
+                        <div class="slider-container">
+                            <div class="slider-row"><input type="range" id="slide-inflation" min="0" max="10" step="0.1" value="3.0" class="sync-slider" data-input="inp-inflation"></div>
+                            <div id="ctx-inflation" class="slider-context"></div>
+                        </div>
                     </div>
                 </div>
             </details>
@@ -277,18 +302,21 @@
                     <div id="asset-global" class="asset-body">
                         <div class="input-group">
                             <div class="input-header"><div class="label-wrapper">Starting Balance (USD)</div><input type="text" class="num-format sync-input" id="inp-usdStart" data-slider="slide-usdStart" placeholder="0"></div>
-                            <div class="slider-container"><input type="range" id="slide-usdStart" min="0" max="1000000" step="5000" value="0" class="sync-slider" data-input="inp-usdStart"></div>
+                            <div class="slider-container"><div class="slider-row"><input type="range" id="slide-usdStart" min="0" max="1000000" step="5000" value="0" class="sync-slider" data-input="inp-usdStart"></div></div>
                         </div>
                         <div class="input-group">
                             <div class="input-header"><div class="label-wrapper">Monthly Contribution (USD)</div><input type="text" class="num-format sync-input" id="inp-usdContrib" data-slider="slide-usdContrib" placeholder="0"></div>
-                            <div class="slider-container"><input type="range" id="slide-usdContrib" min="0" max="10000" step="100" value="0" class="sync-slider" data-input="inp-usdContrib"></div>
+                            <div class="slider-container"><div class="slider-row"><input type="range" id="slide-usdContrib" min="0" max="10000" step="100" value="0" class="sync-slider" data-input="inp-usdContrib"></div></div>
                         </div>
                         <div class="input-group">
                             <div class="input-header">
                                 <div class="label-wrapper">Expected Return (%) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Defaulted to 7.0%, building in a conservative margin of safety relative to long-term historical averages of both US and All-World indices.</span></div></div>
                                 <input type="text" class="num-format sync-input" id="inp-usdRet" data-slider="slide-usdRet" value="7.0">
                             </div>
-                            <div class="slider-container"><input type="range" id="slide-usdRet" min="0" max="15" step="0.1" value="7.0" class="sync-slider" data-input="inp-usdRet"></div>
+                            <div class="slider-container">
+                                <div class="slider-row"><input type="range" id="slide-usdRet" min="0" max="15" step="0.1" value="7.0" class="sync-slider" data-input="inp-usdRet"></div>
+                                <div id="ctx-usdRet" class="slider-context"></div>
+                            </div>
                         </div>
                         <div class="input-group">
                             <div class="input-header">
@@ -311,18 +339,21 @@
                     <div id="asset-sg" class="asset-body" style="display: none;">
                         <div class="input-group">
                             <div class="input-header"><div class="label-wrapper">Starting Balance (SGD)</div><input type="text" class="num-format sync-input" id="inp-sgdStart" data-slider="slide-sgdStart" placeholder="0"></div>
-                            <div class="slider-container"><input type="range" id="slide-sgdStart" min="0" max="1000000" step="5000" value="0" class="sync-slider" data-input="inp-sgdStart"></div>
+                            <div class="slider-container"><div class="slider-row"><input type="range" id="slide-sgdStart" min="0" max="1000000" step="5000" value="0" class="sync-slider" data-input="inp-sgdStart"></div></div>
                         </div>
                         <div class="input-group">
                             <div class="input-header"><div class="label-wrapper">Monthly Contribution (SGD)</div><input type="text" class="num-format sync-input" id="inp-sgdContrib" data-slider="slide-sgdContrib" placeholder="0"></div>
-                            <div class="slider-container"><input type="range" id="slide-sgdContrib" min="0" max="10000" step="100" value="0" class="sync-slider" data-input="inp-sgdContrib"></div>
+                            <div class="slider-container"><div class="slider-row"><input type="range" id="slide-sgdContrib" min="0" max="10000" step="100" value="0" class="sync-slider" data-input="inp-sgdContrib"></div></div>
                         </div>
                         <div class="input-group">
                             <div class="input-header">
                                 <div class="label-wrapper">Expected Return (%) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Defaulted to 4.0%, intentionally set roughly 20% lower than the historical annualized return for safety.</span></div></div>
                                 <input type="text" class="num-format sync-input" id="inp-sgdRet" data-slider="slide-sgdRet" value="4.0">
                             </div>
-                            <div class="slider-container"><input type="range" id="slide-sgdRet" min="0" max="15" step="0.1" value="4.0" class="sync-slider" data-input="inp-sgdRet"></div>
+                            <div class="slider-container">
+                                <div class="slider-row"><input type="range" id="slide-sgdRet" min="0" max="15" step="0.1" value="4.0" class="sync-slider" data-input="inp-sgdRet"></div>
+                                <div id="ctx-sgdRet" class="slider-context"></div>
+                            </div>
                         </div>
                     </div>
 
@@ -345,7 +376,6 @@
                         </div>
                     </div>
 
-                    <!-- Moved to Advanced Only for Simplicity -->
                     <div class="advanced-only">
                         <label class="asset-header">
                             <input type="checkbox" id="toggle-sa" onchange="toggleAsset('sa')"> 
@@ -393,7 +423,6 @@
                     
                     <div id="asset-mortgage" class="asset-body" style="display: none;">
                         
-                        <!-- Partner Mortgage Offset Toggle -->
                         <div style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border);">
                             <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700; cursor: pointer; color: var(--text-main);">
                                 <input type="checkbox" id="toggle-mortgage-partner" onchange="toggleMortgagePartner(); calcLiveMortgage(); runSim();" style="width: 16px; height: 16px; accent-color: var(--acc-orange);"> 
@@ -406,7 +435,7 @@
                                         <div class="label-wrapper">Your Share of Mortgage Installment (%)</div>
                                         <input type="text" class="num-format sync-input" id="inp-mortgageShare" data-slider="slide-mortgageShare" value="100" oninput="calcLiveMortgage(); runSim();">
                                     </div>
-                                    <div class="slider-container"><input type="range" id="slide-mortgageShare" min="0" max="100" step="1" value="100" class="sync-slider" data-input="inp-mortgageShare"></div>
+                                    <div class="slider-container"><div class="slider-row"><input type="range" id="slide-mortgageShare" min="0" max="100" step="1" value="100" class="sync-slider" data-input="inp-mortgageShare"></div></div>
                                 </div>
                             </div>
                         </div>
@@ -454,7 +483,7 @@
                                     <div class="label-wrapper">Current Interest Rate (%) <div class="tt-container" id="tt-mortgageRate"><span class="tt-icon">?</span><span class="tt-text" id="tt-text-mortgageRate">HDB rate is pegged at 0.1% above the prevailing CPF OA interest rate.</span></div></div>
                                     <input type="text" class="num-format sync-input" id="inp-mortgageRate" data-slider="slide-mortgageRate" value="2.6" disabled oninput="calcLiveMortgage()">
                                 </div>
-                                <div class="slider-container"><input type="range" id="slide-mortgageRate" min="0" max="10" step="0.1" value="2.6" class="sync-slider" data-input="inp-mortgageRate" disabled></div>
+                                <div class="slider-container"><div class="slider-row"><input type="range" id="slide-mortgageRate" min="0" max="10" step="0.1" value="2.6" class="sync-slider" data-input="inp-mortgageRate" disabled></div></div>
                             </div>
 
                             <div class="mortgage-readout" id="mortgage-readout-box">
@@ -506,7 +535,7 @@
                                     <div class="label-wrapper">Your Share of Household Expenses (%)</div>
                                     <input type="text" class="num-format sync-input" id="inp-expenseShare" data-slider="slide-expenseShare" value="100" oninput="runSim();">
                                 </div>
-                                <div class="slider-container"><input type="range" id="slide-expenseShare" min="0" max="100" step="1" value="100" class="sync-slider" data-input="inp-expenseShare"></div>
+                                <div class="slider-container"><div class="slider-row"><input type="range" id="slide-expenseShare" min="0" max="100" step="1" value="100" class="sync-slider" data-input="inp-expenseShare"></div></div>
                                 <div id="expense-share-readout" style="margin-top: 0.75rem; font-weight: 600; color: #1d4ed8; font-size: 0.85rem;">The simulator will draw down: $0/mo</div>
                             </div>
                         </div>
@@ -517,10 +546,9 @@
                             <div class="label-wrapper">Total Household Expenses (SGD/mo) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Your total household target monthly spending in TODAY's dollars. The simulator will compound this upward every year based on your inflation assumption.</span></div></div>
                             <input type="text" class="num-format sync-input" id="inp-expenses" data-slider="slide-expenses" placeholder="e.g., 2500">
                         </div>
-                        <div class="slider-container"><input type="range" id="slide-expenses" min="0" max="20000" step="100" value="0" class="sync-slider" data-input="inp-expenses"></div>
+                        <div class="slider-container"><div class="slider-row"><input type="range" id="slide-expenses" min="0" max="20000" step="100" value="0" class="sync-slider" data-input="inp-expenses"></div></div>
                     </div>
 
-                    <!-- Dynamic FIRE Target Multiple & Override -->
                     <div class="advanced-only" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border);">
                         
                         <div style="margin-bottom: 1rem; padding: 0.75rem; background: #eff6ff; border: 1px dashed #bfdbfe; border-radius: 6px;">
@@ -538,7 +566,10 @@
                                 <div class="label-wrapper">Target Withdrawal Multiple <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">25x equals the standard 4% SWR. Higher multiples (e.g., 33x = 3% SWR) are more conservative against prolonged market crashes.</span></div></div>
                                 <input type="text" class="num-format sync-input" id="inp-swrMultiple" data-slider="slide-swrMultiple" value="25" disabled>
                             </div>
-                            <div class="slider-container"><input type="range" id="slide-swrMultiple" min="15" max="50" step="1" value="25" class="sync-slider" data-input="inp-swrMultiple" disabled></div>
+                            <div class="slider-container">
+                                <div class="slider-row"><input type="range" id="slide-swrMultiple" min="15" max="50" step="1" value="25" class="sync-slider" data-input="inp-swrMultiple" disabled></div>
+                                <div id="ctx-swrMultiple" class="slider-context"></div>
+                            </div>
                         </div>
                     </div>
                     
@@ -655,6 +686,14 @@
                     <div class="hero-value" id="val-statusText" style="font-size: 1.1rem; line-height: 1.2; margin-top: 0.4rem;">Awaiting Data</div>
                     <div class="hero-subtext" id="val-statusSub">Enter age to begin</div>
                 </div>
+
+                <!-- V5 Diagnostic Engine & Auto-Solver UI -->
+                <div id="diagnostic-panel">
+                    <div class="diag-title">⚠️ Diagnostic Report</div>
+                    <div id="diag-message" class="diag-text">Your portfolio experienced a fatal shortfall.</div>
+                    <button class="btn-solve" onclick="runAutoSolver()">Auto-Solve My Plan</button>
+                    <div id="autosolver-results"></div>
+                </div>
             </div>
 
             <div class="chart-container">
@@ -698,7 +737,41 @@
         let incomeStreamCount = 0;
         let milestoneCount = 0;
         let isLoading = true;
-        const APP_VERSION = "4.0";
+        const APP_VERSION = "5.0";
+
+        // --- Contextual Slider Coaching Engine ---
+        function updateContexts() {
+            let retAge = getVal('inp-retireAge');
+            let ctxRet = document.getElementById('ctx-retireAge');
+            if(retAge < 40) ctxRet.innerText = "Extreme early retirement. Requires massive savings rate.";
+            else if(retAge < 55) ctxRet.innerText = "Aggressive FIRE. Capital must last 40+ years.";
+            else if(retAge <= 65) ctxRet.innerText = "Standard early retirement horizon.";
+            else ctxRet.innerText = "Traditional retirement. High success probability.";
+
+            let infl = getVal('inp-inflation');
+            let ctxInfl = document.getElementById('ctx-inflation');
+            if(infl < 2.0) ctxInfl.innerText = "Highly optimistic. Historically rare over 30 years.";
+            else if(infl <= 3.5) ctxInfl.innerText = "Balanced. Aligns with historical global averages.";
+            else ctxInfl.innerText = "Pessimistic. Modeling heavy stagflation environments.";
+
+            let gRet = getVal('inp-usdRet');
+            let ctxGret = document.getElementById('ctx-usdRet');
+            if(gRet < 5.0) ctxGret.innerText = "Highly conservative. Assumes near-zero real growth.";
+            else if(gRet <= 7.5) ctxGret.innerText = "Balanced. Bakes in a healthy margin of safety.";
+            else ctxGret.innerText = "Aggressive. Relies heavily on sustained bull markets.";
+
+            let sRet = getVal('inp-sgdRet');
+            let ctxSret = document.getElementById('ctx-sgdRet');
+            if(sRet < 3.0) ctxSret.innerText = "Conservative. Treating SG equities like bonds.";
+            else if(sRet <= 5.0) ctxSret.innerText = "Balanced. Aligns with historical STI yields.";
+            else ctxSret.innerText = "Aggressive for a mature, dividend-focused market.";
+
+            let swr = getVal('inp-swrMultiple');
+            let ctxSwr = document.getElementById('ctx-swrMultiple');
+            if(swr < 25) ctxSwr.innerText = "Aggressive (>4% SWR). High risk of depletion.";
+            else if(swr <= 33) ctxSwr.innerText = "Standard FIRE (3% - 4% SWR). Generally safe.";
+            else ctxSwr.innerText = "Highly Conservative (<3% SWR). Institutional safety.";
+        }
 
         // --- Mobile Tooltips (Tap Outside to Close) ---
         document.addEventListener('click', function(e) {
@@ -993,7 +1066,7 @@
             document.getElementById('toggle-sg').checked = false; toggleAsset('sg');
             document.getElementById('toggle-cash').checked = true; toggleAsset('cash');
             
-            document.getElementById('toggle-sa').checked = false; toggleAsset('sa'); // Hidden in simple by default
+            document.getElementById('toggle-sa').checked = false; toggleAsset('sa'); 
             document.getElementById('toggle-mortgage').checked = false; toggleAsset('mortgage');
             
             document.getElementById('toggle-mortgage-partner').checked = false; toggleMortgagePartner();
@@ -1013,6 +1086,7 @@
             document.getElementById('income-streams-container').innerHTML = '';
             document.getElementById('milestones-container').innerHTML = '';
             document.getElementById('mortgage-readout-box').style.display = 'none';
+            document.getElementById('diagnostic-panel').style.display = 'none';
             
             setVal('inp-inflation', 3.0); 
             setVal('inp-usdRet', 7.0); 
@@ -1110,52 +1184,70 @@
             document.getElementById('milestones-container').insertAdjacentHTML('beforeend', html);
         }
 
-        // --- Presets & Loading ---
-        function loadSampleProfile() {
+        // --- V5 Archetypes Engine ---
+        function loadProfile(type) {
             isLoading = true;
-            setVal('inp-currentAge', 35); 
-            setVal('inp-retireAge', 60); 
-            setVal('inp-inflation', 3.0); 
-
-            document.getElementById('toggle-global').checked = true; toggleAsset('global');
-            setVal('inp-usdStart', 20000);
-            setVal('inp-usdContrib', 1000);
-            setVal('inp-usdRet', 7.0); 
-            setVal('inp-fx', 1.35);
-            setVal('inp-fxDrift', 0.0);
-
-            document.getElementById('toggle-sg').checked = true; toggleAsset('sg');
-            setVal('inp-sgdStart', 20000);
-            setVal('inp-sgdContrib', 500);
-            setVal('inp-sgdRet', 4.0); 
-
-            document.getElementById('toggle-cash').checked = true; toggleAsset('cash');
-            setVal('inp-cashStart', 40000);
-            setVal('inp-cashYield', 0.05);
-
-            document.getElementById('toggle-sa').checked = false; toggleAsset('sa');
-
-            document.getElementById('toggle-mortgage').checked = true; toggleAsset('mortgage');
-            document.getElementById('loan-hdb').checked = true;
+            clearAllInputs();
+            document.getElementById('profile-select').value = ""; // reset dropdown
             
-            setVal('inp-mortgageSimple', 1872);
-
-            setVal('inp-mortgagePrincipal', 350000);
-            setVal('inp-loanYrs', 20);
-            document.getElementById('inp-maxOA').checked = true; toggleCustomOA();
-            setVal('inp-oaStart', 25000);
-            setVal('inp-oaContrib', 1872); 
+            if (type === 'median') {
+                setVal('inp-currentAge', 35); setVal('inp-retireAge', 60); setVal('inp-inflation', 3.0); 
+                document.getElementById('toggle-global').checked = true; toggleAsset('global');
+                setVal('inp-usdStart', 20000); setVal('inp-usdContrib', 1000); setVal('inp-usdRet', 7.0); 
+                document.getElementById('toggle-sg').checked = true; toggleAsset('sg');
+                setVal('inp-sgdStart', 20000); setVal('inp-sgdContrib', 500); setVal('inp-sgdRet', 4.0); 
+                document.getElementById('toggle-cash').checked = true; toggleAsset('cash');
+                setVal('inp-cashStart', 40000);
+                document.getElementById('toggle-mortgage').checked = true; toggleAsset('mortgage');
+                document.getElementById('loan-hdb').checked = true;
+                setVal('inp-mortgageSimple', 1872); setVal('inp-mortgagePrincipal', 350000); setVal('inp-loanYrs', 20);
+                document.getElementById('inp-maxOA').checked = true; toggleCustomOA();
+                setVal('inp-oaStart', 25000); setVal('inp-oaContrib', 1872); 
+                setVal('inp-expenses', 2500);
+            } 
+            else if (type === 'coast') {
+                setVal('inp-currentAge', 28); setVal('inp-retireAge', 45); setVal('inp-inflation', 3.0); 
+                document.getElementById('toggle-global').checked = true; toggleAsset('global');
+                setVal('inp-usdStart', 150000); setVal('inp-usdContrib', 2500); setVal('inp-usdRet', 8.0); 
+                document.getElementById('toggle-cash').checked = true; toggleAsset('cash');
+                setVal('inp-cashStart', 60000);
+                setVal('inp-expenses', 3000);
+                // Switch to advanced to show milestones if needed, but keeping simple for baseline load.
+            }
+            else if (type === 'dink') {
+                setVal('inp-currentAge', 32); setVal('inp-retireAge', 55); setVal('inp-inflation', 3.5); 
+                document.getElementById('toggle-global').checked = true; toggleAsset('global');
+                setVal('inp-usdStart', 80000); setVal('inp-usdContrib', 3000); setVal('inp-usdRet', 7.5); 
+                document.getElementById('toggle-cash').checked = true; toggleAsset('cash');
+                setVal('inp-cashStart', 100000);
+                document.getElementById('toggle-mortgage').checked = true; toggleAsset('mortgage');
+                document.getElementById('toggle-mortgage-partner').checked = true; toggleMortgagePartner();
+                document.getElementById('loan-bank').checked = true;
+                setVal('inp-mortgageSimple', 4500); setVal('inp-mortgagePrincipal', 1200000); setVal('inp-loanYrs', 25); setVal('inp-mortgageShare', 50);
+                setVal('inp-oaContrib', 1200); 
+                document.getElementById('toggle-expense-partner').checked = true; toggleExpensePartner();
+                setVal('inp-expenses', 8000); setVal('inp-expenseShare', 50);
+            }
+            else if (type === 'conservative') {
+                setVal('inp-currentAge', 42); setVal('inp-retireAge', 65); setVal('inp-inflation', 2.5); 
+                document.getElementById('toggle-sg').checked = true; toggleAsset('sg');
+                setVal('inp-sgdStart', 100000); setVal('inp-sgdContrib', 800); setVal('inp-sgdRet', 5.0); 
+                document.getElementById('toggle-cash').checked = true; toggleAsset('cash');
+                setVal('inp-cashStart', 50000); setVal('inp-cashYield', 1.5);
+                document.getElementById('toggle-sa').checked = true; toggleAsset('sa');
+                setVal('inp-saStart', 120000); setVal('inp-saContrib', 400);
+                document.getElementById('toggle-mortgage').checked = true; toggleAsset('mortgage');
+                document.getElementById('loan-hdb').checked = true;
+                setVal('inp-mortgageSimple', 1200); setVal('inp-mortgagePrincipal', 200000); setVal('inp-loanYrs', 15);
+                setVal('inp-oaStart', 40000); setVal('inp-oaContrib', 1000); 
+                setVal('inp-expenses', 4000);
+                
+                // Force Advanced Mode to reveal SA
+                document.getElementById('mode-advanced').checked = true;
+                setMode('advanced');
+            }
+            
             calcLiveMortgage();
-
-            setVal('inp-expenses', 2500);
-            
-            document.getElementById('toggle-mortgage-partner').checked = false; toggleMortgagePartner();
-            document.getElementById('toggle-expense-partner').checked = false; toggleExpensePartner();
-            
-            document.getElementById('inp-showFireCurve').checked = true;
-            document.getElementById('inp-swrOverride').checked = false; toggleSwrOverride();
-            setVal('inp-swrMultiple', 25);
-            
             isLoading = false;
             runSim();
         }
@@ -1163,22 +1255,15 @@
         function applyPreset(type) {
             let msg = "";
             if (type === 'highly-conservative') {
-                setVal('inp-usdRet', 5.0); 
-                setVal('inp-sgdRet', 2.5); 
-                setVal('inp-inflation', 3.5); 
+                setVal('inp-usdRet', 5.0); setVal('inp-sgdRet', 2.5); setVal('inp-inflation', 3.5); 
                 msg = "Applied Highly Conservative: Global 5.0%, SG 2.5%, Inflation 3.5%";
             } else if (type === 'somewhat-conservative') {
-                setVal('inp-usdRet', 6.0); 
-                setVal('inp-sgdRet', 3.5); 
-                setVal('inp-inflation', 3.0); 
+                setVal('inp-usdRet', 6.0); setVal('inp-sgdRet', 3.5); setVal('inp-inflation', 3.0); 
                 msg = "Applied Somewhat Conservative: Global 6.0%, SG 3.5%, Inflation 3.0%";
             } else if (type === 'balanced') {
-                setVal('inp-usdRet', 7.0); 
-                setVal('inp-sgdRet', 5.0); 
-                setVal('inp-inflation', 2.5); 
+                setVal('inp-usdRet', 7.0); setVal('inp-sgdRet', 5.0); setVal('inp-inflation', 2.5); 
                 msg = "Applied Balanced: Global 7.0%, SG 5.0%, Inflation 2.5%";
             }
-            
             const banner = document.getElementById('preset-banner');
             document.getElementById('preset-banner-text').innerText = msg;
             banner.style.display = 'flex';
@@ -1394,10 +1479,7 @@
                                 usdPort -= (netWithdrawal * usdRatio) / currentFx;
                                 if (includeSA) saBal -= netWithdrawal * saRatio;
                             } else {
-                                cashRes = 0;
-                                sgdPort = 0;
-                                usdPort = 0;
-                                if (includeSA) saBal = 0;
+                                cashRes = 0; sgdPort = 0; usdPort = 0; if (includeSA) saBal = 0;
                             }
                         }
                     }
@@ -1412,9 +1494,9 @@
                     if (!solvent) { cashRes = 0; sgdPort = 0; usdPort = 0; saBal = 0; }
                 }
 
-                let phase = 1; // Accumulation
-                if (!isWorking && isMortgageActive && (isAdvanced ? remPrincipal > 0 : simpleMortgage > 0)) phase = 2; // Mortgage Drawdown
-                if (!isWorking && (!isMortgageActive || (isAdvanced ? remPrincipal <= 0 : simpleMortgage === 0))) phase = 3; // Debt-Free Retirement
+                let phase = 1;
+                if (!isWorking && isMortgageActive && (isAdvanced ? remPrincipal > 0 : simpleMortgage > 0)) phase = 2; 
+                if (!isWorking && (!isMortgageActive || (isAdvanced ? remPrincipal <= 0 : simpleMortgage === 0))) phase = 3; 
 
                 let totalLiquidSGD = cashRes + sgdPort + (usdPort * currentFx) + saBal;
                 pathData.push({ age, val: totalLiquidSGD });
@@ -1424,8 +1506,79 @@
             return { pathData, phaseMap, solvent, depletionAge, peakNW, warnings: Array.from(warnings) };
         }
 
+        // --- V5 Auto-Solver Engine ---
+        function runAutoSolver() {
+            let baseInputs = getState().inputs;
+            let resultsDiv = document.getElementById('autosolver-results');
+            resultsDiv.style.display = 'block';
+            resultsDiv.innerHTML = '<div style="font-size:0.85rem; color:#d97706;">Calculating solutions...</div>';
+
+            setTimeout(() => {
+                let options = [];
+
+                // 1. Solve by adjusting Monthly Contributions (USD)
+                let test1 = JSON.parse(JSON.stringify(baseInputs));
+                let solvedContrib = false;
+                let originalContrib = test1.usdContrib;
+                for (let c = originalContrib + 100; c <= 20000; c += 100) {
+                    test1.usdContrib = c;
+                    let r = simulatePath(test1, false);
+                    if (r.solvent) {
+                        options.push({ text: `📈 Invest an extra $${(c - originalContrib).toLocaleString()}/mo globally`, action: () => { setVal('inp-usdContrib', c); runSim(); } });
+                        solvedContrib = true;
+                        break;
+                    }
+                }
+
+                // 2. Solve by delaying Retirement Age
+                let test2 = JSON.parse(JSON.stringify(baseInputs));
+                let solvedDelay = false;
+                let originalRet = test2.retireAge;
+                for (let a = originalRet + 1; a <= 80; a += 1) {
+                    test2.retireAge = a;
+                    let r = simulatePath(test2, false);
+                    if (r.solvent) {
+                        options.push({ text: `⏳ Delay retirement by ${a - originalRet} years (Retire at ${a})`, action: () => { setVal('inp-retireAge', a); runSim(); } });
+                        solvedDelay = true;
+                        break;
+                    }
+                }
+
+                // 3. Solve by cutting Expenses
+                let test3 = JSON.parse(JSON.stringify(baseInputs));
+                let solvedExp = false;
+                let originalExp = test3.expenses;
+                for (let e = originalExp - 100; e >= 500; e -= 100) {
+                    test3.expenses = e;
+                    let r = simulatePath(test3, false);
+                    if (r.solvent) {
+                        options.push({ text: `📉 Cut target household spending by $${(originalExp - e).toLocaleString()}/mo`, action: () => { setVal('inp-expenses', e); runSim(); } });
+                        solvedExp = true;
+                        break;
+                    }
+                }
+
+                let html = '<div style="font-size:0.85rem; margin-bottom:0.5rem; color:#92400e;">To fix your plan, do <strong>one</strong> of the following:</div>';
+                if (options.length === 0) {
+                    html = '<div style="font-size:0.85rem; color:#dc2626;">We could not find a simple mathematical fix. You may need a severe combination of cutting expenses and delaying retirement.</div>';
+                } else {
+                    options.forEach((opt, index) => {
+                        window[`solveOption${index}`] = opt.action;
+                        html += `
+                            <div class="solver-option" onclick="window['solveOption${index}']()">
+                                <span class="solver-opt-text">${opt.text}</span>
+                                <span class="solver-opt-btn">Apply</span>
+                            </div>
+                        `;
+                    });
+                }
+                resultsDiv.innerHTML = html;
+            }, 50); // slight delay to allow UI to render calculating state
+        }
+
         function runSim() {
             if (isLoading) return;
+            updateContexts(); // Update V5 UI Contexts
 
             const isAdvanced = document.body.className.includes('advanced-mode');
             const hasGlobal = document.getElementById('toggle-global').checked;
@@ -1437,14 +1590,6 @@
             
             const hasMortgagePartner = document.getElementById('toggle-mortgage-partner').checked;
             const hasExpensePartner = document.getElementById('toggle-expense-partner').checked;
-
-            if (isAdvanced) {
-                document.getElementById('disp-usdRet').innerText = (getVal('inp-usdRet') || 0) + '%';
-                document.getElementById('disp-sgdRet').innerText = (getVal('inp-sgdRet') || 0) + '%';
-                document.getElementById('disp-infl').innerText = (getVal('inp-inflation') || 0) + '%';
-                document.getElementById('disp-fxDrift').innerText = (getVal('inp-fxDrift') || 0) + '%';
-                document.getElementById('disp-mortgageRate').innerText = (getVal('inp-mortgageRate') || 0) + '%';
-            }
 
             const inputs = {
                 isAdvanced: isAdvanced,
@@ -1541,17 +1686,11 @@
 
             let realRet = (1 + nomRet) / (1 + inputs.inflation) - 1;
             let duration = Math.max(1, 95 - inputs.retireAge);
-            
             let calcMultiple = 0;
-            if (Math.abs(realRet) < 0.0001) {
-                calcMultiple = duration;
-            } else {
-                calcMultiple = (1 - Math.pow(1 + realRet, -duration)) / realRet;
-            }
+            if (Math.abs(realRet) < 0.0001) calcMultiple = duration;
+            else calcMultiple = (1 - Math.pow(1 + realRet, -duration)) / realRet;
             
             let targetMultiple = inputs.swrOverride ? inputs.swrMultiple : calcMultiple;
-            
-            // UI Readout Update
             document.getElementById('swr-readout').innerText = `Calculated Multiple: ${calcMultiple.toFixed(1)}x (Based on your ${(realRet*100).toFixed(1)}% Real Return over ${duration} years)`;
 
             // --- Generate Escape Velocity Curve ---
@@ -1599,6 +1738,7 @@
             let elStatus = document.getElementById('val-statusText');
             let elStatusSub = document.getElementById('val-statusSub');
             let cardStatus = document.getElementById('hero-status');
+            let diagPanel = document.getElementById('diagnostic-panel');
 
             elTargetAge.innerText = inputs.retireAge > 0 ? 'Age ' + inputs.retireAge : '--';
             elHeroExp.innerText = '$' + Math.round(effectiveExpenses).toLocaleString();
@@ -1621,7 +1761,6 @@
                         p3.push(phase === 3 ? val : null);
 
                         if(i > 0) {
-                            // Bridge forward to visually snap the phase color change precisely to the start index of the next phase
                             if(phase === 2 && res.phaseMap[i-1] === 1) p1[i] = val;
                             if(phase === 3 && res.phaseMap[i-1] === 2) p2[i] = val;
                             if(phase === 3 && res.phaseMap[i-1] === 1) p1[i] = val;
@@ -1646,10 +1785,25 @@
                         elStatus.innerText = "✅ Safe to Age 95";
                         elStatusSub.innerText = `Ending bal: $${(res.pathData[res.pathData.length-1].val/1000000).toFixed(2)}M`;
                         cardStatus.className = 'hero-card success';
+                        diagPanel.style.display = 'none';
+                        document.getElementById('autosolver-results').style.display = 'none';
                     } else {
                         elStatus.innerText = "⚠️ Shortfall";
                         elStatusSub.innerText = `Depletes at Age ${res.depletionAge}`;
                         cardStatus.className = 'hero-card danger';
+                        
+                        // V5 Diagnostic Engine Output
+                        diagPanel.style.display = 'block';
+                        document.getElementById('autosolver-results').style.display = 'none';
+                        let diagMsg = document.getElementById('diag-message');
+                        
+                        if (res.depletionAge <= inputs.retireAge) {
+                            diagMsg.innerText = `Your portfolio crashed at Age ${res.depletionAge} before you even retired. Your living costs and debt completely overwhelmed your income.`;
+                        } else if (inputs.hasMortgage && res.depletionAge <= (inputs.currentAge + inputs.loanYrs)) {
+                            diagMsg.innerText = `Your portfolio crashed at Age ${res.depletionAge}. Your investments could not sustain the aggressive double-drain of both your living expenses and your monthly mortgage payments in early retirement.`;
+                        } else {
+                            diagMsg.innerText = `Your portfolio survived until Age ${res.depletionAge}. Over a long ${res.depletionAge - inputs.retireAge}-year retirement, inflation slowly eroded your purchasing power, and your capital eventually ran dry.`;
+                        }
                     }
 
                 } else {
@@ -1686,6 +1840,7 @@
                     }
 
                     elPeak.innerText = '$' + (medianPeak / 1000000).toFixed(2) + 'M';
+                    diagPanel.style.display = 'none';
 
                     let winRate = ((successes / runs) * 100).toFixed(1);
                     elStatusSub.innerText = `${runs} Monte Carlo sims`;
@@ -1705,6 +1860,7 @@
                 elStatus.innerText = "Awaiting Data";
                 elStatusSub.innerText = "Enter age to begin";
                 cardStatus.className = 'hero-card';
+                document.getElementById('diagnostic-panel').style.display = 'none';
             }
             
             let wHtml = finalWarnings.map(w => `<div class="warning-alert">${w}</div>`).join('');
@@ -1715,20 +1871,68 @@
             localStorage.setItem('fireSimState', JSON.stringify(getState()));
         }
 
+        // --- V5 Chart Event Flags ---
         function renderChart(labels, datasets, inputs) {
             const ctx = document.getElementById('fireChart').getContext('2d');
             if (fireChart) fireChart.destroy();
             
             let chartAnnotations = {};
             
-            if (inputs && inputs.retireAge > inputs.currentAge && inputs.retireAge <= 95) {
-                let retireIndex = inputs.retireAge - inputs.currentAge;
-                if (retireIndex >= 0 && retireIndex < labels.length) {
-                    chartAnnotations.lineRetire = {
-                        type: 'line', xMin: retireIndex, xMax: retireIndex,
-                        borderColor: '#7c3aed', borderDash: [5, 5], borderWidth: 2,
-                        label: { display: true, content: 'Retirement Age', position: 'start', backgroundColor: '#7c3aed', color: '#fff', font: {size: 11} }
-                    };
+            if (inputs && inputs.currentAge > 0) {
+                // Event 1: Retirement Age
+                if (inputs.retireAge > inputs.currentAge && inputs.retireAge <= 95) {
+                    let retireIndex = inputs.retireAge - inputs.currentAge;
+                    if (retireIndex >= 0 && retireIndex < labels.length) {
+                        chartAnnotations.lineRetire = {
+                            type: 'line', xMin: retireIndex, xMax: retireIndex,
+                            borderColor: '#7c3aed', borderDash: [5, 5], borderWidth: 2,
+                            label: { display: true, content: 'Retirement Age', position: 'start', backgroundColor: '#7c3aed', color: '#fff', font: {size: 11} }
+                        };
+                    }
+                }
+
+                // Event 2: SA Unlocks at 55
+                if (inputs.isAdvanced && inputs.hasSA && inputs.currentAge <= 55) {
+                    let idx55 = 55 - inputs.currentAge;
+                    if (idx55 >= 0 && idx55 < labels.length) {
+                        chartAnnotations.lineSA = {
+                            type: 'line', xMin: idx55, xMax: idx55,
+                            borderColor: 'rgba(16, 185, 129, 0.3)', borderWidth: 1,
+                            label: { display: true, content: '🎂 SA Unlocks', position: 'end', backgroundColor: 'transparent', color: '#10b981', font: {size: 12} }
+                        };
+                    }
+                }
+
+                // Event 3: Mortgage Paid Off
+                if (inputs.hasMortgage) {
+                    let mortgageEndAge = inputs.currentAge + inputs.loanYrs;
+                    if (mortgageEndAge <= 95) {
+                        let mIdx = mortgageEndAge - inputs.currentAge;
+                        if (mIdx >= 0 && mIdx < labels.length) {
+                            chartAnnotations.lineMortgage = {
+                                type: 'line', xMin: mIdx, xMax: mIdx,
+                                borderColor: 'rgba(245, 158, 11, 0.3)', borderWidth: 1,
+                                label: { display: true, content: '🏠 Mortgage Free', position: 'end', backgroundColor: 'transparent', color: '#f59e0b', font: {size: 12}, yAdjust: 20 }
+                            };
+                        }
+                    }
+                }
+
+                // Event 4: Milestone Events
+                if (inputs.isAdvanced && inputs.milestones) {
+                    inputs.milestones.forEach((m, i) => {
+                        if (m.age >= inputs.currentAge && m.age <= 95) {
+                            let msIdx = m.age - inputs.currentAge;
+                            if (msIdx >= 0 && msIdx < labels.length) {
+                                let isExpense = m.amt < 0;
+                                chartAnnotations[`milestone_${i}`] = {
+                                    type: 'line', xMin: msIdx, xMax: msIdx,
+                                    borderColor: 'rgba(100, 116, 139, 0.3)', borderWidth: 1, borderDash: [2, 2],
+                                    label: { display: true, content: isExpense ? '✈️' : '💰', position: 'end', backgroundColor: 'transparent', font: {size: 14}, yAdjust: 40 + (i*15) }
+                                };
+                            }
+                        }
+                    });
                 }
             }
 
