@@ -758,8 +758,8 @@ function simulatePath(inputs, isMonteCarlo) {
         }
 
         let phase = 1;
-        if (!isWorking && isMortgageActive && (isAdvanced ? remPrincipal > 0 : simpleMortgage > 0)) phase = 2; 
-        if (!isWorking && (!isMortgageActive || (isAdvanced ? remPrincipal <= 0 : simpleMortgage === 0))) phase = 3; 
+        if (!isWorking && isMortgageActive) phase = 2; 
+        if (!isWorking && !isMortgageActive) phase = 3;
 
         let totalLiquidSGD = cashRes + sgdPort + (usdPort * currentFx) + saBal;
         pathData.push({ age, val: totalLiquidSGD });
@@ -1011,15 +1011,15 @@ function runSim() {
             }
             
             datasets = [
-                { label: 'Accumulation Phase', data: p1, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.2, spanGaps: true },
-                { label: 'Mortgage Drawdown', data: p2, borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.1)', fill: true, tension: 0.2, spanGaps: true },
-                { label: 'Debt-Free Retirement', data: p3, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.2, spanGaps: true }
+                { label: 'Accumulation Phase', data: p1, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.2, spanGaps: true, pointStyle: 'rect' },
+                { label: 'Mortgage Drawdown', data: p2, borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.1)', fill: true, tension: 0.2, spanGaps: true, pointStyle: 'rect' },
+                { label: 'Debt-Free Retirement', data: p3, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.2, spanGaps: true, pointStyle: 'rect' }
             ];
 
             if (inputs.showFireCurve) {
-                datasets.push({ label: 'FIRE Requirement (Finish Line)', data: fireCurveData, borderColor: '#ef4444', borderDash: [2, 4], fill: false, tension: 0.2, pointRadius: 0, borderWidth: 1.5 });
+                datasets.push({ label: 'FIRE Requirement (Finish Line)', data: fireCurveData, borderColor: '#ef4444', borderDash: [2, 4], fill: false, tension: 0.2, pointRadius: 0, borderWidth: 1.5, pointStyle: 'line' });
             }
-            
+                        
             res.warnings.forEach(w => finalWarnings.push(w));
 
             elPeak.innerText = '$' + (res.peakNW / 1000000).toFixed(2) + 'M';
@@ -1183,6 +1183,7 @@ function renderChart(labels, datasets, inputs) {
                 y: { title: { display: true, text: 'Portfolio Value (SGD)' }, ticks: { callback: v => '$' + (v / 1000000).toFixed(1) + 'M' } }
             },
             plugins: { 
+                legend: { labels: { usePointStyle: true, boxWidth: 15 } },
                 tooltip: { callbacks: { label: c => c.dataset.label + ': $' + Math.round(c.raw).toLocaleString() } },
                 annotation: { annotations: chartAnnotations }
             }
