@@ -314,7 +314,13 @@
                             <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid var(--border); margin-top: 1rem;">
                                 <div style="display: flex; align-items: center; gap: 0.75rem;">
                                     <input type="checkbox" id="inp-maxOA" checked onchange="toggleCustomOA()" style="width:18px; height:18px; accent-color:var(--acc-orange);">
-                                    <label for="inp-maxOA" style="font-size: 0.85rem; font-weight:600; color: var(--text-main); cursor:pointer;">Maximize CPF OA to pay this mortgage</label>
+                                    <label for="inp-maxOA" style="font-size: 0.85rem; font-weight:600; color: var(--text-main); cursor:pointer; display: flex; align-items: center;">
+                                        Prioritize using CPF OA to pay mortgage (saves cash)
+                                        <div class="tt-container" style="margin-left: 6px;">
+                                            <span class="tt-icon">?</span>
+                                            <span class="tt-text" style="bottom: 130%; right: auto; left: 0; transform: none;">If checked, the simulator drains your available OA to pay the mortgage before touching your cash reserves. Uncheck to manually cap OA usage.</span>
+                                        </div>
+                                    </label>
                                 </div>
                                 <div id="custom-oa-cap" style="display: none; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
                                     <div class="input-header" style="margin-bottom:0;">
