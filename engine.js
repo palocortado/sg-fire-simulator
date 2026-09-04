@@ -337,7 +337,7 @@ function clearAllInputs() {
     document.getElementById('toggle-mortgage-partner').checked = false; toggleMortgagePartner();
     document.getElementById('toggle-expense-partner').checked = false; toggleExpensePartner();
     
-    document.getElementById('inp-showFireCurve').checked = true;
+    document.getElementById('inp-showFireCurve').checked = false;
     document.getElementById('inp-swrOverride').checked = false; toggleSwrOverride();
     
     document.getElementById('inp-maxOA').checked = true; toggleCustomOA();
@@ -456,6 +456,7 @@ function loadProfile(type) {
     document.getElementById('profile-select').value = ""; 
     
     if (type === 'median') {
+        document.getElementById('inp-showFireCurve').checked = false;
         setVal('inp-currentAge', 35); setVal('inp-retireAge', 60); setVal('inp-inflation', 3.0); 
         document.getElementById('toggle-global').checked = true; toggleAsset('global');
         setVal('inp-usdStart', 20000); setVal('inp-usdContrib', 1000); setVal('inp-usdRet', 7.0); 
@@ -1025,9 +1026,18 @@ function runSim() {
             elPeak.innerText = '$' + (res.peakNW / 1000000).toFixed(2) + 'M';
 
             if (res.solvent) {
-                elStatus.innerText = "✅ Safe to Age 95";
-                elStatusSub.innerText = `Ending bal: $${(res.pathData[res.pathData.length-1].val/1000000).toFixed(2)}M`;
-                cardStatus.className = 'hero-card success';
+                let finalBal = res.pathData[res.pathData.length-1].val;
+                
+                if (finalBal < 100000) {
+                    elStatus.innerText = "⚠️ Scraping By";
+                    elStatusSub.innerText = `Ending bal: $${(finalBal/1000000).toFixed(2)}M`;
+                    cardStatus.className = 'hero-card warning';
+                } else {
+                    elStatus.innerText = "✅ Safe to Age 95";
+                    elStatusSub.innerText = `Ending bal: $${(finalBal/1000000).toFixed(2)}M`;
+                    cardStatus.className = 'hero-card success';
+                }
+                
                 diagPanel.style.display = 'none';
                 document.getElementById('autosolver-results').style.display = 'none';
             } else {
