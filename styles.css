@@ -27,7 +27,7 @@ body { font-family: system-ui, -apple-system, sans-serif; max-width: 1500px; mar
 .top-controls-wrapper { display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem; }
 .top-controls { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
 
-select.btn-sample { background: var(--acc-green); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2); outline: none; text-align: left; font-family: inherit; font-size: 0.9rem; min-width: 200px; white-space: nowrap; }
+select.btn-sample { background: var(--acc-green); color: white; border: none; padding: 0.6rem 1rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2); outline: none; text-align: left; font-family: inherit; font-size: 0.95rem; min-width: 235px; }
 select.btn-sample:hover { background: #059669; }
 
 .btn-action { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
@@ -107,7 +107,7 @@ input[type="range"]:disabled { opacity: 0.5; cursor: not-allowed; }
 /* Tooltips */
 .tt-container { position: relative; display: inline-flex; cursor: pointer; align-items: center; justify-content: center; }
 .tt-icon { background: #e2e8f0; color: #64748b; border-radius: 50%; font-size: 11px; width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; user-select: none; }
-.tt-text { visibility: hidden; width: 280px; background-color: #1e293b; color: #fff; text-align: left; padding: 0.75rem; border-radius: 6px; position: absolute; z-index: 50; bottom: 130%; left: 50%; transform: translateX(-50%); opacity: 0; transition: opacity 0.2s; font-size: 0.75rem; font-weight: normal; line-height: 1.4; box-shadow: 0 4px 6px rgba(0,0,0,0.2); pointer-events: none; }
+.tt-text { visibility: hidden; width: 280px; background-color: #1e293b; color: #fff; text-align: left; padding: 0.75rem; border-radius: 6px; position: absolute; z-index: 50; bottom: 130%; left: 50%; transform: translateX(-50%); opacity: 0; transition: opacity 0.2s; font-size: 0.75rem; font-weight: normal; line-height: 1.4; box-shadow: 0 4px 6px rgba(0,0,0,0.2); pointer-events: none; text-transform: none; }
 .tt-text::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #1e293b transparent transparent transparent; }
 
 @media (hover: hover) { .tt-container:hover .tt-text { visibility: visible; opacity: 1; z-index: 999; } }
