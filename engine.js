@@ -7,7 +7,6 @@ const APP_VERSION = "5.0";
 // --- Contextual Slider Coaching Engine ---
 function updateContexts() {
     try {
-        // Your existing updateContexts code goes here, but now it won't crash if an element is missing!
         const ids = ['currentAge', 'retireAge', 'expenses', 'usdStart', 'usdContrib', 'cashStart', 'mortgagePrincipal', 'loanYrs', 'mortgageRate', 'mortgageShare', 'oaStart', 'oaContrib', 'inflation', 'usdRet', 'fx', 'cashYield', 'saStart', 'saContrib'];
         ids.forEach(id => {
             let valEl = document.getElementById('val-' + id);
@@ -15,7 +14,7 @@ function updateContexts() {
             if (valEl && inpEl) valEl.innerText = inpEl.value;
         });
     } catch (e) {
-        // Silently ignore missing UI elements
+        // Silently bypass missing UI elements
     }
 }
 
@@ -174,58 +173,21 @@ function getState() {
     };
 }
 
-function loadState(state) {
-    if (!state || !state.inputs) return;
-    let p = state.inputs;
-    
-    if (p.mode) {
-        let r = document.getElementById('mode-' + p.mode);
-        if (r) { r.checked = true; setMode(p.mode); }
+function loadState() {
+    try {
+        let saved = localStorage.getItem('fireSimState');
+        if (!saved) return;
+        let data = JSON.parse(saved);
+        Object.keys(data).forEach(key => {
+            let el = document.getElementById('inp-' + key);
+            // Only inject data if the input box actually exists in the new HTML
+            if (el) {
+                el.value = data[key];
+            }
+        });
+    } catch(e) {
+        console.warn("Ignored incompatible legacy save state.");
     }
-
-    const fields = ['currentAge', 'retireAge', 'inflation', 'inflVol', 'usdStart', 'usdContrib', 'usdRet', 'usdVol', 'fx', 'fxDrift', 'fxVol', 'sgdStart', 'sgdContrib', 'sgdRet', 'sgdVol', 'cashStart', 'cashYield', 'saStart', 'saContrib', 'mortgageSimple', 'mortgagePrincipal', 'loanYrs', 'mortgageRate', 'mortgageVol', 'mortgageShare', 'oaContrib', 'oaStart', 'customOACap', 'expenses', 'expenseShare', 'swrMultiple', 'mcRuns'];
-    fields.forEach(f => {
-        if (p[f] !== undefined) setVal('inp-' + f, p[f]);
-    });
-
-    const toggles = ['global', 'sg', 'cash', 'sa', 'mortgage'];
-    toggles.forEach(t => {
-        let el = document.getElementById('toggle-' + t);
-        let key = 'has' + t.charAt(0).toUpperCase() + t.slice(1);
-        if (p[key] !== undefined && el) {
-            el.checked = p[key];
-            toggleAsset(t);
-        }
-    });
-
-    if (p.inflateContribs !== undefined) document.getElementById('inp-inflateContribs').checked = p.inflateContribs;
-    if (p.isMaxOA !== undefined) document.getElementById('inp-maxOA').checked = p.isMaxOA;
-    if (p.hasMortgagePartner !== undefined) document.getElementById('toggle-mortgage-partner').checked = p.hasMortgagePartner;
-    if (p.hasExpensePartner !== undefined) document.getElementById('toggle-expense-partner').checked = p.hasExpensePartner;
-    if (p.isBlackSwan !== undefined) document.getElementById('inp-blackSwan').checked = p.isBlackSwan;
-    if (p.isMC !== undefined) document.getElementById('inp-mcToggle').checked = p.isMC;
-    if (p.isHdb !== undefined) document.getElementById('loan-hdb').checked = p.isHdb;
-    if (p.isBank !== undefined) document.getElementById('loan-bank').checked = p.isBank;
-    if (p.swrOverride !== undefined) document.getElementById('inp-swrOverride').checked = p.swrOverride;
-    if (p.showFireCurve !== undefined) document.getElementById('inp-showFireCurve').checked = p.showFireCurve;
-
-    document.getElementById('income-streams-container').innerHTML = '';
-    if (p.incomeStreams && Array.isArray(p.incomeStreams)) {
-        p.incomeStreams.forEach(st => addIncomeStream(st.name, st.amt, st.start, st.end));
-    }
-
-    document.getElementById('milestones-container').innerHTML = '';
-    if (p.milestones && Array.isArray(p.milestones)) {
-        p.milestones.forEach(m => addMilestone(m.name, m.amt, m.age));
-    }
-
-    if (p.swrMultiple === undefined) setVal('inp-swrMultiple', 25);
-
-    toggleMortgagePartner();
-    toggleExpensePartner();
-    toggleCustomOA();
-    toggleSwrOverride();
-    calcLiveMortgage();
 }
 
 // --- Export / Import ---
@@ -268,10 +230,13 @@ function setMode(mode) {
 
 function toggleAsset(assetType) {
     try {
-        let isChecked = document.getElementById('inp-has' + assetType).checked;
-        document.getElementById(assetType.toLowerCase() + '-panel').style.display = isChecked ? 'block' : 'none';
-    } catch (e) {
-        // Silently ignore missing accordion panels
+        let checkbox = document.getElementById('inp-has' + assetType);
+        let panel = document.getElementById(assetType.toLowerCase() + '-panel');
+        if (checkbox && panel) {
+            panel.style.display = checkbox.checked ? 'block' : 'none';
+        }
+    } catch(e) {
+        // Silently bypass missing accordion panels
     }
 }
 
@@ -812,12 +777,14 @@ function runSim() {
     updateContexts(); 
 
     const isAdvanced = document.body.className.includes('advanced-mode');
-    const hasGlobal = document.getElementById('toggle-global').checked;
-    const hasSG = document.getElementById('toggle-sg').checked;
-    const hasCash = document.getElementById('toggle-cash').checked;
-    const hasSA = document.getElementById('toggle-sa').checked;
-    const hasMortgage = document.getElementById('toggle-mortgage').checked;
-    const isBlackSwan = isAdvanced ? document.getElementById('inp-blackSwan').checked : false;
+    
+    // SAFE CHECKS: If a checkbox was removed from HTML, the engine defaults safely instead of crashing
+    const hasGlobal = document.getElementById('toggle-global') ? document.getElementById('toggle-global').checked : true;
+    const hasSG = document.getElementById('toggle-sg') ? document.getElementById('toggle-sg').checked : false;
+    const hasCash = document.getElementById('toggle-cash') ? document.getElementById('toggle-cash').checked : true;
+    const hasSA = document.getElementById('toggle-sa') ? document.getElementById('toggle-sa').checked : false;
+    const hasMortgage = document.getElementById('toggle-mortgage') ? document.getElementById('toggle-mortgage').checked : false;
+    const isBlackSwan = (isAdvanced && document.getElementById('inp-blackSwan')) ? document.getElementById('inp-blackSwan').checked : false;
     
     const hasMortgagePartner = document.getElementById('toggle-mortgage-partner').checked;
     const hasExpensePartner = document.getElementById('toggle-expense-partner').checked;
