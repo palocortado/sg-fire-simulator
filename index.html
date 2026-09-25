@@ -3,553 +3,222 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Financial Independence Simulator for Singapore residents</title>
-    <!-- External Libraries -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.1.0/dist/chartjs-plugin-annotation.min.js"></script>
-    <!-- Link to our new isolated CSS file -->
+    <title>Financial Independence Simulator for Singapore</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.2.1/chartjs-plugin-annotation.min.js"></script>
 </head>
 <body class="simple-mode">
-
-    <div class="header-container">
-        <h1>Financial Independence Simulator for Singapore residents</h1>
-        <div class="top-controls-wrapper">
-            <div class="top-controls">
-                <div class="tt-container">
-                    <select id="profile-select" onchange="if(this.value) { loadProfile(this.value); this.value=''; }" class="btn-sample">
-                        <option value="">Load Persona...</option>
-                        <option value="median">Median Baseline</option>
-                        <option value="coast">Coast FIRE Single</option>
-                        <option value="dink">DINK Upgraders</option>
-                        <option value="conservative">Conservative Family</option>
-                    </select>
-                    <span class="tt-text" style="width: 250px; top: 130%; bottom: auto; left: 0; right: auto; transform: none; margin-left: 0;">Beginners learn best by seeing themselves reflected in data. Select a relatable archetype to see how different lifestyle choices play out.</span>
-                </div>
-                <button class="btn-action" onclick="exportPlan()">Export Plan</button>
-                <button class="btn-action" onclick="document.getElementById('file-import').click()">Import Plan</button>
-                <input type="file" id="file-import" style="display:none" accept=".json" onchange="importPlan(event)">
-                <button class="btn-clear" onclick="clearAllInputs()">Clear All</button>
-                <div class="mode-slider">
-                    <input type="radio" id="mode-simple" name="mode" value="simple" checked onchange="setMode('simple')">
-                    <label for="mode-simple">Simple Mode</label>
-                    <input type="radio" id="mode-advanced" name="mode" value="advanced" onchange="setMode('advanced')">
-                    <label for="mode-advanced">Advanced Mode</label>
-                    <div class="slider-bg"></div>
-                </div>
+    <header class="app-header">
+        <div class="header-left">
+            <h1>Financial Independence Simulator for Singapore</h1>
+            <p class="subtitle">Map your path to financial freedom based on your lifestyle, savings, and housing.</p>
+        </div>
+        <div class="header-right">
+            <div class="mode-switch">
+                <label><input type="radio" name="mode" value="simple" checked onchange="document.body.className='simple-mode'"> Guided</label>
+                <label><input type="radio" name="mode" value="advanced" onchange="document.body.className='advanced-mode'"> Engine Room</label>
             </div>
-            <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;">
-                <em>Data auto-saves to your browser. Use "Clear All" on shared devices.</em>
+            <div class="top-actions">
+                <button type="button" class="btn-secondary" onclick="exportPlan()">Export</button>
+                <label class="btn-secondary file-label">Import <input type="file" id="importFile" accept=".json" onchange="importPlan(event)"></label>
+                <button type="button" class="btn-danger" onclick="clearAllInputs()">Clear</button>
             </div>
         </div>
-    </div>
+    </header>
 
-    <div class="grid">
-        <!-- LEFT PANEL: ACCORDION INPUTS -->
-        <div class="inputs-panel">
-            
-            <div class="simple-only" style="margin-bottom: 0.5rem;">
-                <div style="font-size: 1rem; font-weight: 700; margin-bottom: 0.25rem;">Macroeconomic Scenarios</div>
-                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0; margin-bottom: 0.75rem;">Test how your plan holds up under different market conditions.</p>
-                <div class="preset-group">
-                    <button class="preset-btn" onclick="applyPreset('highly-conservative')">Highly Conservative</button>
-                    <button class="preset-btn" onclick="applyPreset('somewhat-conservative')">Somewhat Conservative</button>
-                    <button class="preset-btn" onclick="applyPreset('balanced')">Balanced</button>
-                </div>
+    <main class="app-layout">
+        <!-- TOP: 5 Relatable Persona Cards -->
+        <section class="persona-section">
+            <div class="section-heading">
+                <h2>Start with a profile that feels like you</h2>
+                <span class="sub-heading">Click a baseline below to auto-fill the simulator.</span>
             </div>
-            
-            <div id="preset-banner" class="preset-banner">
-                <span id="preset-banner-text" class="preset-banner-text"></span>
-                <button class="preset-close" onclick="document.getElementById('preset-banner').style.display='none'">✕</button>
+            <div class="persona-grid">
+                <button type="button" class="persona-card" onclick="loadProfile('young_starter')">
+                    <div class="persona-badge emerald">🌱 Single</div>
+                    <div class="persona-name">Young Starter</div>
+                    <div class="tt-container"><span class="tt-icon">i</span><span class="tt-text">Living lean in your 20s/30s. No property commitments, high equity investing.</span></div>
+                </button>
+                <button type="button" class="persona-card active" onclick="loadProfile('hdb_couple')">
+                    <div class="persona-badge blue">🏢 Married</div>
+                    <div class="persona-name">First-Time HDB</div>
+                    <div class="tt-container"><span class="tt-icon">i</span><span class="tt-text">The median baseline. BTO/resale flat, using CPF OA to absorb mortgage installments.</span></div>
+                </button>
+                <button type="button" class="persona-card" onclick="loadProfile('growing_family')">
+                    <div class="persona-badge purple">🏠 Upgrader</div>
+                    <div class="persona-name">Growing Family</div>
+                    <div class="tt-container"><span class="tt-icon">i</span><span class="tt-text">Balancing kids, higher expenses, and a private bank loan.</span></div>
+                </button>
+                <button type="button" class="persona-card" onclick="loadProfile('pragmatic_saver')">
+                    <div class="persona-badge amber">🛡️ CPF Focus</div>
+                    <div class="persona-name">Pragmatic Saver</div>
+                    <div class="tt-container"><span class="tt-icon">i</span><span class="tt-text">Stock-averse, maximizing the CPF SA 4% floor for guaranteed returns.</span></div>
+                </button>
+                <button type="button" class="persona-card" onclick="loadProfile('self_employed')">
+                    <div class="persona-badge slate">💼 Solo</div>
+                    <div class="persona-name">Self-Employed</div>
+                    <div class="tt-container"><span class="tt-icon">i</span><span class="tt-text">Managing uneven income and a larger cash buffer without employer CPF.</span></div>
+                </button>
             </div>
+        </section>
 
-            <!-- Accordion 1: Timeline & Inflation (Green) -->
-            <details class="accordion acc-green" open>
-                <summary>Timeline & Inflation</summary>
-                <div class="accordion-content">
-                    <div class="input-group">
-                        <div class="input-header">
-                            <div class="label-wrapper">Current Age <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Your age today, used as the starting point for compounding.</span></div></div>
-                            <input type="text" class="num-format sync-input" id="inp-currentAge" data-slider="slide-currentAge" placeholder="e.g., 35">
+        <div class="planner-split">
+            <!-- LEFT COLUMN: Inputs & Wizard -->
+            <div class="inputs-column">
+                <div class="card wizard-card">
+                    <div class="wizard-header"><span class="step-num">1</span><h3>Your Timeline & Lifestyle</h3></div>
+                    <div class="form-grid-2">
+                        <div>
+                            <label for="inp-currentAge">Current Age</label>
+                            <input type="number" id="inp-currentAge" value="32" oninput="runSim()">
                         </div>
-                        <div class="slider-container">
-                            <div class="slider-row"><input type="range" id="slide-currentAge" min="20" max="80" value="35" class="sync-slider" data-input="inp-currentAge"></div>
+                        <div>
+                            <label for="inp-retireAge">Target Retire Age</label>
+                            <input type="number" id="inp-retireAge" value="55" oninput="runSim()">
                         </div>
                     </div>
-                    
-                    <div class="input-group">
-                        <div class="input-header">
-                            <div class="label-wrapper">Target Retirement Age <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">The age your monthly investment contributions stop and you begin drawing down your portfolio.</span></div></div>
-                            <input type="text" class="num-format sync-input" id="inp-retireAge" data-slider="slide-retireAge" placeholder="e.g., 60">
-                        </div>
-                        <div class="slider-container">
-                            <div class="slider-row"><input type="range" id="slide-retireAge" min="30" max="80" value="60" class="sync-slider" data-input="inp-retireAge"></div>
-                            <div id="ctx-retireAge" class="slider-context"></div>
-                        </div>
+                    <div class="form-row" style="margin-top: 1rem;">
+                        <label for="inp-expenses">Target Monthly Household Living Costs (SGD)</label>
+                        <input type="text" id="inp-expenses" value="5,000" onblur="runSim()">
                     </div>
-
-                    <div class="input-group" style="margin-top: 1.5rem;">
-                        <div class="input-header">
-                            <div class="label-wrapper">Inflation Rate (%) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">The assumed annual increase in your living expenses.</span></div></div>
-                            <input type="text" class="num-format sync-input" id="inp-inflation" data-slider="slide-inflation" value="3.0">
-                        </div>
-                        <div class="slider-container">
-                            <div class="slider-row"><input type="range" id="slide-inflation" min="0" max="10" step="0.1" value="3.0" class="sync-slider" data-input="inp-inflation"></div>
-                            <div id="ctx-inflation" class="slider-context"></div>
-                        </div>
+                    <div class="form-row checkbox-row">
+                        <label><input type="checkbox" id="toggle-expense-partner" onchange="document.getElementById('expense-partner-panel').style.display = this.checked ? 'block' : 'none'; runSim();"> Share expenses with a partner</label>
+                    </div>
+                    <div id="expense-partner-panel" style="display:none;" class="sub-panel">
+                        <label for="inp-expenseShare">Your Share of Spending (%)</label>
+                        <input type="number" id="inp-expenseShare" value="50" oninput="runSim()">
                     </div>
                 </div>
-            </details>
 
-            <!-- Accordion 2: Asset Classes (Green) -->
-            <details class="accordion acc-green">
-                <summary>Asset Classes</summary>
-                <div class="accordion-content">
-                    
-                    <label class="asset-header">
-                        <input type="checkbox" id="toggle-global" checked onchange="toggleAsset('global')"> 
-                        Global Investments (USD)
-                    </label>
-                    <div id="asset-global" class="asset-body">
-                        <div class="input-group">
-                            <div class="input-header"><div class="label-wrapper">Starting Balance (USD)</div><input type="text" class="num-format sync-input" id="inp-usdStart" data-slider="slide-usdStart" placeholder="0"></div>
-                            <div class="slider-container"><div class="slider-row"><input type="range" id="slide-usdStart" min="0" max="1000000" step="5000" value="0" class="sync-slider" data-input="inp-usdStart"></div></div>
+                <div class="card wizard-card">
+                    <div class="wizard-header"><span class="step-num">2</span><h3>Your Fuel (Savings & Investments)</h3></div>
+                    <div class="form-grid-2">
+                        <div>
+                            <label for="inp-usdStart">Invested Portfolio (USD)</label>
+                            <input type="text" id="inp-usdStart" value="40,000" onblur="runSim()">
                         </div>
-                        <div class="input-group">
-                            <div class="input-header"><div class="label-wrapper">Monthly Contribution (USD)</div><input type="text" class="num-format sync-input" id="inp-usdContrib" data-slider="slide-usdContrib" placeholder="0"></div>
-                            <div class="slider-container"><div class="slider-row"><input type="range" id="slide-usdContrib" min="0" max="10000" step="100" value="0" class="sync-slider" data-input="inp-usdContrib"></div></div>
-                        </div>
-                        <div class="input-group">
-                            <div class="input-header">
-                                <div class="label-wrapper">Expected Return (%) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Defaulted to 7.0%, building in a conservative margin of safety relative to long-term historical averages of both US and All-World indices.</span></div></div>
-                                <input type="text" class="num-format sync-input" id="inp-usdRet" data-slider="slide-usdRet" value="7.0">
-                            </div>
-                            <div class="slider-container">
-                                <div class="slider-row"><input type="range" id="slide-usdRet" min="0" max="15" step="0.1" value="7.0" class="sync-slider" data-input="inp-usdRet"></div>
-                                <div id="ctx-usdRet" class="slider-context"></div>
-                            </div>
-                        </div>
-                        <div class="input-group">
-                            <div class="input-header">
-                                <div class="label-wrapper">Exchange Rate (USD to SGD)</div>
-                                <input type="text" class="num-format" id="inp-fx" value="1.35">
-                            </div>
-                        </div>
-                        <div class="input-group advanced-only">
-                            <div class="input-header">
-                                <div class="label-wrapper">Expected Currency Trend (%) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Historically, the MAS actively strengthens the SGD against the USD to fight inflation. An assumption of -0.8% is often used as a historical baseline.</span></div></div>
-                                <input type="text" class="num-format" id="inp-fxDrift" value="0.0">
-                            </div>
+                        <div>
+                            <label for="inp-usdContrib">Monthly Addition (USD)</label>
+                            <input type="text" id="inp-usdContrib" value="1,000" onblur="runSim()">
                         </div>
                     </div>
-
-                    <label class="asset-header">
-                        <input type="checkbox" id="toggle-sg" onchange="toggleAsset('sg')"> 
-                        SG Investments (SGD)
-                    </label>
-                    <div id="asset-sg" class="asset-body" style="display: none;">
-                        <div class="input-group">
-                            <div class="input-header"><div class="label-wrapper">Starting Balance (SGD)</div><input type="text" class="num-format sync-input" id="inp-sgdStart" data-slider="slide-sgdStart" placeholder="0"></div>
-                            <div class="slider-container"><div class="slider-row"><input type="range" id="slide-sgdStart" min="0" max="1000000" step="5000" value="0" class="sync-slider" data-input="inp-sgdStart"></div></div>
-                        </div>
-                        <div class="input-group">
-                            <div class="input-header"><div class="label-wrapper">Monthly Contribution (SGD)</div><input type="text" class="num-format sync-input" id="inp-sgdContrib" data-slider="slide-sgdContrib" placeholder="0"></div>
-                            <div class="slider-container"><div class="slider-row"><input type="range" id="slide-sgdContrib" min="0" max="10000" step="100" value="0" class="sync-slider" data-input="inp-sgdContrib"></div></div>
-                        </div>
-                        <div class="input-group">
-                            <div class="input-header">
-                                <div class="label-wrapper">Expected Return (%) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Defaulted to 4.0%, intentionally set roughly 20% lower than the historical annualized return for safety.</span></div></div>
-                                <input type="text" class="num-format sync-input" id="inp-sgdRet" data-slider="slide-sgdRet" value="4.0">
-                            </div>
-                            <div class="slider-container">
-                                <div class="slider-row"><input type="range" id="slide-sgdRet" min="0" max="15" step="0.1" value="4.0" class="sync-slider" data-input="inp-sgdRet"></div>
-                                <div id="ctx-sgdRet" class="slider-context"></div>
-                            </div>
-                        </div>
+                    <div class="form-row" style="margin-top: 1rem;">
+                        <label for="inp-cashStart">Cash & Emergency Buffer (SGD)</label>
+                        <input type="text" id="inp-cashStart" value="40,000" onblur="runSim()">
                     </div>
+                </div>
 
-                    <label class="asset-header">
-                        <input type="checkbox" id="toggle-cash" checked onchange="toggleAsset('cash')"> 
-                        Cash Reserve (SGD)
-                    </label>
-                    <div id="asset-cash" class="asset-body">
-                        <div class="input-group">
-                            <div class="input-header">
-                                <div class="label-wrapper">Starting Balance <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Emergency fund, fixed deposits, or Singapore Savings Bonds.</span></div></div>
-                                <input type="text" class="num-format" id="inp-cashStart" placeholder="0">
-                            </div>
-                        </div>
-                        <div class="input-group">
-                            <div class="input-header">
-                                <div class="label-wrapper">Annual Yield (%)</div>
-                                <input type="text" class="num-format" id="inp-cashYield" value="0.05">
-                            </div>
-                        </div>
+                <div class="card wizard-card">
+                    <div class="wizard-header"><span class="step-num">3</span><h3>Housing & Mortgage</h3></div>
+                    <div class="form-row checkbox-row">
+                        <label><input type="checkbox" id="toggle-mortgage" checked onchange="document.getElementById('mortgage-panel').style.display = this.checked ? 'block' : 'none'; runSim();"> I have an active home loan</label>
                     </div>
-
-                    <div class="advanced-only">
-                        <label class="asset-header">
-                            <input type="checkbox" id="toggle-sa" onchange="toggleAsset('sa')"> 
-                            CPF Special Account (SA)
-                        </label>
-                        <div id="asset-sa" class="asset-body" style="display: none;">
-                            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0; margin-bottom: 1rem; line-height: 1.4;">Compounded at the statutory 4.0% floor to visually track progress toward your Full Retirement Sum. (Modeled as an illiquid asset until age 55).</p>
-                            <div class="input-group">
-                                <div class="input-header">
-                                    <div class="label-wrapper">Current SA Balance (SGD)</div>
-                                    <input type="text" class="num-format" id="inp-saStart" placeholder="0">
+                    <div id="mortgage-panel" class="sub-panel">
+                        <div class="form-grid-2">
+                            <div>
+                                <label for="inp-mortgagePrincipal">Outstanding Principal</label>
+                                <input type="text" id="inp-mortgagePrincipal" value="380,000" onblur="runSim()">
+                            </div>
+                            <div>
+                                <label for="inp-loanYrs">Years Remaining</label>
+                                <input type="number" id="inp-loanYrs" value="22" oninput="runSim()">
+                            </div>
+                            <div>
+                                <label for="inp-mortgageRate">Interest Rate (%)</label>
+                                <input type="number" id="inp-mortgageRate" value="2.6" step="0.1" oninput="runSim()">
+                            </div>
+                            <div>
+                                <label for="inp-mortgageShare">Your Liability Share (%)</label>
+                                <input type="number" id="inp-mortgageShare" value="50" oninput="runSim()">
+                            </div>
+                        </div>
+                        <div class="cpf-toggle-box" style="margin-top: 1rem;">
+                            <label><input type="checkbox" id="inp-maxOA" checked onchange="runSim()"> Prioritize paying mortgage with CPF OA</label>
+                            <div class="form-grid-2" style="margin-top: 0.5rem;">
+                                <div>
+                                    <label for="inp-oaStart">Current OA Balance</label>
+                                    <input type="text" id="inp-oaStart" value="20,000" onblur="runSim()">
                                 </div>
-                            </div>
-                            <div class="input-group">
-                                <div class="input-header">
-                                    <div class="label-wrapper">Monthly Contribution (SGD) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Gross monthly inflow from employment or mandatory contributions.</span></div></div>
-                                    <input type="text" class="num-format" id="inp-saContrib" placeholder="0">
+                                <div>
+                                    <label for="inp-oaContrib">Monthly OA Inflow</label>
+                                    <input type="text" id="inp-oaContrib" value="1,400" onblur="runSim()">
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
 
-                        <div style="margin-top: 1.5rem; padding: 1rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px;">
-                            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.25rem;">
-                                <input type="checkbox" id="inp-inflateContribs" onchange="runSim()" style="width:18px; height:18px; accent-color:#d97706;">
-                                <label for="inp-inflateContribs" style="font-size: 0.85rem; font-weight:600; color: #92400e; cursor:pointer;">Increase contributions with inflation</label>
-                            </div>
-                            <p style="font-size: 0.8rem; color: #92400e; margin: 0; padding-left: 1.8rem; line-height: 1.4;">
-                                Check this if you expect your salary to grow in tandem with inflation AND your lifestyle to remain completely unchanged. Note: This level of discipline is uncommon.
-                            </p>
+                <!-- Engine Room Drawer (Hidden in Simple Mode) -->
+                <div class="card wizard-card advanced-only" id="engine-room">
+                    <div class="wizard-header"><span class="step-num">⚙️</span><h3>Advanced Engine Room</h3></div>
+                    <div class="form-grid-2">
+                        <div>
+                            <label for="inp-inflation">Inflation Rate (%)</label>
+                            <input type="number" id="inp-inflation" value="3.0" step="0.1" oninput="runSim()">
+                        </div>
+                        <div>
+                            <label for="inp-usdRet">Global Equity Return (%)</label>
+                            <input type="number" id="inp-usdRet" value="7.0" step="0.1" oninput="runSim()">
+                        </div>
+                        <div>
+                            <label for="inp-fx">USD/SGD Exchange Rate</label>
+                            <input type="number" id="inp-fx" value="1.35" step="0.01" oninput="runSim()">
+                        </div>
+                        <div>
+                            <label for="inp-cashYield">Cash Yield (%)</label>
+                            <input type="number" id="inp-cashYield" value="1.5" step="0.1" oninput="runSim()">
                         </div>
                     </div>
-
+                    <div class="form-row checkbox-row" style="margin-top:1rem;">
+                        <label><input type="checkbox" id="toggle-sa" onchange="document.getElementById('sa-panel').style.display = this.checked ? 'block' : 'none'; runSim();"> Model CPF Special Account (4.0% Floor)</label>
+                    </div>
+                    <div id="sa-panel" style="display:none;" class="sub-panel">
+                        <div class="form-grid-2">
+                            <div>
+                                <label for="inp-saStart">Current SA Balance</label>
+                                <input type="text" id="inp-saStart" value="0" onblur="runSim()">
+                            </div>
+                            <div>
+                                <label for="inp-saContrib">Monthly SA Addition</label>
+                                <input type="text" id="inp-saContrib" value="0" onblur="runSim()">
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </details>
+            </div>
 
-            <!-- Accordion 3: Mortgage & Housing (Orange) -->
-            <details class="accordion acc-orange">
-                <summary>Mortgage & Housing</summary>
-                <div class="accordion-content">
+            <!-- RIGHT COLUMN: Sticky Dashboard -->
+            <div class="chart-column">
+                <div class="sticky-chart-panel">
                     
-                    <label class="asset-header">
-                        <input type="checkbox" id="toggle-mortgage" onchange="toggleAsset('mortgage'); calcLiveMortgage();"> 
-                        I have a property with a current mortgage
-                    </label>
-                    
-                    <div id="asset-mortgage" class="asset-body" style="display: none;">
-                        
-                        <div style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border);">
-                            <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700; cursor: pointer; color: var(--text-main);">
-                                <input type="checkbox" id="toggle-mortgage-partner" onchange="toggleMortgagePartner(); calcLiveMortgage(); runSim();" style="width: 16px; height: 16px; accent-color: var(--acc-orange);"> 
-                                I share this mortgage with a partner
+                    <!-- Dynamic Hero Banner (Using your existing V5 IDs) -->
+                    <div id="card-status" class="hero-card success" style="margin-bottom: 1rem; padding: 1.5rem; border-radius: 12px; color: white;">
+                        <h2 id="status-main" style="font-size: 1.5rem; margin-bottom: 0.25rem;">✅ Safe to Age 95</h2>
+                        <p id="status-sub" style="font-size: 1rem; opacity: 0.9;">Ending bal: $0.00M</p>
+                    </div>
+
+                    <div id="diag-panel" style="display: none; background: #fee2e2; border: 1px solid #fecaca; color: #991b1b; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: 0.9rem;">
+                        <strong>Diagnostic:</strong> <span id="diag-message"></span>
+                    </div>
+
+                    <!-- Chart Card -->
+                    <div class="card chart-card">
+                        <div class="chart-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h4 style="font-size: 1rem; font-weight: 600;">Net Worth Trajectory</h4>
+                            <label style="font-size: 0.8rem; display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                                <input type="checkbox" id="inp-showFireCurve" onchange="runSim()"> Show target curve
                             </label>
-                            
-                            <div id="mortgage-partner-panel" style="display: none; margin-top: 1rem; padding: 1rem; background: #f8fafc; border-radius: 8px; border: 1px solid var(--border);">
-                                <div class="input-group" style="margin-bottom: 0;">
-                                    <div class="input-header">
-                                        <div class="label-wrapper">Your Share of Mortgage Installment (%)</div>
-                                        <input type="text" class="num-format sync-input" id="inp-mortgageShare" data-slider="slide-mortgageShare" value="100" oninput="calcLiveMortgage(); runSim();">
-                                    </div>
-                                    <div class="slider-container"><div class="slider-row"><input type="range" id="slide-mortgageShare" min="0" max="100" step="1" value="100" class="sync-slider" data-input="inp-mortgageShare"></div></div>
-                                </div>
-                            </div>
                         </div>
-
-                        <div class="simple-only">
-                            <div class="input-group">
-                                <div class="input-header">
-                                    <div class="label-wrapper">Total Monthly Mortgage Payment (SGD)</div>
-                                    <input type="text" class="num-format" id="inp-mortgageSimple" placeholder="0" oninput="runSim()">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="advanced-only">
-                            <div style="margin-bottom: 1.5rem;">
-                                <div class="label-wrapper" style="margin-bottom: 0.5rem;">Loan Type</div>
-                                <div style="display: flex; gap: 1rem; background: #f1f5f9; padding: 0.5rem; border-radius: 8px;">
-                                    <label style="flex:1; display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; font-weight:600; cursor:pointer;">
-                                        <input type="radio" name="loanType" id="loan-hdb" value="hdb" checked onchange="calcLiveMortgage()"> HDB Concessionary
-                                    </label>
-                                    <label style="flex:1; display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; font-weight:600; cursor:pointer;">
-                                        <input type="radio" name="loanType" id="loan-bank" value="bank" onchange="calcLiveMortgage()"> Bank Loan (Floating)
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div class="input-group">
-                                <div class="input-header">
-                                    <div class="label-wrapper">Remaining Loan Principal (SGD)</div>
-                                    <input type="text" class="num-format" id="inp-mortgagePrincipal" placeholder="0" oninput="calcLiveMortgage()">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="input-group">
-                            <div class="input-header">
-                                <div class="label-wrapper">Years Remaining on Loan</div>
-                                <input type="text" class="num-format" id="inp-loanYrs" placeholder="0" oninput="calcLiveMortgage(); runSim();">
-                            </div>
-                        </div>
-                        
-                        <div class="advanced-only">
-                            <div class="input-group">
-                                <div class="input-header">
-                                    <div class="label-wrapper">Current Interest Rate (%) <div class="tt-container" id="tt-mortgageRate"><span class="tt-icon">?</span><span class="tt-text" id="tt-text-mortgageRate">HDB rate is pegged at 0.1% above the prevailing CPF OA interest rate.</span></div></div>
-                                    <input type="text" class="num-format sync-input" id="inp-mortgageRate" data-slider="slide-mortgageRate" value="2.6" disabled oninput="calcLiveMortgage()">
-                                </div>
-                                <div class="slider-container"><div class="slider-row"><input type="range" id="slide-mortgageRate" min="0" max="10" step="0.1" value="2.6" class="sync-slider" data-input="inp-mortgageRate" disabled></div></div>
-                            </div>
-
-                            <div class="mortgage-readout" id="mortgage-readout-box">
-                                <div id="disp-calc-pmt-total">Total Monthly Installment: $0</div>
-                                <div id="disp-calc-pmt-personal" style="margin-top: 0.35rem; color: #1d4ed8;">Your Personal Liability (100%): $0</div>
-                            </div>
-                            
-                            <hr style="border: 0; border-top: 1px solid var(--border); margin: 1.5rem 0;">
-                            <div class="input-group">
-                                <div class="input-header">
-                                    <div class="label-wrapper">Gross monthly CPF OA contributions (from employment)</div>
-                                    <input type="text" class="num-format" id="inp-oaContrib" placeholder="e.g., 1000">
-                                </div>
-                            </div>
-                            <div class="input-group"><div class="input-header"><div class="label-wrapper">Current CPF OA Balance (SGD)</div><input type="text" class="num-format" id="inp-oaStart" placeholder="0"></div></div>
-                            
-                            <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid var(--border); margin-top: 1rem;">
-                                <div style="display: flex; align-items: center; gap: 0.75rem;">
-                                    <input type="checkbox" id="inp-maxOA" checked onchange="toggleCustomOA()" style="width:18px; height:18px; accent-color:var(--acc-orange);">
-                                    <label for="inp-maxOA" style="font-size: 0.85rem; font-weight:600; color: var(--text-main); cursor:pointer; display: flex; align-items: center;">
-                                        Prioritize using CPF OA to pay mortgage (saves cash)
-                                        <div class="tt-container" style="margin-left: 6px;">
-                                            <span class="tt-icon">?</span>
-                                            <span class="tt-text" style="bottom: 130%; right: auto; left: 0; transform: none;">If checked, the simulator drains your available OA to pay the mortgage before touching your cash reserves. Uncheck to manually cap OA usage.</span>
-                                        </div>
-                                    </label>
-                                </div>
-                                <div id="custom-oa-cap" style="display: none; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
-                                    <div class="input-header" style="margin-bottom:0;">
-                                        <div class="label-wrapper">Custom cap on monthly CPF OA utilization for mortgage (SGD)</div>
-                                        <input type="text" class="num-format" id="inp-customOACap" value="0">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-            </details>
-
-            <!-- Accordion 4: Retirement Expenses & Targets (Blue) -->
-            <details class="accordion acc-blue">
-                <summary>Retirement Income & Targets</summary>
-                <div class="accordion-content">
-                    
-                    <div style="margin-bottom: 1.5rem;">
-                        <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700; cursor: pointer; color: var(--text-main);">
-                            <input type="checkbox" id="toggle-expense-partner" onchange="toggleExpensePartner(); runSim();" style="width: 16px; height: 16px; accent-color: var(--acc-blue);"> 
-                            I share household living costs with a partner
-                        </label>
-                        
-                        <div id="expense-partner-panel" style="display: none; margin-top: 1rem; padding: 1rem; background: #f8fafc; border-radius: 8px; border: 1px solid var(--border);">
-                            <div class="input-group" style="margin-bottom: 0;">
-                                <div class="input-header">
-                                    <div class="label-wrapper">Your Share of Household Expenses (%)</div>
-                                    <input type="text" class="num-format sync-input" id="inp-expenseShare" data-slider="slide-expenseShare" value="100" oninput="runSim();">
-                                </div>
-                                <div class="slider-container"><div class="slider-row"><input type="range" id="slide-expenseShare" min="0" max="100" step="1" value="100" class="sync-slider" data-input="inp-expenseShare"></div></div>
-                                <div id="expense-share-readout" style="margin-top: 0.75rem; font-weight: 600; color: #1d4ed8; font-size: 0.85rem;">The simulator will draw down: $0/mo</div>
-                            </div>
+                        <div style="position: relative; height: 350px; width: 100%;">
+                            <canvas id="fireChart"></canvas>
                         </div>
                     </div>
-
-                    <div class="input-group">
-                        <div class="input-header">
-                            <div class="label-wrapper">Total Household Expenses (SGD/mo) <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Your total household target monthly spending in TODAY's dollars. The simulator will compound this upward every year based on your inflation assumption.</span></div></div>
-                            <input type="text" class="num-format sync-input" id="inp-expenses" data-slider="slide-expenses" placeholder="e.g., 2500">
-                        </div>
-                        <div class="slider-container"><div class="slider-row"><input type="range" id="slide-expenses" min="0" max="20000" step="100" value="0" class="sync-slider" data-input="inp-expenses"></div></div>
-                    </div>
-
-                    <div class="advanced-only" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border);">
-                        
-                        <div style="margin-bottom: 1rem; padding: 0.75rem; background: #eff6ff; border: 1px dashed #bfdbfe; border-radius: 6px;">
-                            <div style="font-weight: 700; color: #1e40af; font-size: 0.85rem; margin-bottom: 0.25rem;">Dynamic SWR Engine Active</div>
-                            <div id="swr-readout" style="font-size: 0.85rem; color: #3b82f6;">Calculated Multiple: --x (Based on your real return)</div>
-                        </div>
-
-                        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 600; cursor: pointer; color: var(--text-main); margin-bottom: 0.75rem;">
-                            <input type="checkbox" id="inp-swrOverride" onchange="toggleSwrOverride(); runSim();" style="width: 16px; height: 16px; accent-color: var(--acc-blue);"> 
-                            Override with custom withdrawal multiple
-                        </label>
-
-                        <div class="input-group" style="margin-bottom: 0;">
-                            <div class="input-header">
-                                <div class="label-wrapper">Target Withdrawal Multiple <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">25x equals the standard 4% SWR. Higher multiples (e.g., 33x = 3% SWR) are more conservative against prolonged market crashes.</span></div></div>
-                                <input type="text" class="num-format sync-input" id="inp-swrMultiple" data-slider="slide-swrMultiple" value="25" disabled>
-                            </div>
-                            <div class="slider-container">
-                                <div class="slider-row"><input type="range" id="slide-swrMultiple" min="15" max="50" step="1" value="25" class="sync-slider" data-input="inp-swrMultiple" disabled></div>
-                                <div id="ctx-swrMultiple" class="slider-context"></div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="advanced-only" style="margin-top: 2rem;">
-                        <div class="section-title" style="font-size: 1rem;">Milestone Capital Events (SGD)</div>
-                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">Model one-off lumpsums at specific ages. Use negative numbers (-) for heavy expenses (renovations, travel) and positive numbers for windfalls (inheritance, downsizing).</div>
-                        <div style="display: grid; grid-template-columns: 1fr 100px 70px 30px; gap: 0.5rem; font-size: 0.75rem; font-weight: bold; color: var(--text-muted); margin-bottom: 0.25rem;">
-                            <div>Description</div><div>Amt (SGD)</div><div>Age</div><div></div>
-                        </div>
-                        <div id="milestones-container"></div>
-                        <button class="btn-add" onclick="addMilestone()">+ Add Milestone Event</button>
-                    </div>
-
-                    <div class="advanced-only" style="margin-top: 2rem;">
-                        <div class="section-title" style="font-size: 1rem;">Passive Income Streams (SGD/mo)</div>
-                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">Only active during retirement. Nominal values (does not inflate).</div>
-                        <div style="display: grid; grid-template-columns: 1fr 100px 70px 70px 30px; gap: 0.5rem; font-size: 0.75rem; font-weight: bold; color: var(--text-muted); margin-bottom: 0.25rem;">
-                            <div>Name</div><div>Amt (mo)</div><div>Start Age</div><div>End Age</div><div></div>
-                        </div>
-                        <div id="income-streams-container"></div>
-                        <button class="btn-add" onclick="addIncomeStream()">+ Add Income Stream</button>
-                    </div>
-
-                </div>
-            </details>
-
-            <!-- Accordion 5: Monte Carlo (Advanced Only) (Gray) -->
-            <details class="accordion acc-gray advanced-only">
-                <summary>Monte Carlo Simulation</summary>
-                <div class="accordion-content">
-                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0; margin-bottom: 1.5rem;">
-                        Real markets don't move in a straight line. Instead of assuming perfect average returns every year, this engine runs hundreds of alternate realities with randomized market booms and crashes to stress-test your plan.
-                    </p>
-
-                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid var(--border);">
-                        <input type="checkbox" id="inp-mcToggle" onchange="runSim()" style="width:18px; height:18px; accent-color:var(--acc-gray);">
-                        <label for="inp-mcToggle" style="font-weight:700; color:var(--text-main); cursor:pointer;">Enable Monte Carlo Engine</label>
-                    </div>
-
-                    <div class="input-group">
-                        <div class="input-header">
-                            <div class="label-wrapper">Simulations <div class="tt-container"><span class="tt-icon">?</span><span class="tt-text">Number of random paths to generate. Higher numbers take slightly longer to calculate.</span></div></div>
-                            <input type="text" class="num-format" id="inp-mcRuns" value="200">
-                        </div>
-                    </div>
-
-                    <div class="vol-grid" style="display: grid; grid-template-columns: 1fr 80px 100px; gap: 0.75rem; align-items: center;">
-                        <div style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted);">Variable</div>
-                        <div style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted); text-align: center;">Base</div>
-                        <div style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted); text-align: right;">Vol. (± pp)</div>
-                        
-                        <div style="font-size: 0.85rem; font-weight: 600;">Global Equities</div>
-                        <div id="disp-usdRet" style="text-align: center; font-size: 0.95rem; font-weight: 700; color: #0f172a;">7.0%</div>
-                        <input type="text" class="num-format" id="inp-usdVol" value="15.0">
-
-                        <div style="font-size: 0.85rem; font-weight: 600;">SG Equities</div>
-                        <div id="disp-sgdRet" style="text-align: center; font-size: 0.95rem; font-weight: 700; color: #0f172a;">4.0%</div>
-                        <input type="text" class="num-format" id="inp-sgdVol" value="14.0">
-
-                        <div style="font-size: 0.85rem; font-weight: 600;">Inflation</div>
-                        <div id="disp-infl" style="text-align: center; font-size: 0.95rem; font-weight: 700; color: #0f172a;">3.0%</div>
-                        <input type="text" class="num-format" id="inp-inflVol" value="1.5">
-
-                        <div style="font-size: 0.85rem; font-weight: 600;">Currency Trend</div>
-                        <div id="disp-fxDrift" style="text-align: center; font-size: 0.95rem; font-weight: 700; color: #0f172a;">0.0%</div>
-                        <input type="text" class="num-format" id="inp-fxVol" value="4.5">
-
-                        <div style="font-size: 0.85rem; font-weight: 600;">Mortgage Rate</div>
-                        <div id="disp-mortgageRate" style="text-align: center; font-size: 0.95rem; font-weight: 700; color: #0f172a;">2.6%</div>
-                        <input type="text" class="num-format" id="inp-mortgageVol" value="1.5">
-                    </div>
-
-                    <div style="margin-top: 1.5rem; background: #fffbeb; border: 1px solid #fde68a; padding: 1rem; border-radius: 8px;">
-                        <div style="display: flex; align-items: center; gap: 0.75rem;">
-                            <input type="checkbox" id="inp-blackSwan" onchange="runSim()" style="width:18px; height:18px; accent-color:#d97706;">
-                            <label for="inp-blackSwan" style="font-weight:700; color:#92400e; cursor:pointer;">Enable "Black Swan" Market Risk</label>
-                            <div class="tt-container">
-                                <span class="tt-icon" style="background: #fcd34d; color: #92400e;">?</span>
-                                <span class="tt-text" style="right:0; left:auto; transform:none; margin-left:0;">A 'Black Swan' replaces the standard bell curve with a fat-tailed distribution, drastically increasing the simulated frequency of extreme market crashes.</span>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-            </details>
-
-        </div>
-
-        <!-- RIGHT PANEL: HERO DASHBOARD & CHART -->
-        <div class="right-panel">
-            
-            <div class="hero-dashboard">
-                <div class="hero-card" id="hero-target">
-                    <div class="hero-label">Target Retire Age</div>
-                    <div class="hero-value" id="val-targetAge">--</div>
-                    <div class="hero-subtext">Personal Exp: <span id="val-heroExp">$0</span></div>
-                </div>
-                <div class="hero-card" id="hero-fire">
-                    <div class="hero-label">Target FIRE Number <div class="tt-container"><span class="tt-icon" style="width:12px; height:12px; font-size:9px;">?</span><span class="tt-text" style="width: 200px; bottom: 130%; right: -100px; left: auto; transform: none; margin-left: 0;">Your 'financial finish line'. The exact portfolio value you need to safely stop working.</span></div></div>
-                    <div class="hero-value" id="val-fireNumber">$0</div>
-                    <div class="hero-subtext">Dynamic target at Age <span id="val-fireAge">--</span></div>
-                    <label style="display: inline-flex; align-items: center; justify-content: center; gap: 4px; font-size: 0.7rem; font-weight: 600; color: var(--primary); cursor: pointer; margin-top: 8px; padding: 4px 8px; background: #eff6ff; border-radius: 4px; border: 1px solid #bfdbfe;">
-                        <input type="checkbox" id="inp-showFireCurve" onchange="runSim()" style="width: 12px; height: 12px; accent-color: var(--primary); margin: 0;"> 
-                        Show curve on chart
-                    </label>
-                </div>
-                <div class="hero-card" id="hero-peak">
-                    <div class="hero-label">Peak Nest Egg</div>
-                    <div class="hero-value" id="val-peak">$0</div>
-                    <div class="hero-subtext">Liquid SGD Portfolio</div>
-                </div>
-                <div class="hero-card" id="hero-status">
-                    <div class="hero-label">Simulation Outlook</div>
-                    <div class="hero-value" id="val-statusText" style="font-size: 1.1rem; line-height: 1.2; margin-top: 0.4rem;">Awaiting Data</div>
-                    <div class="hero-subtext" id="val-statusSub">Enter age to begin</div>
-                </div>
-
-                <!-- V5 Diagnostic Engine & Auto-Solver UI -->
-                <div id="diagnostic-panel">
-                    <div class="diag-title">⚠️ Diagnostic Report</div>
-                    <div id="diag-message" class="diag-text">Your portfolio experienced a fatal shortfall.</div>
-                    <button class="btn-solve" onclick="runAutoSolver()">Auto-Solve My Plan</button>
-                    <div id="autosolver-results"></div>
                 </div>
             </div>
-
-            <div class="chart-container">
-                <div id="warningsBox" class="warnings-container" style="position: absolute; top: 1rem; left: 1rem; right: 1rem; z-index: 10;"></div>
-                <canvas id="fireChart"></canvas>
-            </div>
-
-            <details class="guide" open>
-                <summary>Assumptions & Beginner Blindspots Guide</summary>
-                <div style="padding-top: 1rem;">
-                    
-                    <h4 style="margin-top: 0;">The Financial Finish Line (Dynamic FIRE Number)</h4>
-                    <p style="font-size: 0.95rem; color: #4b5563;">Think of this number as your financial finish line. Because things cost more in the future (inflation) and you may eventually pay off large debts (mortgages), the finish line moves every single year.</p>
-                    <p style="font-size: 0.95rem; color: #4b5563;">Instead of plotting a static target, this engine plots your <strong>FIRE Requirement</strong> as a dynamic, dotted curve on the chart. It calculates exactly how much money you need for any given year based on that year's specific inflation and remaining debt. Once your compounding portfolio (the green area) catches up and crosses <em>above</em> the dotted red line, you have achieved Financial Independence.</p>
-                    
-                    <h4 style="margin-top: 1.5rem; color: #166534;">🛡️ The CPF LIFE "Margin of Safety"</h4>
-                    <p style="font-size: 0.95rem; color: #4b5563;">This simulator deliberately excludes CPF LIFE payouts and the Age 55 Retirement Account (RA) deduction. We recommend treating your eventual CPF LIFE payouts as a pure "margin of safety" rather than relying on it to fund your base FIRE calculations. For conceptual planning, the 2026 CPF cohort benchmarks (in today's dollars) are roughly $110,200 yielding ~$900/mo (BRS) or $220,400 yielding ~$1,700/mo (FRS).</p>
-
-                    <h4 style="margin-top: 1.5rem;">Historical Global Returns & Margin of Safety</h4>
-                    <p style="font-size: 0.95rem; color: #4b5563;">When projecting global equity returns, history offers a guide. Over the last 20-30 years, US-only indices (like the S&P 500) have annualized roughly 10-10.5%, while globally diversified indices (like the MSCI ACWI) have annualized roughly 8-8.5%. This simulator defaults to <strong>7.0%</strong>, applying an intentional ~20% "margin of safety" haircut to account for future uncertainties and potential lower-growth decades.</p>
-
-                    <h4 style="margin-top: 1.5rem;">Expected Currency Trend & Currency Risk</h4>
-                    <p style="font-size: 0.95rem; color: #4b5563;">The MAS uses exchange rate policy to manage inflation, meaning the SGD has historically appreciated against the USD. An "Expected Currency Trend" assumption (e.g., -0.8%) models this depreciation of the US Dollar, gradually reducing the local SGD purchasing power of your global portfolio over decades. For simplicity, the simple mode preset starts at 0%.</p>
-
-                    <h4 style="color: #991b1b; margin-top: 2rem;">⚠️ Limitations & Blindspots (For Beginners)</h4>
-                    <p style="font-size: 0.95rem; color: #4b5563;">Real life is messier than math. Do not base major life decisions on this chart without understanding its blindspots:</p>
-                    <ul class="blindspots-list">
-                        <li><strong>Sequence of Returns Risk (SORR) & Cash Buffers:</strong> Because the simulator draws down proportionally, it assumes you continue selling equities even during a market crash. In reality, you should actively manage a cash buffer (using dynamic strategies like the <em>Guyton-Klinger rules</em>) to avoid locking in losses when the market is down.</li>
-                        <li><strong>The "Stagflation" Blindspot:</strong> The macroeconomic preset buttons pair lower market returns with higher inflation. However, real life can feature "Stagflation" where inflation spikes dramatically at the exact same time markets crash (e.g., 2022). You must manually type in high inflation and negative returns to stress-test this.</li>
-                        <li><strong>Invisible Tax Drag:</strong> If your global portfolio includes US-domiciled ETFs, the US levies a 30% Dividend Withholding Tax on Singaporeans. A projected 8% gross return might effectively be 7.4% after this tax drag.</li>
-                        <li><strong>The Retirement "Smile":</strong> The base tool inflates expenses on a straight line. Real retirement spending usually "smiles"—high early on (travel), lower in the middle, and spiking heavily at the end (healthcare). Use Advanced Mode's "Milestone Capital Events" to properly model this.</li>
-                    </ul>
-                </div>
-            </details>
-
         </div>
-    </div>
+    </main>
 
-    <!-- Link to our isolated Engine logic -->
     <script src="engine.js"></script>
 </body>
 </html>
