@@ -266,10 +266,13 @@ function setMode(mode) {
     if(!isLoading) runSim();
 }
 
-function toggleAsset(asset) {
-    const isChecked = document.getElementById(`toggle-${asset}`).checked;
-    document.getElementById(`asset-${asset}`).style.display = isChecked ? 'block' : 'none';
-    if(!isLoading) runSim();
+function toggleAsset(assetType) {
+    try {
+        let isChecked = document.getElementById('inp-has' + assetType).checked;
+        document.getElementById(assetType.toLowerCase() + '-panel').style.display = isChecked ? 'block' : 'none';
+    } catch (e) {
+        // Silently ignore missing accordion panels
+    }
 }
 
 function toggleMortgagePartner() {
