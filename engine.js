@@ -451,68 +451,57 @@ function addMilestone(name = '', amt = '', age = 60) {
 
 // --- V5 Archetypes Engine ---
 function loadProfile(type) {
-    isLoading = true;
-    clearAllInputs();
-    document.getElementById('profile-select').value = ""; 
-    
-    if (type === 'median') {
-        document.getElementById('inp-showFireCurve').checked = false;
-        setVal('inp-currentAge', 35); setVal('inp-retireAge', 60); setVal('inp-inflation', 3.0); 
-        document.getElementById('toggle-global').checked = true; toggleAsset('global');
-        setVal('inp-usdStart', 20000); setVal('inp-usdContrib', 1000); setVal('inp-usdRet', 7.0); 
-        document.getElementById('toggle-sg').checked = true; toggleAsset('sg');
-        setVal('inp-sgdStart', 20000); setVal('inp-sgdContrib', 500); setVal('inp-sgdRet', 4.0); 
-        document.getElementById('toggle-cash').checked = true; toggleAsset('cash');
-        setVal('inp-cashStart', 40000);
-        document.getElementById('toggle-mortgage').checked = true; toggleAsset('mortgage');
-        document.getElementById('loan-hdb').checked = true;
-        setVal('inp-mortgageSimple', 1872); setVal('inp-mortgagePrincipal', 350000); setVal('inp-loanYrs', 20);
-        document.getElementById('inp-maxOA').checked = true; toggleCustomOA();
-        setVal('inp-oaStart', 25000); setVal('inp-oaContrib', 1872); 
-        setVal('inp-expenses', 2500);
+    document.querySelectorAll('.persona-card').forEach(c => c.classList.remove('active'));
+    let activeBtn = event ? event.currentTarget : null;
+    if (activeBtn) activeBtn.classList.add('active');
+
+    if (type === 'young_starter') {
+        setVal('inp-currentAge', 28); setVal('inp-retireAge', 55); setVal('inp-expenses', 2500);
+        document.getElementById('toggle-expense-partner').checked = false;
+        setVal('inp-usdStart', 35000); setVal('inp-usdContrib', 1500); setVal('inp-cashStart', 25000);
+        document.getElementById('toggle-mortgage').checked = false;
+        document.getElementById('toggle-sa').checked = false;
     } 
-    else if (type === 'coast') {
-        setVal('inp-currentAge', 28); setVal('inp-retireAge', 45); setVal('inp-inflation', 3.0); 
-        document.getElementById('toggle-global').checked = true; toggleAsset('global');
-        setVal('inp-usdStart', 150000); setVal('inp-usdContrib', 2500); setVal('inp-usdRet', 8.0); 
-        document.getElementById('toggle-cash').checked = true; toggleAsset('cash');
-        setVal('inp-cashStart', 60000);
-        setVal('inp-expenses', 3000);
+    else if (type === 'hdb_couple') {
+        setVal('inp-currentAge', 32); setVal('inp-retireAge', 55); setVal('inp-expenses', 5000);
+        document.getElementById('toggle-expense-partner').checked = true; setVal('inp-expenseShare', 50);
+        setVal('inp-usdStart', 40000); setVal('inp-usdContrib', 1000); setVal('inp-cashStart', 40000);
+        document.getElementById('toggle-mortgage').checked = true;
+        setVal('inp-mortgagePrincipal', 380000); setVal('inp-loanYrs', 22); setVal('inp-mortgageRate', 2.6); setVal('inp-mortgageShare', 50);
+        document.getElementById('inp-maxOA').checked = true; setVal('inp-oaStart', 20000); setVal('inp-oaContrib', 1400);
+        document.getElementById('toggle-sa').checked = false;
+    } 
+    else if (type === 'growing_family') {
+        setVal('inp-currentAge', 38); setVal('inp-retireAge', 60); setVal('inp-expenses', 8500);
+        document.getElementById('toggle-expense-partner').checked = true; setVal('inp-expenseShare', 50);
+        setVal('inp-usdStart', 120000); setVal('inp-usdContrib', 2200); setVal('inp-cashStart', 80000);
+        document.getElementById('toggle-mortgage').checked = true;
+        setVal('inp-mortgagePrincipal', 1100000); setVal('inp-loanYrs', 25); setVal('inp-mortgageRate', 2.8); setVal('inp-mortgageShare', 50);
+        document.getElementById('inp-maxOA').checked = true; setVal('inp-oaStart', 35000); setVal('inp-oaContrib', 1500);
+        document.getElementById('toggle-sa').checked = false;
+    } 
+    else if (type === 'pragmatic_saver') {
+        setVal('inp-currentAge', 42); setVal('inp-retireAge', 62); setVal('inp-expenses', 2400);
+        document.getElementById('toggle-expense-partner').checked = false;
+        setVal('inp-usdStart', 20000); setVal('inp-usdContrib', 300); setVal('inp-cashStart', 60000);
+        document.getElementById('toggle-mortgage').checked = true;
+        setVal('inp-mortgagePrincipal', 120000); setVal('inp-loanYrs', 10); setVal('inp-mortgageRate', 2.6); setVal('inp-mortgageShare', 100);
+        document.getElementById('inp-maxOA').checked = true; setVal('inp-oaStart', 30000); setVal('inp-oaContrib', 1200);
+        document.getElementById('toggle-sa').checked = true; setVal('inp-saStart', 140000); setVal('inp-saContrib', 500);
+    } 
+    else if (type === 'self_employed') {
+        setVal('inp-currentAge', 34); setVal('inp-retireAge', 58); setVal('inp-expenses', 3200);
+        document.getElementById('toggle-expense-partner').checked = false;
+        setVal('inp-usdStart', 70000); setVal('inp-usdContrib', 1200); setVal('inp-cashStart', 75000);
+        document.getElementById('toggle-mortgage').checked = false;
+        document.getElementById('toggle-sa').checked = false;
     }
-    else if (type === 'dink') {
-        setVal('inp-currentAge', 32); setVal('inp-retireAge', 55); setVal('inp-inflation', 3.5); 
-        document.getElementById('toggle-global').checked = true; toggleAsset('global');
-        setVal('inp-usdStart', 80000); setVal('inp-usdContrib', 3000); setVal('inp-usdRet', 7.5); 
-        document.getElementById('toggle-cash').checked = true; toggleAsset('cash');
-        setVal('inp-cashStart', 100000);
-        document.getElementById('toggle-mortgage').checked = true; toggleAsset('mortgage');
-        document.getElementById('toggle-mortgage-partner').checked = true; toggleMortgagePartner();
-        document.getElementById('loan-bank').checked = true;
-        setVal('inp-mortgageSimple', 4500); setVal('inp-mortgagePrincipal', 1200000); setVal('inp-loanYrs', 25); setVal('inp-mortgageShare', 50);
-        setVal('inp-oaContrib', 1200); 
-        document.getElementById('toggle-expense-partner').checked = true; toggleExpensePartner();
-        setVal('inp-expenses', 8000); setVal('inp-expenseShare', 50);
-    }
-    else if (type === 'conservative') {
-        setVal('inp-currentAge', 42); setVal('inp-retireAge', 65); setVal('inp-inflation', 2.5); 
-        document.getElementById('toggle-sg').checked = true; toggleAsset('sg');
-        setVal('inp-sgdStart', 100000); setVal('inp-sgdContrib', 800); setVal('inp-sgdRet', 5.0); 
-        document.getElementById('toggle-cash').checked = true; toggleAsset('cash');
-        setVal('inp-cashStart', 50000); setVal('inp-cashYield', 1.5);
-        document.getElementById('toggle-sa').checked = true; toggleAsset('sa');
-        setVal('inp-saStart', 120000); setVal('inp-saContrib', 400);
-        document.getElementById('toggle-mortgage').checked = true; toggleAsset('mortgage');
-        document.getElementById('loan-hdb').checked = true;
-        setVal('inp-mortgageSimple', 1200); setVal('inp-mortgagePrincipal', 200000); setVal('inp-loanYrs', 15);
-        setVal('inp-oaStart', 40000); setVal('inp-oaContrib', 1000); 
-        setVal('inp-expenses', 4000);
-        
-        document.getElementById('mode-advanced').checked = true;
-        setMode('advanced');
-    }
+
+    // Trigger UI visibility panels to match checkboxes
+    document.getElementById('expense-partner-panel').style.display = document.getElementById('toggle-expense-partner').checked ? 'block' : 'none';
+    document.getElementById('mortgage-panel').style.display = document.getElementById('toggle-mortgage').checked ? 'block' : 'none';
+    document.getElementById('sa-panel').style.display = document.getElementById('toggle-sa').checked ? 'block' : 'none';
     
-    calcLiveMortgage();
-    isLoading = false;
     runSim();
 }
 
