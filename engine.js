@@ -693,11 +693,7 @@ function simulatePath(inputs, isMonteCarlo) {
         let currentPersonalMortgage = 0;
         
         if (isMortgageActive) {
-            if (isAdvanced) {
-                currentTotalMortgage = calcPmt(remPrincipal, actualMortgageRate, mortgageEndAge - age);
-            } else {
-                currentTotalMortgage = simpleMortgage;
-            }
+            currentTotalMortgage = calcPmt(remPrincipal, actualMortgageRate, mortgageEndAge - age);
             currentPersonalMortgage = currentTotalMortgage * (mortgageShare / 100);
         }
 
@@ -737,18 +733,11 @@ function simulatePath(inputs, isMonteCarlo) {
                 saBal += currentSaContrib;
                 
                 if (isMortgageActive && currentTotalMortgage > 0) {
-                    if (isAdvanced) {
-                        let interestPayment = remPrincipal * (actualMortgageRate / 12);
-                        remPrincipal = Math.max(0, remPrincipal - (currentTotalMortgage - interestPayment));
-                    }
+                    let interestPayment = remPrincipal * (actualMortgageRate / 12);
+                    remPrincipal = Math.max(0, remPrincipal - (currentTotalMortgage - interestPayment));
 
                     let targetOaPay = currentPersonalMortgage;
-                    
-                    if (!isAdvanced) {
-                        oaBal += currentPersonalMortgage; 
-                    } else if (!isMaxOA) {
-                        targetOaPay = Math.min(customOACap, currentPersonalMortgage);
-                    }
+                    if (!isMaxOA) targetOaPay = Math.min(customOACap, currentPersonalMortgage);
                     
                     if (oaBal >= targetOaPay) {
                         oaBal -= targetOaPay;
@@ -778,10 +767,8 @@ function simulatePath(inputs, isMonteCarlo) {
                 let grossSpending = currentExpenses * (expenseShare / 100);
                 
                 if (isMortgageActive && currentTotalMortgage > 0) {
-                    if (isAdvanced) {
-                        let interestPayment = remPrincipal * (actualMortgageRate / 12);
-                        remPrincipal = Math.max(0, remPrincipal - (currentTotalMortgage - interestPayment));
-                    }
+                    let interestPayment = remPrincipal * (actualMortgageRate / 12);
+                    remPrincipal = Math.max(0, remPrincipal - (currentTotalMortgage - interestPayment));
 
                     if (oaBal >= currentPersonalMortgage) {
                         oaBal -= currentPersonalMortgage;
@@ -978,8 +965,8 @@ function runSim() {
         mortgageVol: isAdvanced ? getVal('inp-mortgageVol') / 100 : 0,
         loanYrs: getVal('inp-loanYrs') || 25,
         mortgageShare: hasMortPartner ? getVal('inp-mortgageShare') : 100,
-        isMaxOA: (isAdvanced && inpMaxOA) ? inpMaxOA.checked : true,
-        customOACap: isAdvanced ? getVal('inp-customOACap') : 0,
+        isMaxOA: inpMaxOA ? inpMaxOA.checked : true,
+        customOACap: getVal('inp-customOACap') || 0,
         oaStart: getVal('inp-oaStart') || 0,
         oaContrib: getVal('inp-oaContrib') || 0,
         expenses: getVal('inp-expenses') || 3000,
