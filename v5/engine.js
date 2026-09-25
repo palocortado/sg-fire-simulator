@@ -368,7 +368,7 @@ function clearAllInputs() {
         document.getElementById('slide-mortgageRate').disabled = true;
     }
 
-    localStorage.removeItem('fireSimState');
+    localStorage.removeItem('fireSimState_v5');
     runSim();
 }
 
@@ -1119,7 +1119,7 @@ function runSim() {
     document.getElementById('warningsBox').innerHTML = wHtml;
 
     renderChart(labels, datasets, inputs);
-    localStorage.setItem('fireSimState', JSON.stringify(getState()));
+    localStorage.setItem('fireSimState_v5', JSON.stringify(getState()));
 }
 
 // --- V5 Chart Event Flags ---
@@ -1202,7 +1202,7 @@ function renderChart(labels, datasets, inputs) {
 }
 
 // --- Initialization on Load ---
-let savedState = localStorage.getItem('fireSimState');
+let savedState = localStorage.getItem('fireSimState_v5');
 if (savedState) {
     try {
         loadState(JSON.parse(savedState));
