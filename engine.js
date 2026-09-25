@@ -2,20 +2,52 @@ let fireChart;
 let incomeStreamCount = 0;
 let milestoneCount = 0;
 let isLoading = true;
-const APP_VERSION = "5.0";
+const APP_VERSION = "6.0"; // Updated to bypass old V5 save conflicts
 
 // --- Contextual Slider Coaching Engine ---
 function updateContexts() {
     try {
-        const ids = ['currentAge', 'retireAge', 'expenses', 'usdStart', 'usdContrib', 'cashStart', 'mortgagePrincipal', 'loanYrs', 'mortgageRate', 'mortgageShare', 'oaStart', 'oaContrib', 'inflation', 'usdRet', 'fx', 'cashYield', 'saStart', 'saContrib'];
-        ids.forEach(id => {
-            let valEl = document.getElementById('val-' + id);
-            let inpEl = document.getElementById('inp-' + id);
-            if (valEl && inpEl) valEl.innerText = inpEl.value;
-        });
-    } catch (e) {
-        // Silently bypass missing UI elements
-    }
+        let retAge = getVal('inp-retireAge');
+        let ctxRet = document.getElementById('ctx-retireAge');
+        if(ctxRet) {
+            if(retAge < 40) ctxRet.innerText = "Extreme early retirement. Requires massive savings rate.";
+            else if(retAge < 55) ctxRet.innerText = "Aggressive FIRE. Capital must last 40+ years.";
+            else if(retAge <= 65) ctxRet.innerText = "Standard early retirement horizon.";
+            else ctxRet.innerText = "Traditional retirement. High success probability.";
+        }
+
+        let infl = getVal('inp-inflation');
+        let ctxInfl = document.getElementById('ctx-inflation');
+        if(ctxInfl) {
+            if(infl < 2.0) ctxInfl.innerText = "Highly optimistic. Historically rare over 30 years.";
+            else if(infl <= 3.5) ctxInfl.innerText = "Balanced. Aligns with historical global averages.";
+            else ctxInfl.innerText = "Pessimistic. Modeling heavy stagflation environments.";
+        }
+
+        let gRet = getVal('inp-usdRet');
+        let ctxGret = document.getElementById('ctx-usdRet');
+        if(ctxGret) {
+            if(gRet < 5.0) ctxGret.innerText = "Highly conservative. Assumes near-zero real growth.";
+            else if(gRet <= 7.5) ctxGret.innerText = "Balanced. Bakes in a healthy margin of safety.";
+            else ctxGret.innerText = "Aggressive. Relies heavily on sustained bull markets.";
+        }
+
+        let sRet = getVal('inp-sgdRet');
+        let ctxSret = document.getElementById('ctx-sgdRet');
+        if(ctxSret) {
+            if(sRet < 3.0) ctxSret.innerText = "Conservative. Treating SG equities like bonds.";
+            else if(sRet <= 5.0) ctxSret.innerText = "Balanced. Aligns with historical STI yields.";
+            else ctxSret.innerText = "Aggressive for a mature, dividend-focused market.";
+        }
+
+        let swr = getVal('inp-swrMultiple');
+        let ctxSwr = document.getElementById('ctx-swrMultiple');
+        if(ctxSwr) {
+            if(swr < 25) ctxSwr.innerText = "Aggressive (>4% SWR). High risk of depletion.";
+            else if(swr <= 33) ctxSwr.innerText = "Standard FIRE (3% - 4% SWR). Generally safe.";
+            else ctxSwr.innerText = "Highly Conservative (<3% SWR). Institutional safety.";
+        }
+    } catch(e) {}
 }
 
 // --- Mobile Tooltips (Tap Outside to Close) ---
@@ -86,108 +118,155 @@ document.querySelectorAll('.sync-slider').forEach(slider => {
 
 // --- State Management (Scooper & Loader) ---
 function getState() {
-    let inputs = {
-        mode: document.querySelector('input[name="mode"]:checked').value,
-        
-        currentAge: getVal('inp-currentAge'),
-        retireAge: getVal('inp-retireAge'),
-        inflation: getVal('inp-inflation'),
-        inflVol: getVal('inp-inflVol'),
-        inflateContribs: document.getElementById('inp-inflateContribs').checked,
-        
-        hasGlobal: document.getElementById('toggle-global').checked,
-        usdStart: getVal('inp-usdStart'),
-        usdContrib: getVal('inp-usdContrib'),
-        usdRet: getVal('inp-usdRet'),
-        usdVol: getVal('inp-usdVol'),
-        fx: getVal('inp-fx'),
-        fxDrift: getVal('inp-fxDrift'),
-        fxVol: getVal('inp-fxVol'),
+    try {
+        let inputs = {
+            mode: document.querySelector('input[name="mode"]:checked') ? document.querySelector('input[name="mode"]:checked').value : 'simple',
+            
+            currentAge: getVal('inp-currentAge'),
+            retireAge: getVal('inp-retireAge'),
+            inflation: getVal('inp-inflation'),
+            inflVol: getVal('inp-inflVol'),
+            inflateContribs: document.getElementById('inp-inflateContribs') ? document.getElementById('inp-inflateContribs').checked : false,
+            
+            hasGlobal: document.getElementById('toggle-global') ? document.getElementById('toggle-global').checked : true,
+            usdStart: getVal('inp-usdStart'),
+            usdContrib: getVal('inp-usdContrib'),
+            usdRet: getVal('inp-usdRet'),
+            usdVol: getVal('inp-usdVol'),
+            fx: getVal('inp-fx'),
+            fxDrift: getVal('inp-fxDrift'),
+            fxVol: getVal('inp-fxVol'),
 
-        hasSG: document.getElementById('toggle-sg').checked,
-        sgdStart: getVal('inp-sgdStart'),
-        sgdContrib: getVal('inp-sgdContrib'),
-        sgdRet: getVal('inp-sgdRet'),
-        sgdVol: getVal('inp-sgdVol'),
+            hasSG: document.getElementById('toggle-sg') ? document.getElementById('toggle-sg').checked : false,
+            sgdStart: getVal('inp-sgdStart'),
+            sgdContrib: getVal('inp-sgdContrib'),
+            sgdRet: getVal('inp-sgdRet'),
+            sgdVol: getVal('inp-sgdVol'),
 
-        hasCash: document.getElementById('toggle-cash').checked,
-        cashStart: getVal('inp-cashStart'),
-        cashYield: getVal('inp-cashYield'),
+            hasCash: document.getElementById('toggle-cash') ? document.getElementById('toggle-cash').checked : true,
+            cashStart: getVal('inp-cashStart'),
+            cashYield: getVal('inp-cashYield'),
 
-        hasSA: document.getElementById('toggle-sa').checked,
-        saStart: getVal('inp-saStart'),
-        saContrib: getVal('inp-saContrib'),
+            hasSA: document.getElementById('toggle-sa') ? document.getElementById('toggle-sa').checked : false,
+            saStart: getVal('inp-saStart'),
+            saContrib: getVal('inp-saContrib'),
 
-        hasMortgage: document.getElementById('toggle-mortgage').checked,
-        hasMortgagePartner: document.getElementById('toggle-mortgage-partner').checked,
-        isHdb: document.getElementById('loan-hdb').checked,
-        isBank: document.getElementById('loan-bank').checked,
-        mortgageSimple: getVal('inp-mortgageSimple'),
-        mortgagePrincipal: getVal('inp-mortgagePrincipal'),
-        loanYrs: getVal('inp-loanYrs'),
-        mortgageRate: getVal('inp-mortgageRate'),
-        mortgageVol: getVal('inp-mortgageVol'),
-        mortgageShare: getVal('inp-mortgageShare'),
-        
-        isMaxOA: document.getElementById('inp-maxOA').checked,
-        customOACap: getVal('inp-customOACap'),
-        oaStart: getVal('inp-oaStart'),
-        oaContrib: getVal('inp-oaContrib'),
+            hasMortgage: document.getElementById('toggle-mortgage') ? document.getElementById('toggle-mortgage').checked : false,
+            hasMortgagePartner: document.getElementById('toggle-mortgage-partner') ? document.getElementById('toggle-mortgage-partner').checked : false,
+            isHdb: document.getElementById('loan-hdb') ? document.getElementById('loan-hdb').checked : false,
+            isBank: document.getElementById('loan-bank') ? document.getElementById('loan-bank').checked : false,
+            mortgageSimple: getVal('inp-mortgageSimple'),
+            mortgagePrincipal: getVal('inp-mortgagePrincipal'),
+            loanYrs: getVal('inp-loanYrs'),
+            mortgageRate: getVal('inp-mortgageRate'),
+            mortgageVol: getVal('inp-mortgageVol'),
+            mortgageShare: getVal('inp-mortgageShare'),
+            
+            isMaxOA: document.getElementById('inp-maxOA') ? document.getElementById('inp-maxOA').checked : true,
+            customOACap: getVal('inp-customOACap'),
+            oaStart: getVal('inp-oaStart'),
+            oaContrib: getVal('inp-oaContrib'),
 
-        hasExpensePartner: document.getElementById('toggle-expense-partner').checked,
-        expenses: getVal('inp-expenses'),
-        expenseShare: getVal('inp-expenseShare'),
-        showFireCurve: document.getElementById('inp-showFireCurve').checked,
-        swrOverride: document.getElementById('inp-swrOverride').checked,
-        swrMultiple: getVal('inp-swrMultiple'),
+            hasExpensePartner: document.getElementById('toggle-expense-partner') ? document.getElementById('toggle-expense-partner').checked : false,
+            expenses: getVal('inp-expenses'),
+            expenseShare: getVal('inp-expenseShare'),
+            showFireCurve: document.getElementById('inp-showFireCurve') ? document.getElementById('inp-showFireCurve').checked : false,
+            swrOverride: document.getElementById('inp-swrOverride') ? document.getElementById('inp-swrOverride').checked : false,
+            swrMultiple: getVal('inp-swrMultiple'),
 
-        isMC: document.getElementById('inp-mcToggle').checked,
-        mcRuns: getVal('inp-mcRuns'),
-        isBlackSwan: document.getElementById('inp-blackSwan').checked,
+            isMC: document.getElementById('inp-mcToggle') ? document.getElementById('inp-mcToggle').checked : false,
+            mcRuns: getVal('inp-mcRuns'),
+            isBlackSwan: document.getElementById('inp-blackSwan') ? document.getElementById('inp-blackSwan').checked : false,
 
-        incomeStreams: [],
-        milestones: []
-    };
+            incomeStreams: [],
+            milestones: []
+        };
 
-    document.querySelectorAll('.income-stream').forEach(row => {
-        inputs.incomeStreams.push({
-            name: row.querySelector('.is-name').value,
-            amt: getVal(row.querySelector('.is-amt').id) || parseFloat(row.querySelector('.is-amt').value.replace(/,/g, '')) || 0,
-            start: parseFloat(row.querySelector('.is-start').value) || 0,
-            end: parseFloat(row.querySelector('.is-end').value) || 0
+        document.querySelectorAll('.income-stream').forEach(row => {
+            inputs.incomeStreams.push({
+                name: row.querySelector('.is-name').value,
+                amt: getVal(row.querySelector('.is-amt').id) || parseFloat(row.querySelector('.is-amt').value.replace(/,/g, '')) || 0,
+                start: parseFloat(row.querySelector('.is-start').value) || 0,
+                end: parseFloat(row.querySelector('.is-end').value) || 0
+            });
         });
-    });
 
-    document.querySelectorAll('.milestone-stream').forEach(row => {
-        inputs.milestones.push({
-            name: row.querySelector('.ms-name').value,
-            amt: getVal(row.querySelector('.ms-amt').id) || parseFloat(row.querySelector('.ms-amt').value.replace(/,/g, '')) || 0,
-            age: parseFloat(row.querySelector('.ms-age').value) || 0
+        document.querySelectorAll('.milestone-stream').forEach(row => {
+            inputs.milestones.push({
+                name: row.querySelector('.ms-name').value,
+                amt: getVal(row.querySelector('.ms-amt').id) || parseFloat(row.querySelector('.ms-amt').value.replace(/,/g, '')) || 0,
+                age: parseFloat(row.querySelector('.ms-age').value) || 0
+            });
         });
-    });
 
-    return {
-        version: APP_VERSION,
-        last_saved: new Date().toISOString(),
-        inputs: inputs
-    };
+        return {
+            version: APP_VERSION,
+            last_saved: new Date().toISOString(),
+            inputs: inputs
+        };
+    } catch(e) {
+        return { inputs: {} };
+    }
 }
 
-function loadState() {
+function loadState(state) {
+    if (!state || !state.inputs) return;
     try {
-        let saved = localStorage.getItem('fireSimState');
-        if (!saved) return;
-        let data = JSON.parse(saved);
-        Object.keys(data).forEach(key => {
-            let el = document.getElementById('inp-' + key);
-            // Only inject data if the input box actually exists in the new HTML
-            if (el) {
-                el.value = data[key];
+        let p = state.inputs;
+        
+        if (p.mode) {
+            let r = document.getElementById('mode-' + p.mode);
+            if (r) { r.checked = true; setMode(p.mode); }
+        }
+
+        const fields = ['currentAge', 'retireAge', 'inflation', 'inflVol', 'usdStart', 'usdContrib', 'usdRet', 'usdVol', 'fx', 'fxDrift', 'fxVol', 'sgdStart', 'sgdContrib', 'sgdRet', 'sgdVol', 'cashStart', 'cashYield', 'saStart', 'saContrib', 'mortgageSimple', 'mortgagePrincipal', 'loanYrs', 'mortgageRate', 'mortgageVol', 'mortgageShare', 'oaContrib', 'oaStart', 'customOACap', 'expenses', 'expenseShare', 'swrMultiple', 'mcRuns'];
+        fields.forEach(f => {
+            if (p[f] !== undefined) setVal('inp-' + f, p[f]);
+        });
+
+        const toggles = ['global', 'sg', 'cash', 'sa', 'mortgage'];
+        toggles.forEach(t => {
+            let el = document.getElementById('toggle-' + t);
+            let key = 'has' + t.charAt(0).toUpperCase() + t.slice(1);
+            if (p[key] !== undefined && el) {
+                el.checked = p[key];
+                toggleAsset(t);
             }
         });
-    } catch(e) {
-        console.warn("Ignored incompatible legacy save state.");
-    }
+
+        if (p.inflateContribs !== undefined && document.getElementById('inp-inflateContribs')) document.getElementById('inp-inflateContribs').checked = p.inflateContribs;
+        if (p.isMaxOA !== undefined && document.getElementById('inp-maxOA')) document.getElementById('inp-maxOA').checked = p.isMaxOA;
+        if (p.hasMortgagePartner !== undefined && document.getElementById('toggle-mortgage-partner')) document.getElementById('toggle-mortgage-partner').checked = p.hasMortgagePartner;
+        if (p.hasExpensePartner !== undefined && document.getElementById('toggle-expense-partner')) document.getElementById('toggle-expense-partner').checked = p.hasExpensePartner;
+        if (p.isBlackSwan !== undefined && document.getElementById('inp-blackSwan')) document.getElementById('inp-blackSwan').checked = p.isBlackSwan;
+        if (p.isMC !== undefined && document.getElementById('inp-mcToggle')) document.getElementById('inp-mcToggle').checked = p.isMC;
+        if (p.isHdb !== undefined && document.getElementById('loan-hdb')) document.getElementById('loan-hdb').checked = p.isHdb;
+        if (p.isBank !== undefined && document.getElementById('loan-bank')) document.getElementById('loan-bank').checked = p.isBank;
+        if (p.swrOverride !== undefined && document.getElementById('inp-swrOverride')) document.getElementById('inp-swrOverride').checked = p.swrOverride;
+        if (p.showFireCurve !== undefined && document.getElementById('inp-showFireCurve')) document.getElementById('inp-showFireCurve').checked = p.showFireCurve;
+
+        if(document.getElementById('income-streams-container')) {
+            document.getElementById('income-streams-container').innerHTML = '';
+            if (p.incomeStreams && Array.isArray(p.incomeStreams)) {
+                p.incomeStreams.forEach(st => addIncomeStream(st.name, st.amt, st.start, st.end));
+            }
+        }
+
+        if(document.getElementById('milestones-container')) {
+            document.getElementById('milestones-container').innerHTML = '';
+            if (p.milestones && Array.isArray(p.milestones)) {
+                p.milestones.forEach(m => addMilestone(m.name, m.amt, m.age));
+            }
+        }
+
+        if (p.swrMultiple === undefined) setVal('inp-swrMultiple', 25);
+
+        toggleMortgagePartner();
+        toggleExpensePartner();
+        toggleCustomOA();
+        toggleSwrOverride();
+        calcLiveMortgage();
+    } catch(e) {}
 }
 
 // --- Export / Import ---
@@ -228,96 +307,118 @@ function setMode(mode) {
     if(!isLoading) runSim();
 }
 
-function toggleAsset(assetType) {
+function toggleAsset(asset) {
     try {
-        let checkbox = document.getElementById('inp-has' + assetType);
-        let panel = document.getElementById(assetType.toLowerCase() + '-panel');
-        if (checkbox && panel) {
+        const checkbox = document.getElementById(`toggle-${asset}`);
+        const panel = document.getElementById(`asset-${asset}`) || document.getElementById(`${asset}-panel`);
+        if(checkbox && panel) {
             panel.style.display = checkbox.checked ? 'block' : 'none';
         }
-    } catch(e) {
-        // Silently bypass missing accordion panels
-    }
+    } catch(e) {}
+    if(!isLoading) runSim();
 }
 
 function toggleMortgagePartner() {
-    const isChecked = document.getElementById('toggle-mortgage-partner').checked;
-    document.getElementById('mortgage-partner-panel').style.display = isChecked ? 'block' : 'none';
-    if (!isChecked) setVal('inp-mortgageShare', 100);
+    try {
+        const el = document.getElementById('toggle-mortgage-partner');
+        const panel = document.getElementById('mortgage-partner-panel');
+        if(el && panel) {
+            panel.style.display = el.checked ? 'block' : 'none';
+            if (!el.checked) setVal('inp-mortgageShare', 100);
+        }
+    } catch(e) {}
 }
 
 function toggleExpensePartner() {
-    const isChecked = document.getElementById('toggle-expense-partner').checked;
-    document.getElementById('expense-partner-panel').style.display = isChecked ? 'block' : 'none';
-    if (!isChecked) setVal('inp-expenseShare', 100);
+    try {
+        const el = document.getElementById('toggle-expense-partner');
+        const panel = document.getElementById('expense-partner-panel');
+        if(el && panel) {
+            panel.style.display = el.checked ? 'block' : 'none';
+            if (!el.checked) setVal('inp-expenseShare', 100);
+        }
+    } catch(e) {}
 }
 
 function toggleSwrOverride() {
-    const isChecked = document.getElementById('inp-swrOverride').checked;
-    document.getElementById('inp-swrMultiple').disabled = !isChecked;
-    document.getElementById('slide-swrMultiple').disabled = !isChecked;
+    try {
+        const el = document.getElementById('inp-swrOverride');
+        if(el) {
+            let mult = document.getElementById('inp-swrMultiple');
+            let slide = document.getElementById('slide-swrMultiple');
+            if(mult) mult.disabled = !el.checked;
+            if(slide) slide.disabled = !el.checked;
+        }
+    } catch(e) {}
 }
 
 function toggleCustomOA() {
-    const isMax = document.getElementById('inp-maxOA').checked;
-    document.getElementById('custom-oa-cap').style.display = isMax ? 'none' : 'block';
-    if (!isMax) {
-        let share = document.getElementById('toggle-mortgage-partner').checked ? getVal('inp-mortgageShare') : 100;
-        let p = getVal('inp-mortgagePrincipal');
-        let y = getVal('inp-loanYrs');
-        let r = getVal('inp-mortgageRate') / 100;
-        let totalPmt = calcPmt(p, r, y);
-        let personalPmt = totalPmt * (share / 100);
-        setVal('inp-customOACap', Math.round(personalPmt) || 0);
-    }
+    try {
+        const el = document.getElementById('inp-maxOA');
+        const cap = document.getElementById('custom-oa-cap');
+        if(el && cap) {
+            cap.style.display = el.checked ? 'none' : 'block';
+            if (!el.checked) {
+                let sharePartner = document.getElementById('toggle-mortgage-partner');
+                let share = (sharePartner && sharePartner.checked) ? getVal('inp-mortgageShare') : 100;
+                let p = getVal('inp-mortgagePrincipal');
+                let y = getVal('inp-loanYrs');
+                let r = getVal('inp-mortgageRate') / 100;
+                let totalPmt = calcPmt(p, r, y);
+                let personalPmt = totalPmt * (share / 100);
+                setVal('inp-customOACap', Math.round(personalPmt) || 0);
+            }
+        }
+    } catch(e) {}
     if(!isLoading) runSim();
 }
 
 function clearAllInputs() {
-    document.querySelectorAll('input[type="text"]').forEach(el => setVal(el.id, ''));
-    
-    document.getElementById('toggle-global').checked = true; toggleAsset('global');
-    document.getElementById('toggle-sg').checked = false; toggleAsset('sg');
-    document.getElementById('toggle-cash').checked = true; toggleAsset('cash');
-    
-    document.getElementById('toggle-sa').checked = false; toggleAsset('sa'); 
-    document.getElementById('toggle-mortgage').checked = false; toggleAsset('mortgage');
-    
-    document.getElementById('toggle-mortgage-partner').checked = false; toggleMortgagePartner();
-    document.getElementById('toggle-expense-partner').checked = false; toggleExpensePartner();
-    
-    document.getElementById('inp-showFireCurve').checked = false;
-    document.getElementById('inp-swrOverride').checked = false; toggleSwrOverride();
-    
-    document.getElementById('inp-maxOA').checked = true; toggleCustomOA();
-    document.getElementById('inp-inflateContribs').checked = false;
-    
-    if(document.body.className.includes('advanced-mode')) {
-         document.getElementById('inp-blackSwan').checked = false;
-         document.getElementById('inp-mcToggle').checked = false;
-    }
-    
-    document.getElementById('income-streams-container').innerHTML = '';
-    document.getElementById('milestones-container').innerHTML = '';
-    document.getElementById('mortgage-readout-box').style.display = 'none';
-    document.getElementById('diagnostic-panel').style.display = 'none';
-    
-    setVal('inp-inflation', 3.0); 
-    setVal('inp-usdRet', 7.0); 
-    setVal('inp-sgdRet', 4.0); 
-    setVal('inp-fx', 1.35);
-    setVal('inp-fxDrift', 0.0);
-    setVal('inp-cashYield', 0.05);
-    setVal('inp-mortgageRate', 2.6);
-    setVal('inp-mortgageShare', 100);
-    setVal('inp-expenseShare', 100);
-    setVal('inp-swrMultiple', 25);
+    try {
+        document.querySelectorAll('input[type="text"]').forEach(el => setVal(el.id, ''));
+        
+        if(document.getElementById('toggle-global')) document.getElementById('toggle-global').checked = true; toggleAsset('global');
+        if(document.getElementById('toggle-sg')) document.getElementById('toggle-sg').checked = false; toggleAsset('sg');
+        if(document.getElementById('toggle-cash')) document.getElementById('toggle-cash').checked = true; toggleAsset('cash');
+        if(document.getElementById('toggle-sa')) document.getElementById('toggle-sa').checked = false; toggleAsset('sa'); 
+        if(document.getElementById('toggle-mortgage')) document.getElementById('toggle-mortgage').checked = false; toggleAsset('mortgage');
+        
+        if(document.getElementById('toggle-mortgage-partner')) document.getElementById('toggle-mortgage-partner').checked = false; toggleMortgagePartner();
+        if(document.getElementById('toggle-expense-partner')) document.getElementById('toggle-expense-partner').checked = false; toggleExpensePartner();
+        
+        if(document.getElementById('inp-showFireCurve')) document.getElementById('inp-showFireCurve').checked = false;
+        if(document.getElementById('inp-swrOverride')) document.getElementById('inp-swrOverride').checked = false; toggleSwrOverride();
+        
+        if(document.getElementById('inp-maxOA')) document.getElementById('inp-maxOA').checked = true; toggleCustomOA();
+        if(document.getElementById('inp-inflateContribs')) document.getElementById('inp-inflateContribs').checked = false;
+        
+        if(document.body.className.includes('advanced-mode')) {
+             if(document.getElementById('inp-blackSwan')) document.getElementById('inp-blackSwan').checked = false;
+             if(document.getElementById('inp-mcToggle')) document.getElementById('inp-mcToggle').checked = false;
+        }
+        
+        if(document.getElementById('income-streams-container')) document.getElementById('income-streams-container').innerHTML = '';
+        if(document.getElementById('milestones-container')) document.getElementById('milestones-container').innerHTML = '';
+        if(document.getElementById('mortgage-readout-box')) document.getElementById('mortgage-readout-box').style.display = 'none';
+        if(document.getElementById('diagnostic-panel')) document.getElementById('diagnostic-panel').style.display = 'none';
+        
+        setVal('inp-inflation', 3.0); 
+        setVal('inp-usdRet', 7.0); 
+        setVal('inp-sgdRet', 4.0); 
+        setVal('inp-fx', 1.35);
+        setVal('inp-fxDrift', 0.0);
+        setVal('inp-cashYield', 1.5);
+        setVal('inp-mortgageRate', 2.6);
+        setVal('inp-mortgageShare', 100);
+        setVal('inp-expenseShare', 100);
+        setVal('inp-swrMultiple', 25);
 
-    if(document.getElementById('loan-hdb').checked) {
-        document.getElementById('slide-mortgageRate').disabled = true;
-    }
+        if(document.getElementById('loan-hdb') && document.getElementById('loan-hdb').checked) {
+            if(document.getElementById('slide-mortgageRate')) document.getElementById('slide-mortgageRate').disabled = true;
+        }
 
-    localStorage.removeItem('fireSimState');
+        localStorage.removeItem('fireSimState_v5');
+    } catch(e) {}
     runSim();
 }
 
@@ -331,47 +432,55 @@ function calcPmt(principal, ratePerYear, yearsRemaining) {
 }
 
 function calcLiveMortgage() {
-    let isAdvanced = document.body.className.includes('advanced-mode');
-    let hasMortgage = document.getElementById('toggle-mortgage').checked;
-    let pmtBox = document.getElementById('mortgage-readout-box');
-    
-    if(!hasMortgage || !isAdvanced) {
-        pmtBox.style.display = 'none';
-        return;
-    } else {
-        pmtBox.style.display = 'block';
-    }
+    try {
+        let isAdvanced = document.body.className.includes('advanced-mode');
+        let tMort = document.getElementById('toggle-mortgage');
+        let hasMortgage = tMort ? tMort.checked : false;
+        let pmtBox = document.getElementById('mortgage-readout-box');
+        
+        if(pmtBox) {
+            if(!hasMortgage || !isAdvanced) {
+                pmtBox.style.display = 'none';
+                return;
+            } else {
+                pmtBox.style.display = 'block';
+            }
+        }
 
-    let isHdb = document.getElementById('loan-hdb').checked;
-    let rateInput = document.getElementById('inp-mortgageRate');
-    let rateSlider = document.getElementById('slide-mortgageRate');
-    let ttText = document.getElementById('tt-text-mortgageRate');
+        let loanHdb = document.getElementById('loan-hdb');
+        let isHdb = loanHdb ? loanHdb.checked : false;
+        let rateInput = document.getElementById('inp-mortgageRate');
+        let rateSlider = document.getElementById('slide-mortgageRate');
+        let ttText = document.getElementById('tt-text-mortgageRate');
 
-    if(isHdb) {
-        setVal('inp-mortgageRate', 2.6);
-        rateInput.disabled = true;
-        rateSlider.disabled = true;
-        ttText.innerText = "HDB rate is pegged at 0.1% above the prevailing CPF OA interest rate.";
-    } else {
-        rateInput.disabled = false;
-        rateSlider.disabled = false;
-        if(getVal('inp-mortgageRate') === 2.6) setVal('inp-mortgageRate', 1.8);
-        ttText.innerText = "Defaulted to 1.8%, reflecting the ~20-year historical average of the 3-Month SIBOR/SORA.";
-    }
+        if(isHdb) {
+            setVal('inp-mortgageRate', 2.6);
+            if(rateInput) rateInput.disabled = true;
+            if(rateSlider) rateSlider.disabled = true;
+            if(ttText) ttText.innerText = "HDB rate is pegged at 0.1% above the prevailing CPF OA interest rate.";
+        } else {
+            if(rateInput) rateInput.disabled = false;
+            if(rateSlider) rateSlider.disabled = false;
+            if(getVal('inp-mortgageRate') === 2.6) setVal('inp-mortgageRate', 1.8);
+            if(ttText) ttText.innerText = "Defaulted to 1.8%, reflecting the ~20-year historical average of the 3-Month SIBOR/SORA.";
+        }
 
-    let p = getVal('inp-mortgagePrincipal');
-    let y = getVal('inp-loanYrs');
-    let r = getVal('inp-mortgageRate') / 100;
-    
-    let totalPmt = calcPmt(p, r, y);
-    let share = document.getElementById('toggle-mortgage-partner').checked ? getVal('inp-mortgageShare') : 100;
-    let personalPmt = totalPmt * (share / 100);
+        let p = getVal('inp-mortgagePrincipal');
+        let y = getVal('inp-loanYrs');
+        let r = getVal('inp-mortgageRate') / 100;
+        
+        let totalPmt = calcPmt(p, r, y);
+        let mortPartner = document.getElementById('toggle-mortgage-partner');
+        let share = (mortPartner && mortPartner.checked) ? getVal('inp-mortgageShare') : 100;
+        let personalPmt = totalPmt * (share / 100);
 
-    document.getElementById('disp-calc-pmt-total').innerText = 'Total Monthly Installment: $' + Math.round(totalPmt).toLocaleString();
-    document.getElementById('disp-calc-pmt-personal').innerText = `Your Personal Liability (${share}%): $` + Math.round(personalPmt).toLocaleString();
+        if(document.getElementById('disp-calc-pmt-total')) document.getElementById('disp-calc-pmt-total').innerText = 'Total Monthly Installment: $' + Math.round(totalPmt).toLocaleString();
+        if(document.getElementById('disp-calc-pmt-personal')) document.getElementById('disp-calc-pmt-personal').innerText = `Your Personal Liability (${share}%): $` + Math.round(personalPmt).toLocaleString();
+    } catch(e) {}
 }
 
 function addIncomeStream(name = '', amt = '', start = 60, end = 95) {
+    if(!document.getElementById('income-streams-container')) return;
     const id = incomeStreamCount++;
     const html = `
         <div class="list-stream income-stream" id="stream-${id}">
@@ -386,6 +495,7 @@ function addIncomeStream(name = '', amt = '', start = 60, end = 95) {
 }
 
 function addMilestone(name = '', amt = '', age = 60) {
+    if(!document.getElementById('milestones-container')) return;
     const id = milestoneCount++;
     const html = `
         <div class="milestone-stream" id="milestone-${id}">
@@ -398,59 +508,79 @@ function addMilestone(name = '', amt = '', age = 60) {
     document.getElementById('milestones-container').insertAdjacentHTML('beforeend', html);
 }
 
-// --- V5 Archetypes Engine ---
+// --- New V6 Archetypes Engine ---
 function loadProfile(type) {
+    isLoading = true;
+    
+    // UI Update for the 5 persona cards
     document.querySelectorAll('.persona-card').forEach(c => c.classList.remove('active'));
-    let activeBtn = event ? event.currentTarget : null;
-    if (activeBtn) activeBtn.classList.add('active');
+    if (typeof event !== 'undefined' && event && event.currentTarget) {
+        event.currentTarget.classList.add('active');
+    }
 
     if (type === 'young_starter') {
         setVal('inp-currentAge', 28); setVal('inp-retireAge', 55); setVal('inp-expenses', 2500);
-        document.getElementById('toggle-expense-partner').checked = false;
+        if(document.getElementById('toggle-expense-partner')) document.getElementById('toggle-expense-partner').checked = false;
         setVal('inp-usdStart', 35000); setVal('inp-usdContrib', 1500); setVal('inp-cashStart', 25000);
-        document.getElementById('toggle-mortgage').checked = false;
-        document.getElementById('toggle-sa').checked = false;
+        if(document.getElementById('toggle-mortgage')) document.getElementById('toggle-mortgage').checked = false;
+        if(document.getElementById('toggle-sa')) document.getElementById('toggle-sa').checked = false;
     } 
-    else if (type === 'hdb_couple') {
+    else if (type === 'hdb_couple' || type === 'median') {
         setVal('inp-currentAge', 32); setVal('inp-retireAge', 55); setVal('inp-expenses', 5000);
-        document.getElementById('toggle-expense-partner').checked = true; setVal('inp-expenseShare', 50);
+        if(document.getElementById('toggle-expense-partner')) document.getElementById('toggle-expense-partner').checked = true; 
+        setVal('inp-expenseShare', 50);
         setVal('inp-usdStart', 40000); setVal('inp-usdContrib', 1000); setVal('inp-cashStart', 40000);
-        document.getElementById('toggle-mortgage').checked = true;
+        if(document.getElementById('toggle-mortgage')) document.getElementById('toggle-mortgage').checked = true;
         setVal('inp-mortgagePrincipal', 380000); setVal('inp-loanYrs', 22); setVal('inp-mortgageRate', 2.6); setVal('inp-mortgageShare', 50);
-        document.getElementById('inp-maxOA').checked = true; setVal('inp-oaStart', 20000); setVal('inp-oaContrib', 1400);
-        document.getElementById('toggle-sa').checked = false;
+        if(document.getElementById('inp-maxOA')) document.getElementById('inp-maxOA').checked = true; 
+        setVal('inp-oaStart', 20000); setVal('inp-oaContrib', 1400);
+        if(document.getElementById('toggle-sa')) document.getElementById('toggle-sa').checked = false;
     } 
     else if (type === 'growing_family') {
         setVal('inp-currentAge', 38); setVal('inp-retireAge', 60); setVal('inp-expenses', 8500);
-        document.getElementById('toggle-expense-partner').checked = true; setVal('inp-expenseShare', 50);
+        if(document.getElementById('toggle-expense-partner')) document.getElementById('toggle-expense-partner').checked = true; 
+        setVal('inp-expenseShare', 50);
         setVal('inp-usdStart', 120000); setVal('inp-usdContrib', 2200); setVal('inp-cashStart', 80000);
-        document.getElementById('toggle-mortgage').checked = true;
+        if(document.getElementById('toggle-mortgage')) document.getElementById('toggle-mortgage').checked = true;
         setVal('inp-mortgagePrincipal', 1100000); setVal('inp-loanYrs', 25); setVal('inp-mortgageRate', 2.8); setVal('inp-mortgageShare', 50);
-        document.getElementById('inp-maxOA').checked = true; setVal('inp-oaStart', 35000); setVal('inp-oaContrib', 1500);
-        document.getElementById('toggle-sa').checked = false;
+        if(document.getElementById('inp-maxOA')) document.getElementById('inp-maxOA').checked = true; 
+        setVal('inp-oaStart', 35000); setVal('inp-oaContrib', 1500);
+        if(document.getElementById('toggle-sa')) document.getElementById('toggle-sa').checked = false;
     } 
-    else if (type === 'pragmatic_saver') {
+    else if (type === 'pragmatic_saver' || type === 'conservative') {
         setVal('inp-currentAge', 42); setVal('inp-retireAge', 62); setVal('inp-expenses', 2400);
-        document.getElementById('toggle-expense-partner').checked = false;
+        if(document.getElementById('toggle-expense-partner')) document.getElementById('toggle-expense-partner').checked = false;
         setVal('inp-usdStart', 20000); setVal('inp-usdContrib', 300); setVal('inp-cashStart', 60000);
-        document.getElementById('toggle-mortgage').checked = true;
+        if(document.getElementById('toggle-mortgage')) document.getElementById('toggle-mortgage').checked = true;
         setVal('inp-mortgagePrincipal', 120000); setVal('inp-loanYrs', 10); setVal('inp-mortgageRate', 2.6); setVal('inp-mortgageShare', 100);
-        document.getElementById('inp-maxOA').checked = true; setVal('inp-oaStart', 30000); setVal('inp-oaContrib', 1200);
-        document.getElementById('toggle-sa').checked = true; setVal('inp-saStart', 140000); setVal('inp-saContrib', 500);
+        if(document.getElementById('inp-maxOA')) document.getElementById('inp-maxOA').checked = true; 
+        setVal('inp-oaStart', 30000); setVal('inp-oaContrib', 1200);
+        if(document.getElementById('toggle-sa')) document.getElementById('toggle-sa').checked = true; 
+        setVal('inp-saStart', 140000); setVal('inp-saContrib', 500);
     } 
     else if (type === 'self_employed') {
         setVal('inp-currentAge', 34); setVal('inp-retireAge', 58); setVal('inp-expenses', 3200);
-        document.getElementById('toggle-expense-partner').checked = false;
+        if(document.getElementById('toggle-expense-partner')) document.getElementById('toggle-expense-partner').checked = false;
         setVal('inp-usdStart', 70000); setVal('inp-usdContrib', 1200); setVal('inp-cashStart', 75000);
-        document.getElementById('toggle-mortgage').checked = false;
-        document.getElementById('toggle-sa').checked = false;
+        if(document.getElementById('toggle-mortgage')) document.getElementById('toggle-mortgage').checked = false;
+        if(document.getElementById('toggle-sa')) document.getElementById('toggle-sa').checked = false;
     }
 
-    // Trigger UI visibility panels to match checkboxes
-    document.getElementById('expense-partner-panel').style.display = document.getElementById('toggle-expense-partner').checked ? 'block' : 'none';
-    document.getElementById('mortgage-panel').style.display = document.getElementById('toggle-mortgage').checked ? 'block' : 'none';
-    document.getElementById('sa-panel').style.display = document.getElementById('toggle-sa').checked ? 'block' : 'none';
+    // Force panel visibility to match toggles safely
+    try {
+        if(document.getElementById('expense-partner-panel')) {
+            document.getElementById('expense-partner-panel').style.display = (document.getElementById('toggle-expense-partner') && document.getElementById('toggle-expense-partner').checked) ? 'block' : 'none';
+        }
+        if(document.getElementById('mortgage-panel')) {
+            document.getElementById('mortgage-panel').style.display = (document.getElementById('toggle-mortgage') && document.getElementById('toggle-mortgage').checked) ? 'block' : 'none';
+        }
+        if(document.getElementById('sa-panel')) {
+            document.getElementById('sa-panel').style.display = (document.getElementById('toggle-sa') && document.getElementById('toggle-sa').checked) ? 'block' : 'none';
+        }
+    } catch(e) {}
     
+    calcLiveMortgage();
+    isLoading = false;
     runSim();
 }
 
@@ -467,8 +597,10 @@ function applyPreset(type) {
         msg = "Applied Balanced: Global 7.0%, SG 5.0%, Inflation 2.5%";
     }
     const banner = document.getElementById('preset-banner');
-    document.getElementById('preset-banner-text').innerText = msg;
-    banner.style.display = 'flex';
+    if(banner) {
+        if(document.getElementById('preset-banner-text')) document.getElementById('preset-banner-text').innerText = msg;
+        banner.style.display = 'flex';
+    }
     runSim();
 }
 
@@ -712,6 +844,8 @@ function simulatePath(inputs, isMonteCarlo) {
 function runAutoSolver() {
     let baseInputs = getState().inputs;
     let resultsDiv = document.getElementById('autosolver-results');
+    if(!resultsDiv) return;
+    
     resultsDiv.style.display = 'block';
     resultsDiv.innerHTML = '<div style="font-size:0.85rem; color:#d97706;">Calculating solutions...</div>';
 
@@ -772,72 +906,93 @@ function runAutoSolver() {
     }, 50); 
 }
 
+// Safely update DOM text
+function updateDOM(id, val, isHTML=false) {
+    let el = document.getElementById(id);
+    if (el) {
+        if (isHTML) el.innerHTML = val;
+        else el.innerText = val;
+    }
+}
+
 function runSim() {
     if (isLoading) return;
     updateContexts(); 
 
     const isAdvanced = document.body.className.includes('advanced-mode');
     
-    // SAFE CHECKS: If a checkbox was removed from HTML, the engine defaults safely instead of crashing
-    const hasGlobal = document.getElementById('toggle-global') ? document.getElementById('toggle-global').checked : true;
-    const hasSG = document.getElementById('toggle-sg') ? document.getElementById('toggle-sg').checked : false;
-    const hasCash = document.getElementById('toggle-cash') ? document.getElementById('toggle-cash').checked : true;
-    const hasSA = document.getElementById('toggle-sa') ? document.getElementById('toggle-sa').checked : false;
-    const hasMortgage = document.getElementById('toggle-mortgage') ? document.getElementById('toggle-mortgage').checked : false;
-    const isBlackSwan = (isAdvanced && document.getElementById('inp-blackSwan')) ? document.getElementById('inp-blackSwan').checked : false;
+    // SAFE CHECKS: Allows new UI without crashing math engine
+    const toggleGlobal = document.getElementById('toggle-global');
+    const toggleSG = document.getElementById('toggle-sg');
+    const toggleCash = document.getElementById('toggle-cash');
+    const toggleSA = document.getElementById('toggle-sa');
+    const toggleMortgage = document.getElementById('toggle-mortgage');
+    const inpBlackSwan = document.getElementById('inp-blackSwan');
+    const toggleMortgagePartner = document.getElementById('toggle-mortgage-partner');
+    const toggleExpensePartner = document.getElementById('toggle-expense-partner');
+    const inpMaxOA = document.getElementById('inp-maxOA');
+    const inpInflateContribs = document.getElementById('inp-inflateContribs');
+    const inpShowFireCurve = document.getElementById('inp-showFireCurve');
+    const inpSwrOverride = document.getElementById('inp-swrOverride');
     
-    const hasMortgagePartner = document.getElementById('toggle-mortgage-partner').checked;
-    const hasExpensePartner = document.getElementById('toggle-expense-partner').checked;
+    const hasGlobal = toggleGlobal ? toggleGlobal.checked : true;
+    const hasSG = toggleSG ? toggleSG.checked : false;
+    const hasCash = toggleCash ? toggleCash.checked : true;
+    const hasSA = toggleSA ? toggleSA.checked : false;
+    const hasMortgage = toggleMortgage ? toggleMortgage.checked : false;
+    const isBlackSwan = (isAdvanced && inpBlackSwan) ? inpBlackSwan.checked : false;
+    const hasMortPartner = toggleMortgagePartner ? toggleMortgagePartner.checked : false;
+    const hasExpPartner = toggleExpensePartner ? toggleExpensePartner.checked : false;
 
     const inputs = {
         isAdvanced: isAdvanced,
         isBlackSwan: isBlackSwan,
-        currentAge: getVal('inp-currentAge'),
-        retireAge: getVal('inp-retireAge'),
-        inflation: getVal('inp-inflation') / 100,
+        currentAge: getVal('inp-currentAge') || 30,
+        retireAge: getVal('inp-retireAge') || 55,
+        inflation: (getVal('inp-inflation') || 3.0) / 100,
         inflVol: isAdvanced ? getVal('inp-inflVol') / 100 : 0,
-        inflateContribs: document.getElementById('inp-inflateContribs').checked,
+        inflateContribs: inpInflateContribs ? inpInflateContribs.checked : false,
         fx: getVal('inp-fx') || 1.35,
         fxDrift: isAdvanced ? getVal('inp-fxDrift') / 100 : 0,
         fxVol: isAdvanced ? getVal('inp-fxVol') / 100 : 0,
         hasGlobal: hasGlobal,
         usdStart: getVal('inp-usdStart'),
         usdContrib: getVal('inp-usdContrib'),
-        usdRet: getVal('inp-usdRet') / 100,
+        usdRet: (getVal('inp-usdRet') || 7.0) / 100,
         usdVol: isAdvanced ? getVal('inp-usdVol') / 100 : 0,
         hasSG: hasSG,
         sgdStart: getVal('inp-sgdStart'),
         sgdContrib: getVal('inp-sgdContrib'),
-        sgdRet: getVal('inp-sgdRet') / 100,
+        sgdRet: (getVal('inp-sgdRet') || 4.0) / 100,
         sgdVol: isAdvanced ? getVal('inp-sgdVol') / 100 : 0,
         hasCash: hasCash,
         cashStart: getVal('inp-cashStart'),
-        cashYield: getVal('inp-cashYield') / 100,
+        cashYield: (getVal('inp-cashYield') || 1.5) / 100,
         hasSA: hasSA,
         saStart: getVal('inp-saStart'),
         saContrib: getVal('inp-saContrib'),
         hasMortgage: hasMortgage,
         simpleMortgage: getVal('inp-mortgageSimple'),
         mortgagePrincipal: getVal('inp-mortgagePrincipal'),
-        mortgageRate: getVal('inp-mortgageRate') / 100,
+        mortgageRate: (getVal('inp-mortgageRate') || 2.6) / 100,
         mortgageVol: isAdvanced ? getVal('inp-mortgageVol') / 100 : 0,
-        loanYrs: getVal('inp-loanYrs'),
-        mortgageShare: hasMortgagePartner ? getVal('inp-mortgageShare') : 100,
-        isMaxOA: isAdvanced ? document.getElementById('inp-maxOA').checked : true,
+        loanYrs: getVal('inp-loanYrs') || 25,
+        mortgageShare: hasMortPartner ? getVal('inp-mortgageShare') : 100,
+        isMaxOA: (isAdvanced && inpMaxOA) ? inpMaxOA.checked : true,
         customOACap: isAdvanced ? getVal('inp-customOACap') : 0,
-        oaStart: isAdvanced ? getVal('inp-oaStart') : 0,
-        oaContrib: isAdvanced ? getVal('inp-oaContrib') : 0,
-        expenses: getVal('inp-expenses'),
-        expenseShare: hasExpensePartner ? getVal('inp-expenseShare') : 100,
-        showFireCurve: document.getElementById('inp-showFireCurve').checked,
-        swrOverride: isAdvanced ? document.getElementById('inp-swrOverride').checked : false,
+        oaStart: getVal('inp-oaStart') : 0,
+        oaContrib: getVal('inp-oaContrib') : 0,
+        expenses: getVal('inp-expenses') || 3000,
+        expenseShare: hasExpPartner ? getVal('inp-expenseShare') : 100,
+        showFireCurve: inpShowFireCurve ? inpShowFireCurve.checked : false,
+        swrOverride: (isAdvanced && inpSwrOverride) ? inpSwrOverride.checked : false,
         swrMultiple: isAdvanced ? (getVal('inp-swrMultiple') || 25) : 25,
         incomeStreams: [],
         milestones: []
     };
 
     let effectiveExpenses = inputs.expenses * (inputs.expenseShare / 100);
-    document.getElementById('expense-share-readout').innerText = 'The simulator will draw down: $' + Math.round(effectiveExpenses).toLocaleString() + '/mo';
+    updateDOM('expense-share-readout', 'The simulator will draw down: $' + Math.round(effectiveExpenses).toLocaleString() + '/mo');
 
     if(isAdvanced) {
         document.querySelectorAll('.income-stream').forEach(row => {
@@ -875,7 +1030,7 @@ function runSim() {
     else calcMultiple = (1 - Math.pow(1 + realRet, -duration)) / realRet;
     
     let targetMultiple = inputs.swrOverride ? inputs.swrMultiple : calcMultiple;
-    document.getElementById('swr-readout').innerText = `Calculated Multiple: ${calcMultiple.toFixed(1)}x (Based on your ${(realRet*100).toFixed(1)}% Real Return over ${duration} years)`;
+    updateDOM('swr-readout', `Calculated Multiple: ${calcMultiple.toFixed(1)}x (Based on your ${(realRet*100).toFixed(1)}% Real Return over ${duration} years)`);
 
     // --- Generate Escape Velocity Curve ---
     let fireCurveData = [];
@@ -908,26 +1063,17 @@ function runSim() {
     let sysWarnings = new Set();
     if (inputs.inflation >= Math.max(inputs.usdRet, inputs.sgdRet) && (inputs.hasGlobal || inputs.hasSG)) sysWarnings.add("Inflation exceeds expected portfolio returns. Real growth is negative.");
 
-    const isMC = document.getElementById('inp-mcToggle').checked && isAdvanced;
+    let mcToggle = document.getElementById('inp-mcToggle');
+    const isMC = mcToggle ? mcToggle.checked && isAdvanced : false;
     
     let labels = [];
     let datasets = [];
     let finalWarnings = Array.from(sysWarnings);
-    
-    let elTargetAge = document.getElementById('val-targetAge');
-    let elHeroExp = document.getElementById('val-heroExp');
-    let elFireNumber = document.getElementById('val-fireNumber');
-    let elFireAge = document.getElementById('val-fireAge');
-    let elPeak = document.getElementById('val-peak');
-    let elStatus = document.getElementById('val-statusText');
-    let elStatusSub = document.getElementById('val-statusSub');
-    let cardStatus = document.getElementById('hero-status');
-    let diagPanel = document.getElementById('diagnostic-panel');
 
-    elTargetAge.innerText = inputs.retireAge > 0 ? 'Age ' + inputs.retireAge : '--';
-    elHeroExp.innerText = '$' + Math.round(effectiveExpenses).toLocaleString();
-    elFireNumber.innerText = '$' + (targetAtRetirement / 1000000).toFixed(2) + 'M';
-    elFireAge.innerText = inputs.retireAge;
+    updateDOM('val-targetAge', inputs.retireAge > 0 ? 'Age ' + inputs.retireAge : '--');
+    updateDOM('val-heroExp', '$' + Math.round(effectiveExpenses).toLocaleString());
+    updateDOM('val-fireNumber', '$' + (targetAtRetirement / 1000000).toFixed(2) + 'M');
+    updateDOM('val-fireAge', inputs.retireAge);
     
     if (inputs.currentAge > 0) {
         for(let i=inputs.currentAge; i<=95; i++) labels.push(i);
@@ -963,39 +1109,50 @@ function runSim() {
                         
             res.warnings.forEach(w => finalWarnings.push(w));
 
-            elPeak.innerText = '$' + (res.peakNW / 1000000).toFixed(2) + 'M';
+            updateDOM('val-peak', '$' + (res.peakNW / 1000000).toFixed(2) + 'M');
 
+            let cardStatus = document.getElementById('hero-status') || document.getElementById('card-status');
+            
             if (res.solvent) {
                 let finalBal = res.pathData[res.pathData.length-1].val;
                 
                 if (finalBal < 100000) {
-                    elStatus.innerText = "⚠️ Scraping By";
-                    elStatusSub.innerText = `Ending bal: $${(finalBal/1000000).toFixed(2)}M`;
-                    cardStatus.className = 'hero-card warning';
+                    updateDOM('val-statusText', "⚠️ Scraping By");
+                    updateDOM('status-main', "⚠️ Scraping By");
+                    updateDOM('val-statusSub', `Ending bal: $${(finalBal/1000000).toFixed(2)}M`);
+                    updateDOM('status-sub', `Ending bal: $${(finalBal/1000000).toFixed(2)}M`);
+                    if(cardStatus) cardStatus.className = 'hero-card warning';
                 } else {
-                    elStatus.innerText = "✅ Safe to Age 95";
-                    elStatusSub.innerText = `Ending bal: $${(finalBal/1000000).toFixed(2)}M`;
-                    cardStatus.className = 'hero-card success';
+                    updateDOM('val-statusText', "✅ Safe to Age 95");
+                    updateDOM('status-main', "✅ Safe to Age 95");
+                    updateDOM('val-statusSub', `Ending bal: $${(finalBal/1000000).toFixed(2)}M`);
+                    updateDOM('status-sub', `Ending bal: $${(finalBal/1000000).toFixed(2)}M`);
+                    if(cardStatus) cardStatus.className = 'hero-card success';
                 }
                 
-                diagPanel.style.display = 'none';
-                document.getElementById('autosolver-results').style.display = 'none';
+                if(document.getElementById('diagnostic-panel')) document.getElementById('diagnostic-panel').style.display = 'none';
+                if(document.getElementById('diag-panel')) document.getElementById('diag-panel').style.display = 'none';
+                if(document.getElementById('autosolver-results')) document.getElementById('autosolver-results').style.display = 'none';
             } else {
-                elStatus.innerText = "⚠️ Shortfall";
-                elStatusSub.innerText = `Depletes at Age ${res.depletionAge}`;
-                cardStatus.className = 'hero-card danger';
+                updateDOM('val-statusText', "⚠️ Shortfall");
+                updateDOM('status-main', "⚠️ Shortfall");
+                updateDOM('val-statusSub', `Depletes at Age ${res.depletionAge}`);
+                updateDOM('status-sub', `Depletes at Age ${res.depletionAge}`);
+                if(cardStatus) cardStatus.className = 'hero-card danger';
                 
-                diagPanel.style.display = 'block';
-                document.getElementById('autosolver-results').style.display = 'none';
-                let diagMsg = document.getElementById('diag-message');
+                if(document.getElementById('diagnostic-panel')) document.getElementById('diagnostic-panel').style.display = 'block';
+                if(document.getElementById('diag-panel')) document.getElementById('diag-panel').style.display = 'block';
+                if(document.getElementById('autosolver-results')) document.getElementById('autosolver-results').style.display = 'none';
                 
+                let diagMsg = `Your portfolio crashed at Age ${res.depletionAge}.`;
                 if (res.depletionAge <= inputs.retireAge) {
-                    diagMsg.innerText = `Your portfolio crashed at Age ${res.depletionAge} before you even retired. Your living costs and debt completely overwhelmed your income.`;
+                    diagMsg = `Your portfolio crashed at Age ${res.depletionAge} before you even retired. Your living costs and debt completely overwhelmed your income.`;
                 } else if (inputs.hasMortgage && res.depletionAge <= (inputs.currentAge + inputs.loanYrs)) {
-                    diagMsg.innerText = `Your portfolio crashed at Age ${res.depletionAge}. Your investments could not sustain the aggressive double-drain of both your living expenses and your monthly mortgage payments in early retirement.`;
+                    diagMsg = `Your portfolio crashed at Age ${res.depletionAge}. Your investments could not sustain the aggressive double-drain of both your living expenses and your monthly mortgage payments in early retirement.`;
                 } else {
-                    diagMsg.innerText = `Your portfolio survived until Age ${res.depletionAge}. Over a long ${res.depletionAge - inputs.retireAge}-year retirement, inflation slowly eroded your purchasing power, and your capital eventually ran dry.`;
+                    diagMsg = `Your portfolio survived until Age ${res.depletionAge}. Over a long ${res.depletionAge - inputs.retireAge}-year retirement, inflation slowly eroded your purchasing power, and your capital eventually ran dry.`;
                 }
+                updateDOM('diag-message', diagMsg);
             }
 
         } else {
@@ -1031,40 +1188,57 @@ function runSim() {
                 datasets.push({ label: 'FIRE Requirement (Finish Line)', data: fireCurveData, borderColor: '#ef4444', borderDash: [2, 4], fill: false, tension: 0.2, pointRadius: 0, borderWidth: 1.5, pointStyle: 'line' });
             }
 
-            elPeak.innerText = '$' + (medianPeak / 1000000).toFixed(2) + 'M';
-            diagPanel.style.display = 'none';
+            updateDOM('val-peak', '$' + (medianPeak / 1000000).toFixed(2) + 'M');
+            if(document.getElementById('diagnostic-panel')) document.getElementById('diagnostic-panel').style.display = 'none';
+            if(document.getElementById('diag-panel')) document.getElementById('diag-panel').style.display = 'none';
 
             let winRate = ((successes / runs) * 100).toFixed(1);
-            elStatusSub.innerText = `${runs} Monte Carlo sims`;
+            let cardStatus = document.getElementById('hero-status') || document.getElementById('card-status');
+            
+            updateDOM('val-statusSub', `${runs} Monte Carlo sims`);
+            updateDOM('status-sub', `${runs} Monte Carlo sims`);
+            
             if (winRate >= 90) {
-                elStatus.innerText = `✅ ${winRate}% Success`;
-                cardStatus.className = 'hero-card success';
+                updateDOM('val-statusText', `✅ ${winRate}% Success`);
+                updateDOM('status-main', `✅ ${winRate}% Success`);
+                if(cardStatus) cardStatus.className = 'hero-card success';
             } else if (winRate >= 70) {
-                elStatus.innerText = `⚠️ ${winRate}% Success`;
-                cardStatus.className = 'hero-card warning';
+                updateDOM('val-statusText', `⚠️ ${winRate}% Success`);
+                updateDOM('status-main', `⚠️ ${winRate}% Success`);
+                if(cardStatus) cardStatus.className = 'hero-card warning';
             } else {
-                elStatus.innerText = `🛑 ${winRate}% Success`;
-                cardStatus.className = 'hero-card danger';
+                updateDOM('val-statusText', `🛑 ${winRate}% Success`);
+                updateDOM('status-main', `🛑 ${winRate}% Success`);
+                if(cardStatus) cardStatus.className = 'hero-card danger';
             }
         }
     } else {
-        elPeak.innerText = "$0";
-        elStatus.innerText = "Awaiting Data";
-        elStatusSub.innerText = "Enter age to begin";
-        cardStatus.className = 'hero-card';
-        document.getElementById('diagnostic-panel').style.display = 'none';
+        updateDOM('val-peak', "$0");
+        updateDOM('val-statusText', "Awaiting Data");
+        updateDOM('status-main', "Awaiting Data");
+        updateDOM('val-statusSub', "Enter age to begin");
+        updateDOM('status-sub', "Enter age to begin");
+        
+        let cardStatus = document.getElementById('hero-status') || document.getElementById('card-status');
+        if(cardStatus) cardStatus.className = 'hero-card';
+        if(document.getElementById('diagnostic-panel')) document.getElementById('diagnostic-panel').style.display = 'none';
+        if(document.getElementById('diag-panel')) document.getElementById('diag-panel').style.display = 'none';
     }
     
     let wHtml = finalWarnings.map(w => `<div class="warning-alert">${w}</div>`).join('');
-    document.getElementById('warningsBox').innerHTML = wHtml;
+    updateDOM('warningsBox', wHtml, true);
 
     renderChart(labels, datasets, inputs);
-    localStorage.setItem('fireSimState', JSON.stringify(getState()));
+    try {
+        localStorage.setItem('fireSimState', JSON.stringify(getState()));
+    } catch(e) {}
 }
 
 // --- V5 Chart Event Flags ---
 function renderChart(labels, datasets, inputs) {
-    const ctx = document.getElementById('fireChart').getContext('2d');
+    let canvas = document.getElementById('fireChart');
+    if(!canvas) return; // Prevent crash if canvas isn't loaded yet
+    const ctx = canvas.getContext('2d');
     if (fireChart) fireChart.destroy();
     
     let chartAnnotations = {};
@@ -1146,9 +1320,9 @@ let savedState = localStorage.getItem('fireSimState');
 if (savedState) {
     try {
         loadState(JSON.parse(savedState));
-    } catch(e) {
-        console.error("Failed to parse saved state", e);
-    }
+    } catch(e) {}
 }
 isLoading = false;
-runSim();
+
+// Initialize using the new HDB Couple default profile
+loadProfile('hdb_couple');
