@@ -1339,7 +1339,7 @@ function runOAEstimate() {
     let oaRate = 0.23; 
     if (age > 35 && age <= 45) oaRate = 0.21;
     else if (age > 45 && age <= 50) oaRate = 0.19;
-    else if (age > 50 && age <= 55) oa 0.15;
+    else if (age > 50 && age <= 55) oaRate = 0.15;
     else if (age > 55 && age <= 60) oaRate = 0.12;
     else if (age > 60) oaRate = 0.035;
 
