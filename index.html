@@ -15,9 +15,10 @@
             <p class="subtitle">Map your path to financial freedom based on your lifestyle, savings, and housing.</p>
         </div>
         <div class="header-right">
-            <div class="mode-switch">
-                <label><input type="radio" name="mode" value="simple" checked onchange="document.body.className='simple-mode'"> Guided</label>
-                <label><input type="radio" name="mode" value="advanced" onchange="document.body.className='advanced-mode'"> Engine Room</label>
+            <div class="mode-switch" style="display:flex; gap:1rem; align-items:center;">
+                <label style="cursor:pointer;"><input type="radio" name="mode" value="simple" checked> Simple</label>
+                <label class="disabled-mode" style="opacity:0.4; cursor:not-allowed;"><input type="radio" name="mode" value="advanced" disabled> Advanced 🔒</label>
+                <label class="disabled-mode" style="opacity:0.4; cursor:not-allowed;"><input type="radio" name="mode" value="expert" disabled> Expert 🔒</label>
             </div>
             <div class="top-actions">
                 <button type="button" class="btn-secondary" onclick="exportPlan()">Export</button>
@@ -105,8 +106,10 @@
                         <label><input type="checkbox" id="toggle-expense-partner" onchange="document.getElementById('expense-partner-panel').style.display = this.checked ? 'block' : 'none'; runSim();"> Share expenses with a partner</label>
                     </div>
                     <div id="expense-partner-panel" style="display:none;" class="sub-panel">
-                        <label for="inp-expenseShare">Your Share of Spending (%)</label>
-                        <input type="number" id="inp-expenseShare" value="50" oninput="runSim()">
+                        <div class="inline-input-row">
+                            <label for="inp-expenseShare">Your Share of Spending (%)</label>
+                            <input type="number" id="inp-expenseShare" value="50" oninput="runSim()">
+                        </div>
                     </div>
                 </div>
 
@@ -209,12 +212,16 @@
                             </div>
 
                             <div>
-                                <label for="inp-mortgageRate">Interest Rate (%)</label>
+                                <label style="display:flex; align-items:center;">
+                                    Interest Rate (%)
+                                    <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Defaults to 2.6%, which is the standard HDB concessionary loan interest rate (pegged at 0.1% above the prevailing CPF OA interest rate).</div></div>
+                                </label>
                                 <input type="number" id="inp-mortgageRate" value="2.6" step="0.1" oninput="runSim()">
                             </div>
                             <div>
                                 <label for="inp-mortgageShare">Your Liability Share (%)</label>
                                 <input type="number" id="inp-mortgageShare" value="50" oninput="runSim()">
+                                <div style="font-size: 0.75rem; color: #64748b; margin-top: 4px;">Your share of installment: <strong id="disp-personalMortgage" style="color:#0f172a;">$0</strong></div>
                             </div>
                         </div>
 

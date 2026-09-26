@@ -1099,6 +1099,16 @@ function runSim() {
             // Live Mortgage Display Update
             if (inputs.hasMortgage) {
                 let pmt = calcPmt(inputs.mortgagePrincipal, inputs.mortgageRate, inputs.loanYrs);
+                let personalPmt = pmt * (inputs.mortgageShare / 100);
+                
+                let disp = document.getElementById('disp-monthlyMortgage');
+                if (disp) disp.innerText = `$${Math.round(pmt).toLocaleString()}`;
+
+                let dispPersonal = document.getElementById('disp-personalMortgage');
+                if (dispPersonal) dispPersonal.innerText = `$${Math.round(personalPmt).toLocaleString()}`;
+            }
+            if (inputs.hasMortgage) {
+                let pmt = calcPmt(inputs.mortgagePrincipal, inputs.mortgageRate, inputs.loanYrs);
                 let disp = document.getElementById('disp-monthlyMortgage');
                 if (disp) disp.innerText = `$${Math.round(pmt).toLocaleString()}`;
             }

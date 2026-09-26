@@ -98,3 +98,14 @@ body.advanced-mode .advanced-only { display: block !important; }
 .hero-card.success { background: #10b981; }
 .hero-card.warning { background: #f59e0b; color: #fff; }
 .hero-card.danger { background: #ef4444; color: #fff; }
+
+/* Standardized Global Typography */
+body, input, label, button, select, textarea, .sub-panel, .wizard-header h3, .app-header { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important; }
+
+/* Standardized Form Labels & Checkboxes */
+label, .checkbox-row label, .cpf-toggle-box label { font-size: 0.9rem !important; font-weight: 500 !important; color: var(--text-main) !important; }
+
+/* Inline Partner Share Layout */
+.inline-input-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.inline-input-row label { margin: 0; white-space: nowrap; }
+.inline-input-row input { width: 120px; text-align: right; }
