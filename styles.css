@@ -183,3 +183,30 @@ label, .checkbox-row label, .cpf-toggle-box label { font-size: 0.9rem !important
 .btn-coach:hover { background: #f8fafc; transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
 .btn-coach.safe { border-left: 4px solid #10b981; }
 .btn-coach.danger { border-left: 4px solid #3b82f6; }
+
+/* --- Expanded Viewport Layout for Large Screens --- */
+.app-header, 
+.app-layout {
+    max-width: 1600px !important; 
+    width: 95% !important;
+    margin: 0 auto !important;
+}
+
+/* Widen the welcome mat slightly, but prevent the text lines from getting too long to read comfortably */
+.welcome-mat {
+    max-width: 1200px !important; 
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .app-header, 
+    .app-layout {
+        width: 100% !important;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+    
+    .welcome-mat {
+        padding: 1.5rem 1rem !important;
+    }
+}
