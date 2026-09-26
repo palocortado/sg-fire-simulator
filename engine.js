@@ -520,7 +520,8 @@ function loadProfile(type) {
     if (type === 'young_starter') {
         setVal('inp-currentAge', 28); setVal('inp-retireAge', 55); setVal('inp-expenses', 2500);
         if(document.getElementById('toggle-expense-partner')) document.getElementById('toggle-expense-partner').checked = false;
-        setVal('inp-invStart', 35000); setVal('inp-invContrib', 1500); setVal('inp-invRet', 5.0); setVal('inp-cashStart', 25000);
+        setVal('inp-invStart', 35000); setVal('inp-invContrib', 1000); setVal('inp-invRet', 5.0); 
+        setVal('inp-cashStart', 25000); setVal('inp-cashContrib', 500);
         if(document.getElementById('toggle-mortgage')) document.getElementById('toggle-mortgage').checked = false;
         if(document.getElementById('toggle-sa')) document.getElementById('toggle-sa').checked = false;
     } 
@@ -528,7 +529,8 @@ function loadProfile(type) {
         setVal('inp-currentAge', 32); setVal('inp-retireAge', 55); setVal('inp-expenses', 5000);
         if(document.getElementById('toggle-expense-partner')) document.getElementById('toggle-expense-partner').checked = true; 
         setVal('inp-expenseShare', 50);
-        setVal('inp-invStart', 40000); setVal('inp-invContrib', 1000); setVal('inp-invRet', 4.5); setVal('inp-cashStart', 40000);
+        setVal('inp-invStart', 40000); setVal('inp-invContrib', 500); setVal('inp-invRet', 4.5); 
+        setVal('inp-cashStart', 40000); setVal('inp-cashContrib', 500);
         if(document.getElementById('toggle-mortgage')) document.getElementById('toggle-mortgage').checked = true;
         setVal('inp-mortgagePrincipal', 380000); setVal('inp-loanYrs', 22); setVal('inp-mortgageRate', 2.6); setVal('inp-mortgageShare', 50);
         if(document.getElementById('inp-maxOA')) document.getElementById('inp-maxOA').checked = true; 
@@ -539,7 +541,8 @@ function loadProfile(type) {
         setVal('inp-currentAge', 38); setVal('inp-retireAge', 60); setVal('inp-expenses', 8500);
         if(document.getElementById('toggle-expense-partner')) document.getElementById('toggle-expense-partner').checked = true; 
         setVal('inp-expenseShare', 50);
-        setVal('inp-invStart', 120000); setVal('inp-invContrib', 2200); setVal('inp-invRet', 4.5); setVal('inp-cashStart', 80000);
+        setVal('inp-invStart', 120000); setVal('inp-invContrib', 1500); setVal('inp-invRet', 4.5); 
+        setVal('inp-cashStart', 80000); setVal('inp-cashContrib', 700);
         if(document.getElementById('toggle-mortgage')) document.getElementById('toggle-mortgage').checked = true;
         setVal('inp-mortgagePrincipal', 1100000); setVal('inp-loanYrs', 25); setVal('inp-mortgageRate', 2.8); setVal('inp-mortgageShare', 50);
         if(document.getElementById('inp-maxOA')) document.getElementById('inp-maxOA').checked = true; 
@@ -549,7 +552,8 @@ function loadProfile(type) {
     else if (type === 'pragmatic_saver' || type === 'conservative') {
         setVal('inp-currentAge', 42); setVal('inp-retireAge', 62); setVal('inp-expenses', 2400);
         if(document.getElementById('toggle-expense-partner')) document.getElementById('toggle-expense-partner').checked = false;
-        setVal('inp-invStart', 20000); setVal('inp-invContrib', 300); setVal('inp-invRet', 4.0); setVal('inp-cashStart', 60000);
+        setVal('inp-invStart', 20000); setVal('inp-invContrib', 0); setVal('inp-invRet', 4.0); 
+        setVal('inp-cashStart', 60000); setVal('inp-cashContrib', 1500);
         if(document.getElementById('toggle-mortgage')) document.getElementById('toggle-mortgage').checked = true;
         setVal('inp-mortgagePrincipal', 120000); setVal('inp-loanYrs', 10); setVal('inp-mortgageRate', 2.6); setVal('inp-mortgageShare', 100);
         if(document.getElementById('inp-maxOA')) document.getElementById('inp-maxOA').checked = true; 
@@ -560,12 +564,12 @@ function loadProfile(type) {
     else if (type === 'self_employed') {
         setVal('inp-currentAge', 34); setVal('inp-retireAge', 58); setVal('inp-expenses', 3200);
         if(document.getElementById('toggle-expense-partner')) document.getElementById('toggle-expense-partner').checked = false;
-        setVal('inp-invStart', 70000); setVal('inp-invContrib', 1200); setVal('inp-invRet', 5.0); setVal('inp-cashStart', 75000);
+        setVal('inp-invStart', 70000); setVal('inp-invContrib', 600); setVal('inp-invRet', 5.0); 
+        setVal('inp-cashStart', 75000); setVal('inp-cashContrib', 600);
         if(document.getElementById('toggle-mortgage')) document.getElementById('toggle-mortgage').checked = false;
         if(document.getElementById('toggle-sa')) document.getElementById('toggle-sa').checked = false;
     }
     
-    // Trigger display toggle manually after setting everything
     let tp = document.getElementById('toggle-expense-partner');
     if(tp) document.getElementById('expense-partner-panel').style.display = tp.checked ? 'block' : 'none';
     let tm = document.getElementById('toggle-mortgage');
@@ -621,7 +625,7 @@ function simulatePath(inputs, isMonteCarlo) {
           fx, fxDrift, fxVol,
           hasGlobal, usdStart, usdContrib, usdRet, usdVol,
           hasSG, sgdStart, sgdContrib, sgdRet, sgdVol,
-          hasCash, cashStart, cashYield, 
+          hasCash, cashStart, cashContrib, cashYield, 
           hasSA, saStart, saContrib,
           hasMortgage, simpleMortgage, mortgagePrincipal, mortgageRate, mortgageVol, mortgageShare, isMaxOA, customOACap, loanYrs, oaStart, oaContrib,
           expenses, expenseShare, incomeStreams, milestones, isAdvanced, isBlackSwan } = inputs;
@@ -635,6 +639,7 @@ function simulatePath(inputs, isMonteCarlo) {
     let mortgageEndAge = currentAge + loanYrs;
     let currentUsdContrib = hasGlobal ? usdContrib : 0;
     let currentSgdContrib = hasSG ? sgdContrib : 0;
+    let currentCashContrib = hasCash ? cashContrib : 0;
     let currentOaContrib = oaContrib; 
     let currentSaContrib = hasSA ? saContrib : 0;
     let currentExpenses = expenses;
@@ -671,6 +676,7 @@ function simulatePath(inputs, isMonteCarlo) {
             if (inflateContribs) {
                 currentUsdContrib *= (1 + actualInfl);
                 currentSgdContrib *= (1 + actualInfl);
+                currentCashContrib *= (1 + actualInfl);
                 if (isAdvanced) {
                     currentOaContrib *= (1 + actualInfl);
                     currentSaContrib *= (1 + actualInfl);
@@ -724,6 +730,7 @@ function simulatePath(inputs, isMonteCarlo) {
             if (isWorking) {
                 oaBal += currentOaContrib;
                 saBal += currentSaContrib;
+                cashRes += currentCashContrib;
                 
                 if (isMortgageActive && currentTotalMortgage > 0) {
                     let interestPayment = remPrincipal * (actualMortgageRate / 12);
@@ -948,6 +955,7 @@ function runSim() {
         sgdVol: isAdvanced ? getVal('inp-sgdVol') / 100 : 0,
         hasCash: hasCash,
         cashStart: getVal('inp-cashStart'),
+        cashContrib: getVal('inp-cashContrib') || 0,
         cashYield: (getVal('inp-cashYield') || 1.5) / 100,
         hasSA: hasSA,
         saStart: getVal('inp-saStart'),
