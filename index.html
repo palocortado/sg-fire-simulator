@@ -14,18 +14,6 @@
             <h1>Financial Independence Simulator for Singapore</h1>
             <p class="subtitle">Map your path to financial freedom based on your lifestyle, savings, and housing.</p>
         </div>
-        <div class="header-right">
-            <div class="mode-switch" style="display:flex; gap:1rem; align-items:center;">
-                <label style="cursor:pointer;"><input type="radio" name="mode" value="simple" checked> Simple</label>
-                <label class="disabled-mode" style="opacity:0.4; cursor:not-allowed;"><input type="radio" name="mode" value="advanced" disabled> Advanced 🔒</label>
-                <label class="disabled-mode" style="opacity:0.4; cursor:not-allowed;"><input type="radio" name="mode" value="expert" disabled> Expert 🔒</label>
-            </div>
-            <div class="top-actions">
-                <button type="button" class="btn-secondary" onclick="exportPlan()">Export</button>
-                <label class="btn-secondary file-label">Import <input type="file" id="importFile" accept=".json" onchange="importPlan(event)"></label>
-                <button type="button" class="btn-danger" onclick="clearAllInputs()">Clear</button>
-            </div>
-        </div>
     </header>
 
     <main class="app-layout">
@@ -50,7 +38,7 @@
         <section class="persona-section">
             <div class="section-heading">
                 <h2>Start with a profile that feels like you</h2>
-                <span class="sub-heading">Select a baseline below, then tweak the numbers below to fit your exact situation.</span>
+                <span class="sub-heading" style="font-style: italic;">You can tweak the numbers to fit your exact situation.</span>
             </div>
             <div class="persona-grid">
                 <button type="button" class="persona-card" onclick="loadProfile('young_starter')">
@@ -296,7 +284,21 @@
                         </div>
                     </div>
                 </div>
-            </div>
+                <!-- Wizard Action Footer Bar -->
+                <div class="wizard-footer-bar">
+                    <div class="mode-switch" style="display:flex; gap:1rem; align-items:center;">
+                        <label style="cursor:pointer;"><input type="radio" name="mode" value="simple" checked> Simple</label>
+                        <label class="disabled-mode" style="opacity:0.4; cursor:not-allowed;"><input type="radio" name="mode" value="advanced" disabled> Advanced 🔒</label>
+                        <label class="disabled-mode" style="opacity:0.4; cursor:not-allowed;"><input type="radio" name="mode" value="expert" disabled> Expert 🔒</label>
+                    </div>
+                    <div class="top-actions" style="display:flex; gap:0.5rem;">
+                        <button type="button" class="btn-secondary" onclick="exportPlan()">Export</button>
+                        <label class="btn-secondary file-label" style="margin:0; display:inline-flex; align-items:center; cursor:pointer;">Import <input type="file" id="importFile" accept=".json" onchange="importPlan(event)" style="display:none;"></label>
+                        <button type="button" class="btn-danger" onclick="clearAllInputs()">Clear</button>
+                    </div>
+                </div>
+            </div> <!-- End of .inputs-column -->
+            
 
             <!-- RIGHT COLUMN: Sticky Dashboard -->
             <div class="chart-column">
