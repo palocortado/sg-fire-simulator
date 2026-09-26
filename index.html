@@ -126,7 +126,10 @@
                                 <input type="text" id="inp-invStart" class="num-format" value="40,000" onblur="runSim()">
                             </div>
                             <div>
-                                <label for="inp-invContrib">Monthly Investments (SGD)</label>
+                                <label style="display:flex; align-items:center;">
+                                    Monthly Investments (SGD)
+                                    <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">The regular monthly amount you inject or add to your investment portfolio to compound and grow your assets over time.</div></div>
+                                </label>
                                 <input type="text" id="inp-invContrib" class="num-format" value="1,000" onblur="runSim()">
                             </div>
                             <div>
@@ -151,7 +154,10 @@
                                 <input type="text" id="inp-cashStart" class="num-format" value="40,000" onblur="runSim()">
                             </div>
                             <div>
-                                <label for="inp-cashContrib">Monthly Cash Savings (SGD)</label>
+                                <label style="display:flex; align-items:center;">
+                                    Monthly Cash Savings (SGD)
+                                    <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">The regular monthly amount you save or inject into your liquid cash buffer and savings accounts.</div></div>
+                                </label>
                                 <input type="text" id="inp-cashContrib" class="num-format" value="500" onblur="runSim()">
                             </div>
                         </div>
