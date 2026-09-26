@@ -922,8 +922,6 @@ function runSim() {
     const isBlackSwan = (isAdvanced && inpBlackSwan) ? inpBlackSwan.checked : false;
     const hasMortPartner = toggleMortgagePartner ? toggleMortgagePartner.checked : false;
     const hasExpPartner = toggleExpensePartner ? toggleExpensePartner.checked : false;
-
-    let hasExpPartner = document.getElementById('toggle-expense-partner') ? document.getElementById('toggle-expense-partner').checked : false;
     
     const inputs = {
         isAdvanced: isAdvanced,
