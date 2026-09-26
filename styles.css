@@ -133,3 +133,29 @@ label, .checkbox-row label, .cpf-toggle-box label { font-size: 0.9rem !important
 .persona-card:hover::before { background: #3b82f6; }
 .persona-card.active { border-color: #2563eb; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.15); transform: translateY(-3px); }
 .persona-card.active::before { background: #2563eb; }
+
+/* --- Forced Side-by-Side Planner Split --- */
+.planner-split {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 2rem !important;
+    align-items: start !important;
+}
+
+/* Ensure the columns don't force vertical stacking */
+.planner-split > .inputs-column {
+    width: 100% !important;
+    min-width: 0 !important;
+}
+
+.planner-split > .chart-column {
+    width: 100% !important;
+    min-width: 0 !important;
+}
+
+/* Responsive fallback for small mobile screens only */
+@media (max-width: 1024px) {
+    .planner-split {
+        grid-template-columns: 1fr !important;
+    }
+}
