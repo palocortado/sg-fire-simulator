@@ -62,9 +62,11 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-
 .tt-container:hover .tt-text { visibility: visible; opacity: 1; }
 
 /* Split Layout & Sticky Panel */
-.planner-split { display: grid; grid-template-columns: 420px 1fr; gap: 1.5rem; align-items: start; }
-@media (max-width: 900px) { .planner-split { grid-template-columns: 1fr; } }
-.sticky-chart-panel { position: sticky; top: 1.5rem; }
+/* Enforce Side-by-Side Two-Column Layout */
+.planner-split { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start; }
+@media (max-width: 1024px) {
+    .planner-split { grid-template-columns: 1fr; }
+}
 
 /* Forms & Cards */
 .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem; }
