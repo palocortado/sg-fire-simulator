@@ -706,6 +706,7 @@ function simulatePath(inputs, isMonteCarlo) {
                         usdPort -= (draw * uRatio) / currentFx;
                     } else {
                         cashRes = 0; sgdPort = 0; usdPort = 0;
+                        if (solvent) { solvent = false; depletionAge = age; }
                     }
                 }
             }
@@ -793,6 +794,7 @@ function simulatePath(inputs, isMonteCarlo) {
                         if (includeSA) saBal -= netWithdrawal * saRatio;
                     } else {
                         cashRes = 0; sgdPort = 0; usdPort = 0; if (includeSA) saBal = 0;
+                        if (solvent) { solvent = false; depletionAge = age; }
                     }
                 }
             }
