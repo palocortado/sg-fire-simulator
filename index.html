@@ -82,6 +82,8 @@
 
         <div class="planner-split">
             <div class="inputs-column">
+                
+                <!-- Step 1: Timeline & Lifestyle -->
                 <div class="card wizard-card">
                     <div class="wizard-header"><span class="step-num">1</span><h3>Your Timeline & Lifestyle</h3></div>
                     <div class="form-grid-2">
@@ -113,41 +115,7 @@
                     </div>
                 </div>
 
-                <div class="card wizard-card">
-                    <div class="wizard-header"><span class="step-num">2</span><h3>Your Fuel (Savings & Investments)</h3></div>
-                    <div class="form-grid-2">
-                        <div>
-                            <label style="display:flex; align-items:center;">
-                                Total Invested Portfolio (SGD)
-                                <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">The current total value of your stocks, ETFs, Unit Trusts, or Investment-Linked Policies. Do not include your home value.</div></div>
-                            </label>
-                            <input type="text" id="inp-invStart" class="num-format" value="40,000" onblur="runSim()">
-                        </div>
-                        <div>
-                            <label for="inp-invContrib">Monthly Investments (SGD)</label>
-                            <input type="text" id="inp-invContrib" class="num-format" value="1,000" onblur="runSim()">
-                        </div>
-                        <div>
-                            <label style="display:flex; align-items:center;">
-                                Expected Portfolio Return (%)
-                                <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Realistic local estimates: 2-3% for Fixed Deposits, 3-5% for typical bank funds/ILPs after fees, 6-8% for global index ETFs.</div></div>
-                            </label>
-                            <input type="number" id="inp-invRet" value="4.5" step="0.1" oninput="runSim()">
-                        </div>
-                        <div>
-                            <label style="display:flex; align-items:center;">
-                                Liquid Cash (SGD)
-                                <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Your emergency fund and savings accounts. The engine assumes this yields 1.5% annually. Note: 1.5% requires a High-Yield Savings Account (HYSA) — if you haven't switched to one yet, do so right away! Be aware of bonus interest deposit caps: UOB One ($150k), OCBC 360 ($100k), and DBS Multiplier ($100k).</div></div>
-                            </label>
-                            <input type="text" id="inp-cashStart" class="num-format" value="40,000" onblur="runSim()">
-                        </div>
-                        <div>
-                            <label for="inp-cashContrib">Monthly Cash Savings (SGD)</label>
-                            <input type="text" id="inp-cashContrib" class="num-format" value="500" onblur="runSim()">
-                        </div>
-                    </div>
-                </div>
-
+                <!-- Step 2: Segmented Assets (Investments & Cash) -->
                 <div class="card wizard-card">
                     <div class="wizard-header"><span class="step-num">2</span><h3>Your Fuel (Savings & Investments)</h3></div>
                     
@@ -190,6 +158,132 @@
                             <div>
                                 <label for="inp-cashContrib">Monthly Cash Savings (SGD)</label>
                                 <input type="text" id="inp-cashContrib" class="num-format" value="500" onblur="runSim()">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Housing & Mortgage -->
+                <div class="card wizard-card">
+                    <div class="wizard-header"><span class="step-num">3</span><h3>Housing & Mortgage</h3></div>
+                    <div class="form-row checkbox-row">
+                        <label><input type="checkbox" id="toggle-mortgage" checked onchange="document.getElementById('mortgage-panel').style.display = this.checked ? 'block' : 'none'; runSim();"> I have an active home loan</label>
+                    </div>
+                    
+                    <div id="mortgage-panel" class="sub-panel">
+                        <div class="form-grid-2">
+                            <div>
+                                <div style="display:flex; justify-content:space-between; align-items: center; margin-bottom: 2px;">
+                                    <label for="inp-mortgagePrincipal" style="margin:0;">Outstanding Principal</label>
+                                    <a href="javascript:void(0)" onclick="toggleMortgageCalc()" class="btn-micro">Estimate</a>
+                                </div>
+                                <input type="text" id="inp-mortgagePrincipal" class="num-format" value="380,000" onblur="runSim()">
+                                <div style="font-size: 0.75rem; color: #64748b; margin-top: 4px;">Monthly Installment: <strong id="disp-monthlyMortgage" style="color:#0f172a;">$0</strong></div>
+                            </div>
+                            <div>
+                                <label for="inp-loanYrs">Years Remaining</label>
+                                <input type="number" id="inp-loanYrs" value="22" oninput="runSim()">
+                            </div>
+                            
+                            <!-- Hidden Mortgage Estimator -->
+                            <div id="mortgage-calc-panel" class="helper-panel" style="display:none; grid-column: 1 / -1;">
+                                <div style="font-size: 0.8rem; font-weight:600; margin-bottom: 0.5rem; color: var(--text-secondary);">Reverse-Engineer Your Remaining Principal</div>
+                                <div class="form-grid-2">
+                                    <div>
+                                        <label>Original Loan Amt</label>
+                                        <input type="text" id="est-origLoan" class="num-format" placeholder="e.g. 500,000">
+                                    </div>
+                                    <div>
+                                        <label>Original Tenure (Yrs)</label>
+                                        <input type="number" id="est-origTenure" placeholder="e.g. 25">
+                                    </div>
+                                    <div>
+                                        <label>Years Paid So Far</label>
+                                        <input type="number" id="est-yearsPaid" placeholder="e.g. 3">
+                                    </div>
+                                    <div style="display:flex; align-items:flex-end;">
+                                        <button type="button" class="btn-secondary" style="width:100%;" onclick="applyMortgageEstimate()">Apply</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label for="inp-mortgageRate">Interest Rate (%)</label>
+                                <input type="number" id="inp-mortgageRate" value="2.6" step="0.1" oninput="runSim()">
+                            </div>
+                            <div>
+                                <label for="inp-mortgageShare">Your Liability Share (%)</label>
+                                <input type="number" id="inp-mortgageShare" value="50" oninput="runSim()">
+                            </div>
+                        </div>
+
+                        <div class="cpf-toggle-box" style="margin-top: 1.5rem;">
+                            <label style="display:flex; align-items:center;">
+                                <input type="checkbox" id="inp-maxOA" checked onchange="runSim()" style="margin-right:0.5rem;"> 
+                                Prioritize paying mortgage with CPF OA
+                                <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">While working, this uses your monthly CPF contributions to pay your mortgage, preserving your cash for investments.</div></div>
+                            </label>
+                            
+                            <div class="form-grid-2" style="margin-top: 0.5rem;">
+                                <div>
+                                    <label for="inp-oaStart">Current OA Balance</label>
+                                    <input type="text" id="inp-oaStart" class="num-format" value="20,000" onblur="runSim()">
+                                </div>
+                                <div>
+                                    <div style="display:flex; justify-content:space-between; align-items: center; margin-bottom: 2px;">
+                                        <label for="inp-oaContrib" style="margin:0;">Monthly OA Inflow</label>
+                                        <a href="javascript:void(0)" onclick="toggleOACalc()" class="btn-micro" style="background:#dcfce7; border-color:#86efac; color:#166534;">Estimate</a>
+                                    </div>
+                                    <input type="text" id="inp-oaContrib" class="num-format" value="1,400" onblur="runSim()">
+                                </div>
+                                
+                                <!-- Hidden CPF OA Estimator -->
+                                <div id="oa-calc-panel" class="helper-panel" style="display:none; grid-column: 1 / -1; border-color: #bbf7d0; background: #dcfce7;">
+                                    <label style="color: #166534;">Gross Monthly Salary (SGD)</label>
+                                    <div style="display:flex; gap:0.5rem; align-items:center;">
+                                        <input type="text" id="est-salary" class="num-format" placeholder="e.g. 6,000" oninput="runOAEstimate()" style="flex-grow:1;">
+                                        <button type="button" class="btn-secondary" onclick="applyOAEstimate()">Apply</button>
+                                    </div>
+                                    <div id="oa-est-result" style="font-size:0.75rem; margin-top:0.3rem; color:#15803d;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Engine Room Drawer (Hidden in Simple Mode) -->
+                <div class="card wizard-card advanced-only" id="engine-room" style="display: none;">
+                    <div class="wizard-header"><span class="step-num">⚙️</span><h3>Advanced Engine Room</h3></div>
+                    <div class="form-grid-2">
+                        <div>
+                            <label for="inp-inflation">Inflation Rate (%)</label>
+                            <input type="number" id="inp-inflation" value="3.0" step="0.1" oninput="runSim()">
+                        </div>
+                        <div>
+                            <label for="inp-usdRet">Global Equity Return (%)</label>
+                            <input type="number" id="inp-usdRet" value="7.0" step="0.1" oninput="runSim()">
+                        </div>
+                        <div>
+                            <label for="inp-fx">USD/SGD Exchange Rate</label>
+                            <input type="number" id="inp-fx" value="1.35" step="0.01" oninput="runSim()">
+                        </div>
+                        <div>
+                            <label for="inp-cashYield">Cash Yield (%)</label>
+                            <input type="number" id="inp-cashYield" value="1.5" step="0.1" oninput="runSim()">
+                        </div>
+                    </div>
+                    <div class="form-row checkbox-row" style="margin-top:1rem;">
+                        <label><input type="checkbox" id="toggle-sa" onchange="document.getElementById('sa-panel').style.display = this.checked ? 'block' : 'none'; runSim();"> Model CPF Special Account (4.0% Floor)</label>
+                    </div>
+                    <div id="sa-panel" style="display:none;" class="sub-panel">
+                        <div class="form-grid-2">
+                            <div>
+                                <label for="inp-saStart">Current SA Balance</label>
+                                <input type="text" id="inp-saStart" value="0" onblur="runSim()">
+                            </div>
+                            <div>
+                                <label for="inp-saContrib">Monthly SA Addition</label>
+                                <input type="text" id="inp-saContrib" value="0" onblur="runSim()">
                             </div>
                         </div>
                     </div>
