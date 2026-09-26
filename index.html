@@ -16,8 +16,9 @@
         </div>
         <div class="header-right">
             <div class="mode-switch">
-                <label><input type="radio" name="mode" value="simple" checked onchange="document.body.className='simple-mode'"> Guided</label>
-                <label><input type="radio" name="mode" value="advanced" onchange="document.body.className='advanced-mode'"> Engine Room</label>
+                <label><input type="radio" name="mode" value="simple" checked onchange="document.body.className='simple-mode'"> Simple</label>
+                <label class="disabled-mode" style="opacity:0.5; cursor:not-allowed;"><input type="radio" name="mode" value="advanced" disabled> Advanced 🔒</label>
+                <label class="disabled-mode" style="opacity:0.5; cursor:not-allowed;"><input type="radio" name="mode" value="expert" disabled> Expert 🔒</label>
             </div>
             <div class="top-actions">
                 <button type="button" class="btn-secondary" onclick="exportPlan()">Export</button>
@@ -28,6 +29,25 @@
     </header>
 
     <main class="app-layout">
+        <!-- Educational Welcome Mat -->
+        <div class="welcome-mat">
+            <h3>Plan your path to Financial Independence</h3>
+            <div class="welcome-grid">
+                <div class="welcome-step">
+                    <strong>1. Assess</strong>
+                    <p>Map your current household base living expenses, debt, and assets.</p>
+                </div>
+                <div class="welcome-step">
+                    <strong>2. Project</strong>
+                    <p>See exactly what age your wealth generates enough passive income to cover your life.</p>
+                </div>
+                <div class="welcome-step">
+                    <strong>3. Optimize</strong>
+                    <p>Tweak your savings rate, retirement age, and investments to pull that date closer.</p>
+                </div>
+            </div>
+        </div>
+
         <!-- TOP: 5 Relatable Persona Cards -->
         <section class="persona-section">
             <div class="section-heading">
@@ -79,8 +99,14 @@
                         </div>
                     </div>
                     <div class="form-row" style="margin-top: 1rem;">
-                        <label for="inp-expenses">Target Monthly Household Living Costs (SGD)</label>
-                        <input type="text" id="inp-expenses" value="5,000" onblur="runSim()">
+                        <label style="display:flex; align-items:center;">
+                            Target Household Base Living Expenses (SGD)
+                            <div class="tooltip-container">
+                                <span class="info-icon">ℹ️</span>
+                                <div class="tooltip-text">The amount you plan to spend each month after you stop working, in today's dollars. The simulator will automatically adjust this number for inflation as you age.</div>
+                            </div>
+                        </label>
+                        <input type="text" id="inp-expenses" class="num-format" value="5,000" onblur="runSim()">
                     </div>
                     <div class="form-row checkbox-row">
                         <label><input type="checkbox" id="toggle-expense-partner" onchange="document.getElementById('expense-partner-panel').style.display = this.checked ? 'block' : 'none'; runSim();"> Share expenses with a partner</label>
@@ -95,17 +121,21 @@
                     <div class="wizard-header"><span class="step-num">2</span><h3>Your Fuel (Savings & Investments)</h3></div>
                     <div class="form-grid-2">
                         <div>
-                            <label for="inp-usdStart">Invested Portfolio (USD)</label>
-                            <input type="text" id="inp-usdStart" value="40,000" onblur="runSim()">
+                            <label for="inp-invStart">Total Invested Portfolio (SGD)</label>
+                            <input type="text" id="inp-invStart" class="num-format" value="40,000" onblur="runSim()">
                         </div>
                         <div>
-                            <label for="inp-usdContrib">Monthly Addition (USD)</label>
-                            <input type="text" id="inp-usdContrib" value="1,000" onblur="runSim()">
+                            <label for="inp-invContrib">Monthly Investments (SGD)</label>
+                            <input type="text" id="inp-invContrib" class="num-format" value="1,000" onblur="runSim()">
                         </div>
-                    </div>
-                    <div class="form-row" style="margin-top: 1rem;">
-                        <label for="inp-cashStart">Cash & Emergency Buffer (SGD)</label>
-                        <input type="text" id="inp-cashStart" value="40,000" onblur="runSim()">
+                        <div>
+                            <label for="inp-invRet">Expected Portfolio Return (%)</label>
+                            <input type="number" id="inp-invRet" value="7.0" step="0.1" oninput="runSim()">
+                        </div>
+                        <div>
+                            <label for="inp-cashStart">Liquid Cash (SGD)</label>
+                            <input type="text" id="inp-cashStart" class="num-format" value="40,000" onblur="runSim()">
+                        </div>
                     </div>
                 </div>
 
@@ -117,13 +147,39 @@
                     <div id="mortgage-panel" class="sub-panel">
                         <div class="form-grid-2">
                             <div>
-                                <label for="inp-mortgagePrincipal">Outstanding Principal</label>
-                                <input type="text" id="inp-mortgagePrincipal" value="380,000" onblur="runSim()">
+                                <div style="display:flex; justify-content:space-between;">
+                                    <label for="inp-mortgagePrincipal">Outstanding Principal</label>
+                                    <a href="javascript:void(0)" onclick="toggleMortgageCalc()" style="font-size:0.75rem; color:var(--primary); text-decoration:none;">Estimate</a>
+                                </div>
+                                <input type="text" id="inp-mortgagePrincipal" class="num-format" value="380,000" onblur="runSim()">
                             </div>
                             <div>
                                 <label for="inp-loanYrs">Years Remaining</label>
                                 <input type="number" id="inp-loanYrs" value="22" oninput="runSim()">
                             </div>
+                            
+                            <!-- Hidden Mortgage Estimator -->
+                            <div id="mortgage-calc-panel" class="helper-panel" style="display:none; grid-column: 1 / -1;">
+                                <div style="font-size: 0.8rem; font-weight:600; margin-bottom: 0.5rem; color: var(--text-secondary);">Reverse-Engineer Your Remaining Principal</div>
+                                <div class="form-grid-2">
+                                    <div>
+                                        <label>Original Loan Amt</label>
+                                        <input type="text" id="est-origLoan" class="num-format" placeholder="e.g. 500,000">
+                                    </div>
+                                    <div>
+                                        <label>Original Tenure (Yrs)</label>
+                                        <input type="number" id="est-origTenure" placeholder="e.g. 25">
+                                    </div>
+                                    <div>
+                                        <label>Years Paid So Far</label>
+                                        <input type="number" id="est-yearsPaid" placeholder="e.g. 3">
+                                    </div>
+                                    <div style="display:flex; align-items:flex-end;">
+                                        <button type="button" class="btn-secondary" style="width:100%;" onclick="applyMortgageEstimate()">Apply</button>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div>
                                 <label for="inp-mortgageRate">Interest Rate (%)</label>
                                 <input type="number" id="inp-mortgageRate" value="2.6" step="0.1" oninput="runSim()">
@@ -133,16 +189,38 @@
                                 <input type="number" id="inp-mortgageShare" value="50" oninput="runSim()">
                             </div>
                         </div>
+                        
                         <div class="cpf-toggle-box" style="margin-top: 1rem;">
-                            <label><input type="checkbox" id="inp-maxOA" checked onchange="runSim()"> Prioritize paying mortgage with CPF OA</label>
+                            <label style="display:flex; align-items:center;">
+                                <input type="checkbox" id="inp-maxOA" checked onchange="runSim()" style="margin-right:0.5rem;"> 
+                                Prioritize paying mortgage with CPF OA
+                                <div class="tooltip-container">
+                                    <span class="info-icon">ℹ️</span>
+                                    <div class="tooltip-text">While working, this uses your monthly CPF contributions to pay your mortgage, preserving your cash for investments. In retirement, it drains your remaining OA balance before touching your liquid portfolio.</div>
+                                </div>
+                            </label>
+                            
                             <div class="form-grid-2" style="margin-top: 0.5rem;">
                                 <div>
                                     <label for="inp-oaStart">Current OA Balance</label>
-                                    <input type="text" id="inp-oaStart" value="20,000" onblur="runSim()">
+                                    <input type="text" id="inp-oaStart" class="num-format" value="20,000" onblur="runSim()">
                                 </div>
                                 <div>
-                                    <label for="inp-oaContrib">Monthly OA Inflow</label>
-                                    <input type="text" id="inp-oaContrib" value="1,400" onblur="runSim()">
+                                    <div style="display:flex; justify-content:space-between;">
+                                        <label for="inp-oaContrib">Monthly OA Inflow</label>
+                                        <a href="javascript:void(0)" onclick="toggleOACalc()" style="font-size:0.75rem; color:#166534; text-decoration:none;">Estimate</a>
+                                    </div>
+                                    <input type="text" id="inp-oaContrib" class="num-format" value="1,400" onblur="runSim()">
+                                </div>
+                                
+                                <!-- Hidden CPF OA Estimator -->
+                                <div id="oa-calc-panel" class="helper-panel" style="display:none; grid-column: 1 / -1; border-color: #bbf7d0; background: #dcfce7;">
+                                    <label style="color: #166534;">Gross Monthly Salary (SGD)</label>
+                                    <div style="display:flex; gap:0.5rem; align-items:center;">
+                                        <input type="text" id="est-salary" class="num-format" placeholder="e.g. 6,000" oninput="runOAEstimate()" style="flex-grow:1;">
+                                        <button type="button" class="btn-secondary" onclick="applyOAEstimate()">Apply</button>
+                                    </div>
+                                    <div id="oa-est-result" style="font-size:0.75rem; margin-top:0.3rem; color:#15803d;"></div>
                                 </div>
                             </div>
                         </div>
@@ -150,7 +228,7 @@
                 </div>
 
                 <!-- Engine Room Drawer (Hidden in Simple Mode) -->
-                <div class="card wizard-card advanced-only" id="engine-room">
+                <div class="card wizard-card advanced-only" id="engine-room" style="display: none;">
                     <div class="wizard-header"><span class="step-num">⚙️</span><h3>Advanced Engine Room</h3></div>
                     <div class="form-grid-2">
                         <div>

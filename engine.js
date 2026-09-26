@@ -512,7 +512,6 @@ function addMilestone(name = '', amt = '', age = 60) {
 function loadProfile(type) {
     isLoading = true;
     
-    // UI Update for the 5 persona cards
     document.querySelectorAll('.persona-card').forEach(c => c.classList.remove('active'));
     if (typeof event !== 'undefined' && event && event.currentTarget) {
         event.currentTarget.classList.add('active');
@@ -521,7 +520,7 @@ function loadProfile(type) {
     if (type === 'young_starter') {
         setVal('inp-currentAge', 28); setVal('inp-retireAge', 55); setVal('inp-expenses', 2500);
         if(document.getElementById('toggle-expense-partner')) document.getElementById('toggle-expense-partner').checked = false;
-        setVal('inp-usdStart', 35000); setVal('inp-usdContrib', 1500); setVal('inp-cashStart', 25000);
+        setVal('inp-invStart', 35000); setVal('inp-invContrib', 1500); setVal('inp-invRet', 7.0); setVal('inp-cashStart', 25000);
         if(document.getElementById('toggle-mortgage')) document.getElementById('toggle-mortgage').checked = false;
         if(document.getElementById('toggle-sa')) document.getElementById('toggle-sa').checked = false;
     } 
@@ -529,7 +528,7 @@ function loadProfile(type) {
         setVal('inp-currentAge', 32); setVal('inp-retireAge', 55); setVal('inp-expenses', 5000);
         if(document.getElementById('toggle-expense-partner')) document.getElementById('toggle-expense-partner').checked = true; 
         setVal('inp-expenseShare', 50);
-        setVal('inp-usdStart', 40000); setVal('inp-usdContrib', 1000); setVal('inp-cashStart', 40000);
+        setVal('inp-invStart', 40000); setVal('inp-invContrib', 1000); setVal('inp-invRet', 7.0); setVal('inp-cashStart', 40000);
         if(document.getElementById('toggle-mortgage')) document.getElementById('toggle-mortgage').checked = true;
         setVal('inp-mortgagePrincipal', 380000); setVal('inp-loanYrs', 22); setVal('inp-mortgageRate', 2.6); setVal('inp-mortgageShare', 50);
         if(document.getElementById('inp-maxOA')) document.getElementById('inp-maxOA').checked = true; 
@@ -540,7 +539,7 @@ function loadProfile(type) {
         setVal('inp-currentAge', 38); setVal('inp-retireAge', 60); setVal('inp-expenses', 8500);
         if(document.getElementById('toggle-expense-partner')) document.getElementById('toggle-expense-partner').checked = true; 
         setVal('inp-expenseShare', 50);
-        setVal('inp-usdStart', 120000); setVal('inp-usdContrib', 2200); setVal('inp-cashStart', 80000);
+        setVal('inp-invStart', 120000); setVal('inp-invContrib', 2200); setVal('inp-invRet', 7.0); setVal('inp-cashStart', 80000);
         if(document.getElementById('toggle-mortgage')) document.getElementById('toggle-mortgage').checked = true;
         setVal('inp-mortgagePrincipal', 1100000); setVal('inp-loanYrs', 25); setVal('inp-mortgageRate', 2.8); setVal('inp-mortgageShare', 50);
         if(document.getElementById('inp-maxOA')) document.getElementById('inp-maxOA').checked = true; 
@@ -550,7 +549,7 @@ function loadProfile(type) {
     else if (type === 'pragmatic_saver' || type === 'conservative') {
         setVal('inp-currentAge', 42); setVal('inp-retireAge', 62); setVal('inp-expenses', 2400);
         if(document.getElementById('toggle-expense-partner')) document.getElementById('toggle-expense-partner').checked = false;
-        setVal('inp-usdStart', 20000); setVal('inp-usdContrib', 300); setVal('inp-cashStart', 60000);
+        setVal('inp-invStart', 20000); setVal('inp-invContrib', 300); setVal('inp-invRet', 4.0); setVal('inp-cashStart', 60000);
         if(document.getElementById('toggle-mortgage')) document.getElementById('toggle-mortgage').checked = true;
         setVal('inp-mortgagePrincipal', 120000); setVal('inp-loanYrs', 10); setVal('inp-mortgageRate', 2.6); setVal('inp-mortgageShare', 100);
         if(document.getElementById('inp-maxOA')) document.getElementById('inp-maxOA').checked = true; 
@@ -561,23 +560,10 @@ function loadProfile(type) {
     else if (type === 'self_employed') {
         setVal('inp-currentAge', 34); setVal('inp-retireAge', 58); setVal('inp-expenses', 3200);
         if(document.getElementById('toggle-expense-partner')) document.getElementById('toggle-expense-partner').checked = false;
-        setVal('inp-usdStart', 70000); setVal('inp-usdContrib', 1200); setVal('inp-cashStart', 75000);
+        setVal('inp-invStart', 70000); setVal('inp-invContrib', 1200); setVal('inp-invRet', 7.0); setVal('inp-cashStart', 75000);
         if(document.getElementById('toggle-mortgage')) document.getElementById('toggle-mortgage').checked = false;
         if(document.getElementById('toggle-sa')) document.getElementById('toggle-sa').checked = false;
     }
-
-    // Force panel visibility to match toggles safely
-    try {
-        if(document.getElementById('expense-partner-panel')) {
-            document.getElementById('expense-partner-panel').style.display = (document.getElementById('toggle-expense-partner') && document.getElementById('toggle-expense-partner').checked) ? 'block' : 'none';
-        }
-        if(document.getElementById('mortgage-panel')) {
-            document.getElementById('mortgage-panel').style.display = (document.getElementById('toggle-mortgage') && document.getElementById('toggle-mortgage').checked) ? 'block' : 'none';
-        }
-        if(document.getElementById('sa-panel')) {
-            document.getElementById('sa-panel').style.display = (document.getElementById('toggle-sa') && document.getElementById('toggle-sa').checked) ? 'block' : 'none';
-        }
-    } catch(e) {}
     
     calcLiveMortgage();
     isLoading = false;
@@ -939,17 +925,17 @@ function runSim() {
         inflation: (getVal('inp-inflation') || 3.0) / 100,
         inflVol: isAdvanced ? getVal('inp-inflVol') / 100 : 0,
         inflateContribs: inpInflateContribs ? inpInflateContribs.checked : false,
-        fx: getVal('inp-fx') || 1.35,
+        fx: 1.0, // Forced to 1.0 for consolidated simple mode
         fxDrift: isAdvanced ? getVal('inp-fxDrift') / 100 : 0,
         fxVol: isAdvanced ? getVal('inp-fxVol') / 100 : 0,
-        hasGlobal: hasGlobal,
-        usdStart: getVal('inp-usdStart'),
-        usdContrib: getVal('inp-usdContrib'),
-        usdRet: (getVal('inp-usdRet') || 7.0) / 100,
+        hasGlobal: true, // Consolidated portfolio active
+        usdStart: getVal('inp-invStart'),
+        usdContrib: getVal('inp-invContrib'),
+        usdRet: (getVal('inp-invRet') || 7.0) / 100,
         usdVol: isAdvanced ? getVal('inp-usdVol') / 100 : 0,
-        hasSG: hasSG,
-        sgdStart: getVal('inp-sgdStart'),
-        sgdContrib: getVal('inp-sgdContrib'),
+        hasSG: false, // Legacy SG portfolio disabled for simple mode
+        sgdStart: 0,
+        sgdContrib: 0,
         sgdRet: (getVal('inp-sgdRet') || 4.0) / 100,
         sgdVol: isAdvanced ? getVal('inp-sgdVol') / 100 : 0,
         hasCash: hasCash,
@@ -964,7 +950,7 @@ function runSim() {
         mortgageRate: (getVal('inp-mortgageRate') || 2.6) / 100,
         mortgageVol: isAdvanced ? getVal('inp-mortgageVol') / 100 : 0,
         loanYrs: getVal('inp-loanYrs') || 25,
-        mortgageShare: hasMortPartner ? getVal('inp-mortgageShare') : 100,
+        mortgageShare: document.getElementById('inp-mortgageShare') ? getVal('inp-mortgageShare') : 100,
         isMaxOA: inpMaxOA ? inpMaxOA.checked : true,
         customOACap: getVal('inp-customOACap') || 0,
         oaStart: getVal('inp-oaStart') || 0,
@@ -1031,13 +1017,9 @@ function runSim() {
         let remPrincipal = 0;
         if (inputs.hasMortgage && age < inputs.currentAge + inputs.loanYrs) {
             let mYrs = (inputs.currentAge + inputs.loanYrs) - age;
-            if (inputs.isAdvanced) {
-                let r = inputs.mortgageRate / 12;
-                let pmt = calcPmt(inputs.mortgagePrincipal, inputs.mortgageRate, inputs.loanYrs);
-                remPrincipal = r === 0 ? pmt * (mYrs * 12) : (pmt / r) * (1 - Math.pow(1+r, -(mYrs * 12)));
-            } else {
-                remPrincipal = (inputs.simpleMortgage) * (mYrs * 12); 
-            }
+            let r = inputs.mortgageRate / 12;
+            let pmt = calcPmt(inputs.mortgagePrincipal, inputs.mortgageRate, inputs.loanYrs);
+            remPrincipal = r === 0 ? pmt * (mYrs * 12) : (pmt / r) * (1 - Math.pow(1+r, -(mYrs * 12)));
         }
         
         let personalRemPrincipal = remPrincipal * (inputs.mortgageShare / 100);
@@ -1313,3 +1295,66 @@ isLoading = false;
 
 // Initialize using the new HDB Couple default profile
 loadProfile('hdb_couple');
+
+// --- Smart Estimators (Mortgage & CPF) ---
+function toggleMortgageCalc() {
+    let pnl = document.getElementById('mortgage-calc-panel');
+    if(pnl) pnl.style.display = pnl.style.display === 'none' ? 'block' : 'none';
+}
+
+function applyMortgageEstimate() {
+    let origLoan = getVal('est-origLoan');
+    let origTenure = getVal('est-origTenure');
+    let yearsPaid = getVal('est-yearsPaid');
+    let rate = getVal('inp-mortgageRate') / 100;
+
+    if (origLoan > 0 && origTenure > 0 && yearsPaid >= 0) {
+        let r = rate / 12;
+        let n = origTenure * 12;
+        let monthsPaid = yearsPaid * 12;
+        let pmt = calcPmt(origLoan, rate, origTenure);
+        
+        let remPrincipal = 0;
+        if (r === 0) remPrincipal = origLoan - (pmt * monthsPaid);
+        else remPrincipal = (pmt / r) * (1 - Math.pow(1+r, -(n - monthsPaid)));
+        
+        setVal('inp-mortgagePrincipal', Math.max(0, Math.round(remPrincipal)));
+        setVal('inp-loanYrs', Math.max(0, origTenure - yearsPaid));
+        toggleMortgageCalc();
+        runSim();
+    }
+}
+
+function toggleOACalc() {
+    let pnl = document.getElementById('oa-calc-panel');
+    if(pnl) pnl.style.display = pnl.style.display === 'none' ? 'block' : 'none';
+}
+
+function runOAEstimate() {
+    let salary = getVal('est-salary');
+    let age = getVal('inp-currentAge') || 35;
+    let cappedSalary = Math.min(salary, 8000); // 2026 CPF Ordinary Wage Ceiling
+    
+    // CPF OA Allocation Rates by Age
+    let oaRate = 0.23; 
+    if (age > 35 && age <= 45) oaRate = 0.21;
+    else if (age > 45 && age <= 50) oaRate = 0.19;
+    else if (age > 50 && age <= 55) oa 0.15;
+    else if (age > 55 && age <= 60) oaRate = 0.12;
+    else if (age > 60) oaRate = 0.035;
+
+    let estimatedOA = Math.round(cappedSalary * oaRate);
+    if(document.getElementById('oa-est-result')) {
+        document.getElementById('oa-est-result').innerText = salary > 0 ? `Estimated OA Inflow: $${estimatedOA}/mo` : '';
+    }
+    return estimatedOA;
+}
+
+function applyOAEstimate() {
+    let est = runOAEstimate();
+    if(est > 0) {
+        setVal('inp-oaContrib', est);
+        toggleOACalc();
+        runSim();
+    }
+}
