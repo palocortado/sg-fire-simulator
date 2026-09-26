@@ -512,10 +512,14 @@ function addMilestone(name = '', amt = '', age = 60) {
 function loadProfile(type) {
     isLoading = true;
     
-    document.querySelectorAll('.persona-card').forEach(c => c.classList.remove('active'));
-    if (typeof event !== 'undefined' && event && event.currentTarget) {
-        event.currentTarget.classList.add('active');
-    }
+    // Safely update the active CSS class without relying on the global event object
+    let cards = document.querySelectorAll('.persona-card');
+    cards.forEach(c => c.classList.remove('active'));
+    cards.forEach(c => {
+        if (c.getAttribute('onclick') && c.getAttribute('onclick').includes(type)) {
+            c.classList.add('active');
+        }
+    });
 
     if (type === 'young_starter') {
         setVal('inp-currentAge', 28); setVal('inp-retireAge', 55); setVal('inp-expenses', 3500);
@@ -578,7 +582,10 @@ function loadProfile(type) {
     let tm = document.getElementById('toggle-mortgage');
     if(tm) document.getElementById('mortgage-panel').style.display = tm.checked ? 'block' : 'none';
 
-    calcLiveMortgage();
+    if (typeof calcLiveMortgage === 'function') {
+        calcLiveMortgage();
+    }
+    
     isLoading = false;
 }
 
@@ -1397,20 +1404,29 @@ function unlockPersonas() {
     if(sec) {
         sec.classList.remove('wizard-lock');
         sec.classList.add('wizard-unlock');
-        sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setTimeout(() => sec.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
     }
 }
 
 function selectPersona(type) {
+    // 1. Load the profile inputs safely
     loadProfile(type);
-    let planner = document.getElementById('planner-split');
-    if(planner) {
-        planner.classList.remove('wizard-lock');
-        planner.classList.add('wizard-unlock');
-        planner.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    
+    // 2. Explicitly target and unlock the inputs column
+    let inputsSec = document.getElementById('inputs-section');
+    if(inputsSec) {
+        inputsSec.classList.remove('wizard-lock');
+        inputsSec.classList.add('wizard-unlock');
+        setTimeout(() => inputsSec.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
     }
 }
 
 function executeSimulation() {
+    // 1. Run the math engine
     runSim();
-}
+    
+    // 2. Explicitly target and unlock the chart dashboard
+    let chartSec = document.getElementById('chart-section');
+    if(chartSec) {
+        chartSec.classList.remove('wizard-lock');
+        chartSec.classList.add('wizard-unlock');
