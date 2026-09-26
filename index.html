@@ -12,15 +12,18 @@
     <header class="app-header">
         <div class="header-left">
             <h1>Financial Independence Simulator for Singapore</h1>
-            <p class="subtitle">Map your path to financial freedom based on your lifestyle, savings, and housing.</p>
+            <p class="subtitle">Chart your path to financial freedom: see how adjusting your lifestyle, savings, and investments today can unlock your ideal retirement or funemployment.</p>
         </div>
     </header>
 
     <main class="app-layout">
-        <div class="welcome-mat" style="text-align: center; padding: 2.5rem 2rem;">
-            <h3 style="font-size: 1.75rem; margin-bottom: 0.75rem;">Plan your path to Financial Independence</h3>
-            <p style="color: var(--text-secondary); max-width: 650px; margin: 0 auto 1.5rem auto; font-size: 1rem; line-height: 1.5;">
-                This interactive tool helps you map out your long-term wealth accumulation, housing commitments, and retirement sustainability in Singapore. Follow the 3 steps below to take control of your financial future.
+        <div class="welcome-mat" style="text-align: left; padding: 2.5rem 3rem; max-width: 900px; margin: 0 auto 2rem auto; background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+            <h3 style="font-size: 1.5rem; margin-bottom: 1rem; color: #0f172a;">What is Financial Independence?</h3>
+            <p style="color: var(--text-secondary); font-size: 1.05rem; line-height: 1.6; margin-bottom: 1rem;">
+                Financial Independence (FI) is the tipping point where your investments generate enough passive income to cover your living expenses indefinitely. You no longer have to work for money—giving you the ultimate freedom to design your time and life. It's the opportunity you've been waiting for - to tell your boss or your clients to go to hell and to know that you'll be just fine.
+            </p>
+            <p style="color: var(--text-secondary); font-size: 1.05rem; line-height: 1.6; margin-bottom: 2rem;">
+                This simulator helps you visualize that finish line. By mapping out your current savings rate, investment choices, and desired future lifestyle, you can see exactly when you will cross the FI threshold—and discover which levers to pull to get there sooner.
             </p>
             <div class="welcome-grid" style="margin-bottom: 2rem;">
                 <div class="welcome-step">
@@ -35,7 +38,6 @@
                     <strong>3. Optimize</strong>
                     <p>Tweak your savings rate, retirement age, and investments to pull that date closer.</p>
                 </div>
-            </div>
             <button type="button" class="btn-primary" onclick="unlockPersonas()" style="padding: 0.85rem 2.5rem; font-size: 1rem; font-weight: 600; border-radius: 8px; cursor: pointer;">Let's go</button>
         </div>
 
@@ -92,8 +94,8 @@
                     </div>
                     <div class="form-row" style="margin-top: 1rem;">
                         <label style="display:flex; align-items:center;">
-                            Target Household Base Living Expenses (SGD)
-                            <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Your monthly spending target in retirement, in today's dollars. The engine automatically compounds this at 3% historical inflation per year.</div></div>
+                            Target Retirement Lifestyle (Monthly)
+                            <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">This isn't just bare essentials—it should reflect the life you want to live (travel, hobbies, dining out). You can tweak this later to compare a modest "Lean" retirement against a lavish "Fat" retirement. The engine automatically inflates this over time.</div></div>
                         </label>
                         <input type="text" id="inp-expenses" class="num-format" value="5,000" onblur="runSim()">
                     </div>
@@ -154,7 +156,7 @@
                             <div>
                                 <label style="display:flex; align-items:center;">
                                     Monthly Cash Savings (SGD)
-                                    <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">The regular monthly amount you save or inject into your liquid cash buffer and savings accounts.</div></div>
+                                    <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">The regular monthly amount you save into cash accounts AFTER paying all your bills and cash mortgage obligations.</div></div>
                                 </label>
                                 <input type="text" id="inp-cashContrib" class="num-format" value="500" onblur="runSim()">
                             </div>
@@ -332,6 +334,14 @@
                         </div>
                         <div style="position: relative; height: 350px; width: 100%;">
                             <canvas id="fireChart"></canvas>
+                        </div>
+                    </div>
+                    <!-- Dynamic Coaching Panel -->
+                    <div id="coaching-panel" style="display:none; margin-top: 1.5rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; text-align: left;">
+                        <h4 id="coach-title" style="margin-bottom: 1rem; font-size: 1.1rem; font-weight: 600;">Suggested Tweaks</h4>
+                        <div id="coach-options" style="display: flex; flex-direction: column;"></div>
+                        <div id="coach-note" style="margin-top: 1rem; font-size: 0.85rem; color: #475569; display:none; background: #e2e8f0; padding: 1rem; border-radius: 8px;">
+                            <strong>Optimization Tip:</strong> Consider looking towards higher return investments, especially relatively safe choices like global or US index funds, or switching to investments where commissions or fees to fund managers are lower.
                         </div>
                     </div>
                 </div>

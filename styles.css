@@ -154,3 +154,32 @@ label, .checkbox-row label, .cpf-toggle-box label { font-size: 0.9rem !important
         flex-direction: column !important;
     }
 }
+
+/* --- Refined 35/65 Planner Split --- */
+.planner-split {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 2rem !important;
+    align-items: flex-start !important;
+    width: 100%;
+}
+
+.inputs-column {
+    flex: 1 1 35% !important;
+    min-width: 320px !important; 
+}
+
+.chart-column {
+    flex: 1 1 65% !important;
+    min-width: 0 !important; 
+}
+
+@media (max-width: 1024px) {
+    .planner-split { flex-direction: column !important; }
+}
+
+/* --- Dynamic Coaching Panel UI --- */
+.btn-coach { display: block; width: 100%; text-align: left; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0; background: #ffffff; cursor: pointer; transition: all 0.2s ease; font-size: 0.95rem; font-weight: 500; color: #1e293b; box-shadow: 0 1px 2px rgba(0,0,0,0.05); margin-bottom: 0.5rem; }
+.btn-coach:hover { background: #f8fafc; transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+.btn-coach.safe { border-left: 4px solid #10b981; }
+.btn-coach.danger { border-left: 4px solid #3b82f6; }

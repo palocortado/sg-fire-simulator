@@ -773,19 +773,14 @@ function simulatePath(inputs, isMonteCarlo) {
                     }
                 }
 
+                // Updated Logic: Mortgage cash shortfalls are assumed paid out of unlisted daily expenses.
                 let totalContribSGD = currentSgdContrib + (currentUsdContrib * currentFx);
-                
-                if (mortgageShortfall > totalContribSGD) {
-                    let excessShortfall = mortgageShortfall - totalContribSGD;
-                    cashRes -= excessShortfall;
-                    if (totalContribSGD > 0 && isAdvanced) warnings.add("Mortgage completely consumed monthly investments. Dipping into cash reserves.");
-                } else if (totalContribSGD > 0) {
-                    let effectiveContribSGD = totalContribSGD - mortgageShortfall;
+                if (totalContribSGD > 0) {
                     let usdRatio = (currentUsdContrib * currentFx) / totalContribSGD;
                     let sgdRatio = currentSgdContrib / totalContribSGD;
                     
-                    usdPort += (effectiveContribSGD * usdRatio) / currentFx;
-                    sgdPort += (effectiveContribSGD * sgdRatio);
+                    usdPort += (totalContribSGD * usdRatio) / currentFx;
+                    sgdPort += (totalContribSGD * sgdRatio);
                 }
             } else {
                 // Retired
@@ -1180,6 +1175,10 @@ function runSim() {
                     diagMsg = `Your portfolio survived until Age ${res.depletionAge}. Over a long ${res.depletionAge - inputs.retireAge}-year retirement, inflation slowly eroded your purchasing power, and your capital eventually ran dry.`;
                 }
                 updateDOM('diag-message', diagMsg);
+                // Trigger Dynamic Coaching Panel
+                if (typeof generateCoaching === 'function') {
+                    generateCoaching(inputs, res.solvent);
+                }
             }
 
         } else {
@@ -1450,5 +1449,120 @@ window.executeSimulation = function() {
     if (chartSec) {
         chartSec.classList.remove('wizard-lock');
         chartSec.classList.add('wizard-unlock');
+    }
+};
+
+// --- Dynamic FI Coaching Engine ---
+window.generateCoaching = function(baseInputs, isSolvent) {
+    let panel = document.getElementById('coaching-panel');
+    let optsDiv = document.getElementById('coach-options');
+    let note = document.getElementById('coach-note');
+    if (!panel || !optsDiv) return;
+    
+    panel.style.display = 'block';
+    optsDiv.innerHTML = '<div style="font-size:0.9rem; color:#64748b;">Calculating scenarios...</div>';
+    
+    setTimeout(() => {
+        let html = "";
+        
+        if (isSolvent) {
+            note.style.display = 'none';
+            document.getElementById('coach-title').innerText = '💡 Optimization Opportunities';
+            document.getElementById('coach-title').style.color = '#047857';
+            
+            // 1. Retire Earlier
+            let testAge = JSON.parse(JSON.stringify(baseInputs));
+            let bestAge = testAge.retireAge;
+            for(let a = testAge.retireAge - 1; a >= testAge.currentAge; a--) {
+                testAge.retireAge = a;
+                if(simulatePath(testAge, false).solvent) bestAge = a;
+                else break;
+            }
+            if(bestAge < baseInputs.retireAge) {
+                html += `<button class="btn-coach safe" onclick="applyTweak('inp-retireAge', ${bestAge})">🎉 <strong>Retire Earlier:</strong> You can safely achieve Financial Independence by Age ${bestAge}</button>`;
+            }
+            
+            // 2. Fatten Lifestyle
+            let testExp = JSON.parse(JSON.stringify(baseInputs));
+            let maxExp = testExp.expenses;
+            for(let e = testExp.expenses + 100; e <= testExp.expenses + 10000; e+=100) {
+                testExp.expenses = e;
+                if(simulatePath(testExp, false).solvent) maxExp = e;
+                else break;
+            }
+            if(maxExp > baseInputs.expenses) {
+                html += `<button class="btn-coach safe" onclick="applyTweak('inp-expenses', ${maxExp})">🍷 <strong>Fatten Your Lifestyle:</strong> Your wealth can support up to $${maxExp.toLocaleString()}/mo in retirement</button>`;
+            }
+            
+            // 3. De-Risk
+            let testRisk = JSON.parse(JSON.stringify(baseInputs));
+            let minRet = testRisk.usdRet;
+            for(let r = testRisk.usdRet - 0.005; r >= 0; r -= 0.005) {
+                testRisk.usdRet = r;
+                if(simulatePath(testRisk, false).solvent) minRet = r;
+                else break;
+            }
+            if(minRet < baseInputs.usdRet && minRet > 0) {
+                html += `<button class="btn-coach safe" onclick="applyTweak('inp-invRet', ${(minRet*100).toFixed(1)})">🛡️ <strong>De-Risk Portfolio:</strong> You only need a ${(minRet*100).toFixed(1)}% return to succeed. You can afford safer investments.</button>`;
+            }
+            
+            if(html === "") html = "<div style='font-size:0.9rem;'>Your plan is perfectly balanced!</div>";
+            
+        } else {
+            note.style.display = 'block';
+            document.getElementById('coach-title').innerText = '🔧 How to achieve Financial Independence';
+            document.getElementById('coach-title').style.color = '#1e3a8a';
+            
+            // 1. Spend Less
+            let testExp = JSON.parse(JSON.stringify(baseInputs));
+            let fixExp = null;
+            for(let e = testExp.expenses - 100; e >= 1000; e -= 100) {
+                testExp.expenses = e;
+                if(simulatePath(testExp, false).solvent) { fixExp = e; break; }
+            }
+            if(fixExp) {
+                html += `<button class="btn-coach danger" onclick="applyTweak('inp-expenses', ${fixExp})">📉 <strong>Modest Lifestyle:</strong> Reduce your target retirement spending to $${fixExp.toLocaleString()}/mo</button>`;
+            }
+            
+            // 2. Save More
+            let testSave = JSON.parse(JSON.stringify(baseInputs));
+            let fixSave = null;
+            for(let s = testSave.usdContrib + 100; s <= 20000; s += 100) {
+                testSave.usdContrib = s;
+                if(simulatePath(testSave, false).solvent) { fixSave = s; break; }
+            }
+            if(fixSave) {
+                html += `<button class="btn-coach danger" onclick="applyTweak('inp-invContrib', ${fixSave})">📈 <strong>Supercharge Savings:</strong> Increase monthly investments to $${fixSave.toLocaleString()}/mo</button>`;
+            }
+            
+            // 3. Work Longer
+            let testAge = JSON.parse(JSON.stringify(baseInputs));
+            let fixAge = null;
+            for(let a = testAge.retireAge + 1; a <= 75; a++) {
+                testAge.retireAge = a;
+                if(simulatePath(testAge, false).solvent) { fixAge = a; break; }
+            }
+            if(fixAge) {
+                html += `<button class="btn-coach danger" onclick="applyTweak('inp-retireAge', ${fixAge})">⏳ <strong>Extend Horizon:</strong> Delay retirement to Age ${fixAge}</button>`;
+            }
+            
+            if(html === "") html = "<div style='font-size:0.9rem; color: #b91c1c;'>The shortfall is severe. You may need to manually adjust multiple variables simultaneously.</div>";
+        }
+        
+        optsDiv.innerHTML = html;
+    }, 50);
+};
+
+window.applyTweak = function(id, val) {
+    if(typeof setVal === 'function') {
+        setVal(id, val);
+        if(typeof runSim === 'function') {
+            let chartSec = document.getElementById('chart-section');
+            if (chartSec && chartSec.classList.contains('wizard-lock')) {
+                chartSec.classList.remove('wizard-lock');
+                chartSec.classList.add('wizard-unlock');
+            }
+            runSim();
+        }
     }
 };
