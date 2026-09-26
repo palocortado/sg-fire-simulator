@@ -16,9 +16,8 @@
         </div>
         <div class="header-right">
             <div class="mode-switch">
-                <label><input type="radio" name="mode" value="simple" checked onchange="document.body.className='simple-mode'"> Simple</label>
-                <label class="disabled-mode" style="opacity:0.5; cursor:not-allowed;"><input type="radio" name="mode" value="advanced" disabled> Advanced 🔒</label>
-                <label class="disabled-mode" style="opacity:0.5; cursor:not-allowed;"><input type="radio" name="mode" value="expert" disabled> Expert 🔒</label>
+                <label><input type="radio" name="mode" value="simple" checked onchange="document.body.className='simple-mode'"> Guided</label>
+                <label><input type="radio" name="mode" value="advanced" onchange="document.body.className='advanced-mode'"> Engine Room</label>
             </div>
             <div class="top-actions">
                 <button type="button" class="btn-secondary" onclick="exportPlan()">Export</button>
@@ -29,7 +28,6 @@
     </header>
 
     <main class="app-layout">
-        <!-- Educational Welcome Mat -->
         <div class="welcome-mat">
             <h3>Plan your path to Financial Independence</h3>
             <div class="welcome-grid">
@@ -48,43 +46,41 @@
             </div>
         </div>
 
-        <!-- TOP: 5 Relatable Persona Cards -->
         <section class="persona-section">
             <div class="section-heading">
                 <h2>Start with a profile that feels like you</h2>
-                <span class="sub-heading">Click a baseline below to auto-fill the simulator.</span>
+                <span class="sub-heading">Select a baseline below, then tweak the numbers below to fit your exact situation.</span>
             </div>
             <div class="persona-grid">
                 <button type="button" class="persona-card" onclick="loadProfile('young_starter')">
                     <div class="persona-badge emerald">🌱 Single</div>
                     <div class="persona-name">Young Starter</div>
-                    <div class="tt-container"><span class="tt-icon">i</span><span class="tt-text">Living lean in your 20s/30s. No property commitments, high equity investing.</span></div>
+                    <div class="tt-container"><span class="tt-icon">i</span><span class="tt-text">Age 28, living lean. No property commitments, high equity investing.</span></div>
                 </button>
                 <button type="button" class="persona-card active" onclick="loadProfile('hdb_couple')">
                     <div class="persona-badge blue">🏢 Married</div>
                     <div class="persona-name">First-Time HDB</div>
-                    <div class="tt-container"><span class="tt-icon">i</span><span class="tt-text">The median baseline. BTO/resale flat, using CPF OA to absorb mortgage installments.</span></div>
+                    <div class="tt-container"><span class="tt-icon">i</span><span class="tt-text">Age 32, median baseline. Using CPF OA to shield liquid cash from mortgage payments.</span></div>
                 </button>
                 <button type="button" class="persona-card" onclick="loadProfile('growing_family')">
                     <div class="persona-badge purple">🏠 Upgrader</div>
                     <div class="persona-name">Growing Family</div>
-                    <div class="tt-container"><span class="tt-icon">i</span><span class="tt-text">Balancing kids, higher expenses, and a private bank loan.</span></div>
+                    <div class="tt-container"><span class="tt-icon">i</span><span class="tt-text">Age 38. Balancing higher expenses and a private bank loan.</span></div>
                 </button>
                 <button type="button" class="persona-card" onclick="loadProfile('pragmatic_saver')">
                     <div class="persona-badge amber">🛡️ CPF Focus</div>
                     <div class="persona-name">Pragmatic Saver</div>
-                    <div class="tt-container"><span class="tt-icon">i</span><span class="tt-text">Stock-averse, maximizing the CPF SA 4% floor for guaranteed returns.</span></div>
+                    <div class="tt-container"><span class="tt-icon">i</span><span class="tt-text">Age 42. Stock-averse, maximizing the CPF SA 4% floor for guaranteed returns.</span></div>
                 </button>
                 <button type="button" class="persona-card" onclick="loadProfile('self_employed')">
                     <div class="persona-badge slate">💼 Solo</div>
                     <div class="persona-name">Self-Employed</div>
-                    <div class="tt-container"><span class="tt-icon">i</span><span class="tt-text">Managing uneven income and a larger cash buffer without employer CPF.</span></div>
+                    <div class="tt-container"><span class="tt-icon">i</span><span class="tt-text">Age 34. Managing uneven income and a larger cash buffer without employer CPF.</span></div>
                 </button>
             </div>
         </section>
 
         <div class="planner-split">
-            <!-- LEFT COLUMN: Inputs & Wizard -->
             <div class="inputs-column">
                 <div class="card wizard-card">
                     <div class="wizard-header"><span class="step-num">1</span><h3>Your Timeline & Lifestyle</h3></div>
@@ -94,17 +90,17 @@
                             <input type="number" id="inp-currentAge" value="32" oninput="runSim()">
                         </div>
                         <div>
-                            <label for="inp-retireAge">Target Retire Age</label>
+                            <label style="display:flex; align-items:center;">
+                                Target Retire Age
+                                <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">The age you want the option to stop working. Your CPF OA and SA inflows will drop to zero at this age in the simulation.</div></div>
+                            </label>
                             <input type="number" id="inp-retireAge" value="55" oninput="runSim()">
                         </div>
                     </div>
                     <div class="form-row" style="margin-top: 1rem;">
                         <label style="display:flex; align-items:center;">
                             Target Household Base Living Expenses (SGD)
-                            <div class="tooltip-container">
-                                <span class="info-icon">ℹ️</span>
-                                <div class="tooltip-text">The amount you plan to spend each month after you stop working, in today's dollars. The simulator will automatically adjust this number for inflation as you age.</div>
-                            </div>
+                            <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Your monthly spending target in retirement, in today's dollars. The engine automatically compounds this at 3% historical inflation per year.</div></div>
                         </label>
                         <input type="text" id="inp-expenses" class="num-format" value="5,000" onblur="runSim()">
                     </div>
@@ -121,7 +117,10 @@
                     <div class="wizard-header"><span class="step-num">2</span><h3>Your Fuel (Savings & Investments)</h3></div>
                     <div class="form-grid-2">
                         <div>
-                            <label for="inp-invStart">Total Invested Portfolio (SGD)</label>
+                            <label style="display:flex; align-items:center;">
+                                Total Invested Portfolio (SGD)
+                                <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">The current total value of your stocks, ETFs, Unit Trusts, or Investment-Linked Policies. Do not include your home value.</div></div>
+                            </label>
                             <input type="text" id="inp-invStart" class="num-format" value="40,000" onblur="runSim()">
                         </div>
                         <div>
@@ -129,11 +128,17 @@
                             <input type="text" id="inp-invContrib" class="num-format" value="1,000" onblur="runSim()">
                         </div>
                         <div>
-                            <label for="inp-invRet">Expected Portfolio Return (%)</label>
-                            <input type="number" id="inp-invRet" value="7.0" step="0.1" oninput="runSim()">
+                            <label style="display:flex; align-items:center;">
+                                Expected Portfolio Return (%)
+                                <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Realistic local estimates: 2-3% for Fixed Deposits, 3-5% for typical bank funds/ILPs after fees, 6-8% for global index ETFs.</div></div>
+                            </label>
+                            <input type="number" id="inp-invRet" value="4.5" step="0.1" oninput="runSim()">
                         </div>
                         <div>
-                            <label for="inp-cashStart">Liquid Cash (SGD)</label>
+                            <label style="display:flex; align-items:center;">
+                                Liquid Cash (SGD)
+                                <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Your emergency fund and savings accounts. The engine assumes this yields 1.5% annually.</div></div>
+                            </label>
                             <input type="text" id="inp-cashStart" class="num-format" value="40,000" onblur="runSim()">
                         </div>
                     </div>
@@ -144,14 +149,16 @@
                     <div class="form-row checkbox-row">
                         <label><input type="checkbox" id="toggle-mortgage" checked onchange="document.getElementById('mortgage-panel').style.display = this.checked ? 'block' : 'none'; runSim();"> I have an active home loan</label>
                     </div>
+                    
                     <div id="mortgage-panel" class="sub-panel">
                         <div class="form-grid-2">
                             <div>
-                                <div style="display:flex; justify-content:space-between;">
-                                    <label for="inp-mortgagePrincipal">Outstanding Principal</label>
-                                    <a href="javascript:void(0)" onclick="toggleMortgageCalc()" style="font-size:0.75rem; color:var(--primary); text-decoration:none;">Estimate</a>
+                                <div style="display:flex; justify-content:space-between; align-items: center; margin-bottom: 2px;">
+                                    <label for="inp-mortgagePrincipal" style="margin:0;">Outstanding Principal</label>
+                                    <a href="javascript:void(0)" onclick="toggleMortgageCalc()" class="btn-micro">Estimate</a>
                                 </div>
                                 <input type="text" id="inp-mortgagePrincipal" class="num-format" value="380,000" onblur="runSim()">
+                                <div style="font-size: 0.75rem; color: #64748b; margin-top: 4px;">Monthly Installment: <strong id="disp-monthlyMortgage" style="color:#0f172a;">$0</strong></div>
                             </div>
                             <div>
                                 <label for="inp-loanYrs">Years Remaining</label>
@@ -189,15 +196,12 @@
                                 <input type="number" id="inp-mortgageShare" value="50" oninput="runSim()">
                             </div>
                         </div>
-                        
-                        <div class="cpf-toggle-box" style="margin-top: 1rem;">
+
+                        <div class="cpf-toggle-box" style="margin-top: 1.5rem;">
                             <label style="display:flex; align-items:center;">
                                 <input type="checkbox" id="inp-maxOA" checked onchange="runSim()" style="margin-right:0.5rem;"> 
                                 Prioritize paying mortgage with CPF OA
-                                <div class="tooltip-container">
-                                    <span class="info-icon">ℹ️</span>
-                                    <div class="tooltip-text">While working, this uses your monthly CPF contributions to pay your mortgage, preserving your cash for investments. In retirement, it drains your remaining OA balance before touching your liquid portfolio.</div>
-                                </div>
+                                <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">While working, this uses your monthly CPF contributions to pay your mortgage, preserving your cash for investments.</div></div>
                             </label>
                             
                             <div class="form-grid-2" style="margin-top: 0.5rem;">
@@ -206,9 +210,9 @@
                                     <input type="text" id="inp-oaStart" class="num-format" value="20,000" onblur="runSim()">
                                 </div>
                                 <div>
-                                    <div style="display:flex; justify-content:space-between;">
-                                        <label for="inp-oaContrib">Monthly OA Inflow</label>
-                                        <a href="javascript:void(0)" onclick="toggleOACalc()" style="font-size:0.75rem; color:#166534; text-decoration:none;">Estimate</a>
+                                    <div style="display:flex; justify-content:space-between; align-items: center; margin-bottom: 2px;">
+                                        <label for="inp-oaContrib" style="margin:0;">Monthly OA Inflow</label>
+                                        <a href="javascript:void(0)" onclick="toggleOACalc()" class="btn-micro" style="background:#dcfce7; border-color:#86efac; color:#166534;">Estimate</a>
                                     </div>
                                     <input type="text" id="inp-oaContrib" class="num-format" value="1,400" onblur="runSim()">
                                 </div>
@@ -226,61 +230,16 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Engine Room Drawer (Hidden in Simple Mode) -->
-                <div class="card wizard-card advanced-only" id="engine-room" style="display: none;">
-                    <div class="wizard-header"><span class="step-num">⚙️</span><h3>Advanced Engine Room</h3></div>
-                    <div class="form-grid-2">
-                        <div>
-                            <label for="inp-inflation">Inflation Rate (%)</label>
-                            <input type="number" id="inp-inflation" value="3.0" step="0.1" oninput="runSim()">
-                        </div>
-                        <div>
-                            <label for="inp-usdRet">Global Equity Return (%)</label>
-                            <input type="number" id="inp-usdRet" value="7.0" step="0.1" oninput="runSim()">
-                        </div>
-                        <div>
-                            <label for="inp-fx">USD/SGD Exchange Rate</label>
-                            <input type="number" id="inp-fx" value="1.35" step="0.01" oninput="runSim()">
-                        </div>
-                        <div>
-                            <label for="inp-cashYield">Cash Yield (%)</label>
-                            <input type="number" id="inp-cashYield" value="1.5" step="0.1" oninput="runSim()">
-                        </div>
-                    </div>
-                    <div class="form-row checkbox-row" style="margin-top:1rem;">
-                        <label><input type="checkbox" id="toggle-sa" onchange="document.getElementById('sa-panel').style.display = this.checked ? 'block' : 'none'; runSim();"> Model CPF Special Account (4.0% Floor)</label>
-                    </div>
-                    <div id="sa-panel" style="display:none;" class="sub-panel">
-                        <div class="form-grid-2">
-                            <div>
-                                <label for="inp-saStart">Current SA Balance</label>
-                                <input type="text" id="inp-saStart" value="0" onblur="runSim()">
-                            </div>
-                            <div>
-                                <label for="inp-saContrib">Monthly SA Addition</label>
-                                <input type="text" id="inp-saContrib" value="0" onblur="runSim()">
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <!-- RIGHT COLUMN: Sticky Dashboard -->
             <div class="chart-column">
                 <div class="sticky-chart-panel">
-                    
-                    <!-- Dynamic Hero Banner (Using your existing V5 IDs) -->
                     <div id="card-status" class="hero-card success" style="margin-bottom: 1rem; padding: 1.5rem; border-radius: 12px; color: white;">
-                        <h2 id="status-main" style="font-size: 1.5rem; margin-bottom: 0.25rem;">✅ Safe to Age 95</h2>
-                        <p id="status-sub" style="font-size: 1rem; opacity: 0.9;">Ending bal: $0.00M</p>
+                        <h2 id="status-main" style="font-size: 1.5rem; margin-bottom: 0.25rem;">✅ Fully Funded to Age 95</h2>
+                        <p id="status-sub" style="font-size: 1rem; opacity: 0.9;">Projected surplus: $0.00M</p>
                     </div>
 
-                    <div id="diag-panel" style="display: none; background: #fee2e2; border: 1px solid #fecaca; color: #991b1b; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: 0.9rem;">
-                        <strong>Diagnostic:</strong> <span id="diag-message"></span>
-                    </div>
-
-                    <!-- Chart Card -->
                     <div class="card chart-card">
                         <div class="chart-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                             <h4 style="font-size: 1rem; font-weight: 600;">Net Worth Trajectory</h4>

@@ -520,7 +520,7 @@ function loadProfile(type) {
     if (type === 'young_starter') {
         setVal('inp-currentAge', 28); setVal('inp-retireAge', 55); setVal('inp-expenses', 2500);
         if(document.getElementById('toggle-expense-partner')) document.getElementById('toggle-expense-partner').checked = false;
-        setVal('inp-invStart', 35000); setVal('inp-invContrib', 1500); setVal('inp-invRet', 7.0); setVal('inp-cashStart', 25000);
+        setVal('inp-invStart', 35000); setVal('inp-invContrib', 1500); setVal('inp-invRet', 5.0); setVal('inp-cashStart', 25000);
         if(document.getElementById('toggle-mortgage')) document.getElementById('toggle-mortgage').checked = false;
         if(document.getElementById('toggle-sa')) document.getElementById('toggle-sa').checked = false;
     } 
@@ -528,7 +528,7 @@ function loadProfile(type) {
         setVal('inp-currentAge', 32); setVal('inp-retireAge', 55); setVal('inp-expenses', 5000);
         if(document.getElementById('toggle-expense-partner')) document.getElementById('toggle-expense-partner').checked = true; 
         setVal('inp-expenseShare', 50);
-        setVal('inp-invStart', 40000); setVal('inp-invContrib', 1000); setVal('inp-invRet', 7.0); setVal('inp-cashStart', 40000);
+        setVal('inp-invStart', 40000); setVal('inp-invContrib', 1000); setVal('inp-invRet', 4.5); setVal('inp-cashStart', 40000);
         if(document.getElementById('toggle-mortgage')) document.getElementById('toggle-mortgage').checked = true;
         setVal('inp-mortgagePrincipal', 380000); setVal('inp-loanYrs', 22); setVal('inp-mortgageRate', 2.6); setVal('inp-mortgageShare', 50);
         if(document.getElementById('inp-maxOA')) document.getElementById('inp-maxOA').checked = true; 
@@ -539,7 +539,7 @@ function loadProfile(type) {
         setVal('inp-currentAge', 38); setVal('inp-retireAge', 60); setVal('inp-expenses', 8500);
         if(document.getElementById('toggle-expense-partner')) document.getElementById('toggle-expense-partner').checked = true; 
         setVal('inp-expenseShare', 50);
-        setVal('inp-invStart', 120000); setVal('inp-invContrib', 2200); setVal('inp-invRet', 7.0); setVal('inp-cashStart', 80000);
+        setVal('inp-invStart', 120000); setVal('inp-invContrib', 2200); setVal('inp-invRet', 4.5); setVal('inp-cashStart', 80000);
         if(document.getElementById('toggle-mortgage')) document.getElementById('toggle-mortgage').checked = true;
         setVal('inp-mortgagePrincipal', 1100000); setVal('inp-loanYrs', 25); setVal('inp-mortgageRate', 2.8); setVal('inp-mortgageShare', 50);
         if(document.getElementById('inp-maxOA')) document.getElementById('inp-maxOA').checked = true; 
@@ -560,11 +560,17 @@ function loadProfile(type) {
     else if (type === 'self_employed') {
         setVal('inp-currentAge', 34); setVal('inp-retireAge', 58); setVal('inp-expenses', 3200);
         if(document.getElementById('toggle-expense-partner')) document.getElementById('toggle-expense-partner').checked = false;
-        setVal('inp-invStart', 70000); setVal('inp-invContrib', 1200); setVal('inp-invRet', 7.0); setVal('inp-cashStart', 75000);
+        setVal('inp-invStart', 70000); setVal('inp-invContrib', 1200); setVal('inp-invRet', 5.0); setVal('inp-cashStart', 75000);
         if(document.getElementById('toggle-mortgage')) document.getElementById('toggle-mortgage').checked = false;
         if(document.getElementById('toggle-sa')) document.getElementById('toggle-sa').checked = false;
     }
     
+    // Trigger display toggle manually after setting everything
+    let tp = document.getElementById('toggle-expense-partner');
+    if(tp) document.getElementById('expense-partner-panel').style.display = tp.checked ? 'block' : 'none';
+    let tm = document.getElementById('toggle-mortgage');
+    if(tm) document.getElementById('mortgage-panel').style.display = tm.checked ? 'block' : 'none';
+
     calcLiveMortgage();
     isLoading = false;
     runSim();
@@ -917,6 +923,8 @@ function runSim() {
     const hasMortPartner = toggleMortgagePartner ? toggleMortgagePartner.checked : false;
     const hasExpPartner = toggleExpensePartner ? toggleExpensePartner.checked : false;
 
+    let hasExpPartner = document.getElementById('toggle-expense-partner') ? document.getElementById('toggle-expense-partner').checked : false;
+    
     const inputs = {
         isAdvanced: isAdvanced,
         isBlackSwan: isBlackSwan,
@@ -925,15 +933,15 @@ function runSim() {
         inflation: (getVal('inp-inflation') || 3.0) / 100,
         inflVol: isAdvanced ? getVal('inp-inflVol') / 100 : 0,
         inflateContribs: inpInflateContribs ? inpInflateContribs.checked : false,
-        fx: 1.0, // Forced to 1.0 for consolidated simple mode
+        fx: 1.0, 
         fxDrift: isAdvanced ? getVal('inp-fxDrift') / 100 : 0,
         fxVol: isAdvanced ? getVal('inp-fxVol') / 100 : 0,
-        hasGlobal: true, // Consolidated portfolio active
+        hasGlobal: true, 
         usdStart: getVal('inp-invStart'),
         usdContrib: getVal('inp-invContrib'),
-        usdRet: (getVal('inp-invRet') || 7.0) / 100,
+        usdRet: (getVal('inp-invRet') || 4.5) / 100,
         usdVol: isAdvanced ? getVal('inp-usdVol') / 100 : 0,
-        hasSG: false, // Legacy SG portfolio disabled for simple mode
+        hasSG: false, 
         sgdStart: 0,
         sgdContrib: 0,
         sgdRet: (getVal('inp-sgdRet') || 4.0) / 100,
@@ -1080,34 +1088,41 @@ function runSim() {
 
             updateDOM('val-peak', '$' + (res.peakNW / 1000000).toFixed(2) + 'M');
 
+            // Live Mortgage Display Update
+            if (inputs.hasMortgage) {
+                let pmt = calcPmt(inputs.mortgagePrincipal, inputs.mortgageRate, inputs.loanYrs);
+                let disp = document.getElementById('disp-monthlyMortgage');
+                if (disp) disp.innerText = `$${Math.round(pmt).toLocaleString()}`;
+            }
+
             let cardStatus = document.getElementById('hero-status') || document.getElementById('card-status');
             
             if (res.solvent) {
                 let finalBal = res.pathData[res.pathData.length-1].val;
                 
-                if (finalBal < 100000) {
-                    updateDOM('val-statusText', "⚠️ Scraping By");
-                    updateDOM('status-main', "⚠️ Scraping By");
-                    updateDOM('val-statusSub', `Ending bal: $${(finalBal/1000000).toFixed(2)}M`);
-                    updateDOM('status-sub', `Ending bal: $${(finalBal/1000000).toFixed(2)}M`);
-                    if(cardStatus) cardStatus.className = 'hero-card warning';
-                } else {
-                    updateDOM('val-statusText', "✅ Safe to Age 95");
-                    updateDOM('status-main', "✅ Safe to Age 95");
-                    updateDOM('val-statusSub', `Ending bal: $${(finalBal/1000000).toFixed(2)}M`);
-                    updateDOM('status-sub', `Ending bal: $${(finalBal/1000000).toFixed(2)}M`);
-                    if(cardStatus) cardStatus.className = 'hero-card success';
-                }
+                updateDOM('val-statusText', "✅ Fully Funded to Age 95");
+                updateDOM('status-main', "✅ Fully Funded to Age 95");
+                updateDOM('val-statusSub', `Projected surplus: $${(finalBal/1000000).toFixed(2)}M`);
+                updateDOM('status-sub', `Projected surplus: $${(finalBal/1000000).toFixed(2)}M`);
+                if(cardStatus) cardStatus.className = 'hero-card success';
                 
                 if(document.getElementById('diagnostic-panel')) document.getElementById('diagnostic-panel').style.display = 'none';
                 if(document.getElementById('diag-panel')) document.getElementById('diag-panel').style.display = 'none';
                 if(document.getElementById('autosolver-results')) document.getElementById('autosolver-results').style.display = 'none';
             } else {
-                updateDOM('val-statusText', "⚠️ Shortfall");
-                updateDOM('status-main', "⚠️ Shortfall");
-                updateDOM('val-statusSub', `Depletes at Age ${res.depletionAge}`);
-                updateDOM('status-sub', `Depletes at Age ${res.depletionAge}`);
-                if(cardStatus) cardStatus.className = 'hero-card danger';
+                if (res.depletionAge >= 85) {
+                    updateDOM('val-statusText', "🐢 Almost There");
+                    updateDOM('status-main', "🐢 Almost There");
+                    updateDOM('val-statusSub', `Funds deplete at age ${res.depletionAge}.`);
+                    updateDOM('status-sub', `Funds deplete at age ${res.depletionAge}. A small tweak will get you to 95.`);
+                    if(cardStatus) cardStatus.className = 'hero-card warning';
+                } else {
+                    updateDOM('val-statusText', "⚠️ Adjustments Needed");
+                    updateDOM('status-main', "⚠️ Adjustments Needed");
+                    updateDOM('val-statusSub', `Funds deplete at age ${res.depletionAge}.`);
+                    updateDOM('status-sub', `Funds deplete at age ${res.depletionAge}. Try investing a bit more or retiring later.`);
+                    if(cardStatus) cardStatus.className = 'hero-card danger';
+                }
                 
                 if(document.getElementById('diagnostic-panel')) document.getElementById('diagnostic-panel').style.display = 'block';
                 if(document.getElementById('diag-panel')) document.getElementById('diag-panel').style.display = 'block';
