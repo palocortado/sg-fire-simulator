@@ -134,28 +134,23 @@ label, .checkbox-row label, .cpf-toggle-box label { font-size: 0.9rem !important
 .persona-card.active { border-color: #2563eb; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.15); transform: translateY(-3px); }
 .persona-card.active::before { background: #2563eb; }
 
-/* --- Forced Side-by-Side Planner Split --- */
+/* --- Bulletproof Side-by-Side Planner Split --- */
 .planner-split {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
+    display: flex !important;
+    flex-direction: row !important;
     gap: 2rem !important;
-    align-items: start !important;
+    align-items: flex-start !important;
+    width: 100%;
 }
 
-/* Ensure the columns don't force vertical stacking */
-.planner-split > .inputs-column {
-    width: 100% !important;
-    min-width: 0 !important;
+.inputs-column, .chart-column {
+    flex: 1 1 50% !important;
+    min-width: 0 !important; /* Prevents flex items from blowing out width */
 }
 
-.planner-split > .chart-column {
-    width: 100% !important;
-    min-width: 0 !important;
-}
-
-/* Responsive fallback for small mobile screens only */
+/* Responsive fallback for smaller screens */
 @media (max-width: 1024px) {
     .planner-split {
-        grid-template-columns: 1fr !important;
+        flex-direction: column !important;
     }
 }

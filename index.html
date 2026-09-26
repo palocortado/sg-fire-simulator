@@ -68,8 +68,11 @@
             </div>
         </section>
 
-        <div class="planner-split wizard-lock" id="planner-split" style="margin-top: 2rem;">
-            <div class="inputs-column">
+        <!-- Removed wizard-lock from planner-split so columns can be unlocked independently -->
+        <div class="planner-split" id="planner-split" style="margin-top: 2rem;">
+            
+            <!-- Lock 1: Inputs Column -->
+            <div class="inputs-column wizard-lock" id="inputs-section">
                 
                 <!-- Step 1: Timeline & Lifestyle -->
                 <div class="card wizard-card">
@@ -271,8 +274,8 @@
                         <button type="button" class="btn-danger" onclick="clearAllInputs()">Clear</button>
                     </div>
                 </div>
-            </div>
-                <!-- Engine Room Drawer (Hidden in Simple Mode) -->
+
+                <!-- Engine Room Drawer (Moved back inside inputs-column) -->
                 <div class="card wizard-card advanced-only" id="engine-room" style="display: none;">
                     <div class="wizard-header"><span class="step-num">⚙️</span><h3>Advanced Engine Room</h3></div>
                     <div class="form-grid-2">
@@ -312,12 +315,12 @@
             </div> <!-- End of .inputs-column -->
             
 
-            <!-- RIGHT COLUMN: Sticky Dashboard -->
-            <div class="chart-column">
+            <!-- Lock 2: Chart Column -->
+            <div class="chart-column wizard-lock" id="chart-section">
                 <div class="sticky-chart-panel">
-                    <div id="card-status" class="hero-card success" style="margin-bottom: 1rem; padding: 1.5rem; border-radius: 12px; color: white;">
-                        <h2 id="status-main" style="font-size: 1.5rem; margin-bottom: 0.25rem;">✅ Fully Funded to Age 95</h2>
-                        <p id="status-sub" style="font-size: 1rem; opacity: 0.9;">Projected surplus: $0.00M</p>
+                    <div id="card-status" class="hero-card" style="margin-bottom: 1rem; padding: 1.5rem; border-radius: 12px; color: white; background: #64748b;">
+                        <h2 id="status-main" style="font-size: 1.5rem; margin-bottom: 0.25rem;">⏳ Awaiting Inputs</h2>
+                        <p id="status-sub" style="font-size: 1rem; opacity: 0.9;">Select a profile and calculate your path to see results.</p>
                     </div>
 
                     <div class="card chart-card">
@@ -332,8 +335,9 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
+            </div> <!-- End of .chart-column -->
+            
+        </div> <!-- End of .planner-split -->
     </main>
 <!-- Hidden Legacy Toggles for V5 Engine Compatibility -->
     <div style="display: none;">
