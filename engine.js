@@ -518,42 +518,42 @@ function loadProfile(type) {
     }
 
     if (type === 'young_starter') {
-        setVal('inp-currentAge', 28); setVal('inp-retireAge', 55); setVal('inp-expenses', 2500);
+        setVal('inp-currentAge', 28); setVal('inp-retireAge', 55); setVal('inp-expenses', 3500);
         if(document.getElementById('toggle-expense-partner')) document.getElementById('toggle-expense-partner').checked = false;
-        setVal('inp-invStart', 35000); setVal('inp-invContrib', 1000); setVal('inp-invRet', 5.0); 
-        setVal('inp-cashStart', 25000); setVal('inp-cashContrib', 500);
+        setVal('inp-invStart', 10000); setVal('inp-invContrib', 500); setVal('inp-invRet', 5.0); 
+        setVal('inp-cashStart', 20000); setVal('inp-cashContrib', 1000);
         if(document.getElementById('toggle-mortgage')) document.getElementById('toggle-mortgage').checked = false;
         if(document.getElementById('toggle-sa')) document.getElementById('toggle-sa').checked = false;
     } 
     else if (type === 'hdb_couple' || type === 'median') {
-        setVal('inp-currentAge', 32); setVal('inp-retireAge', 55); setVal('inp-expenses', 5000);
+        setVal('inp-currentAge', 30); setVal('inp-retireAge', 55); setVal('inp-expenses', 5000);
         if(document.getElementById('toggle-expense-partner')) document.getElementById('toggle-expense-partner').checked = true; 
         setVal('inp-expenseShare', 50);
-        setVal('inp-invStart', 40000); setVal('inp-invContrib', 500); setVal('inp-invRet', 4.5); 
-        setVal('inp-cashStart', 40000); setVal('inp-cashContrib', 500);
+        setVal('inp-invStart', 30000); setVal('inp-invContrib', 1000); setVal('inp-invRet', 4.5); 
+        setVal('inp-cashStart', 40000); setVal('inp-cashContrib', 1000);
         if(document.getElementById('toggle-mortgage')) document.getElementById('toggle-mortgage').checked = true;
-        setVal('inp-mortgagePrincipal', 380000); setVal('inp-loanYrs', 22); setVal('inp-mortgageRate', 2.6); setVal('inp-mortgageShare', 50);
+        setVal('inp-mortgagePrincipal', 420000); setVal('inp-loanYrs', 23); setVal('inp-mortgageRate', 2.6); setVal('inp-mortgageShare', 50);
         if(document.getElementById('inp-maxOA')) document.getElementById('inp-maxOA').checked = true; 
         setVal('inp-oaStart', 20000); setVal('inp-oaContrib', 1400);
         if(document.getElementById('toggle-sa')) document.getElementById('toggle-sa').checked = false;
     } 
     else if (type === 'growing_family') {
-        setVal('inp-currentAge', 38); setVal('inp-retireAge', 60); setVal('inp-expenses', 8500);
+        setVal('inp-currentAge', 35); setVal('inp-retireAge', 60); setVal('inp-expenses', 8500);
         if(document.getElementById('toggle-expense-partner')) document.getElementById('toggle-expense-partner').checked = true; 
         setVal('inp-expenseShare', 50);
         setVal('inp-invStart', 120000); setVal('inp-invContrib', 1500); setVal('inp-invRet', 4.5); 
         setVal('inp-cashStart', 80000); setVal('inp-cashContrib', 700);
         if(document.getElementById('toggle-mortgage')) document.getElementById('toggle-mortgage').checked = true;
-        setVal('inp-mortgagePrincipal', 1100000); setVal('inp-loanYrs', 25); setVal('inp-mortgageRate', 2.8); setVal('inp-mortgageShare', 50);
+        setVal('inp-mortgagePrincipal', 1100000); setVal('inp-loanYrs', 24); setVal('inp-mortgageRate', 2.8); setVal('inp-mortgageShare', 50);
         if(document.getElementById('inp-maxOA')) document.getElementById('inp-maxOA').checked = true; 
         setVal('inp-oaStart', 35000); setVal('inp-oaContrib', 1500);
         if(document.getElementById('toggle-sa')) document.getElementById('toggle-sa').checked = false;
     } 
     else if (type === 'pragmatic_saver' || type === 'conservative') {
-        setVal('inp-currentAge', 42); setVal('inp-retireAge', 62); setVal('inp-expenses', 2400);
+        setVal('inp-currentAge', 42); setVal('inp-retireAge', 60); setVal('inp-expenses', 2800);
         if(document.getElementById('toggle-expense-partner')) document.getElementById('toggle-expense-partner').checked = false;
         setVal('inp-invStart', 20000); setVal('inp-invContrib', 0); setVal('inp-invRet', 4.0); 
-        setVal('inp-cashStart', 60000); setVal('inp-cashContrib', 1500);
+        setVal('inp-cashStart', 60000); setVal('inp-cashContrib', 2500);
         if(document.getElementById('toggle-mortgage')) document.getElementById('toggle-mortgage').checked = true;
         setVal('inp-mortgagePrincipal', 120000); setVal('inp-loanYrs', 10); setVal('inp-mortgageRate', 2.6); setVal('inp-mortgageShare', 100);
         if(document.getElementById('inp-maxOA')) document.getElementById('inp-maxOA').checked = true; 
@@ -562,11 +562,14 @@ function loadProfile(type) {
         setVal('inp-saStart', 140000); setVal('inp-saContrib', 500);
     } 
     else if (type === 'self_employed') {
-        setVal('inp-currentAge', 34); setVal('inp-retireAge', 58); setVal('inp-expenses', 3200);
+        setVal('inp-currentAge', 36); setVal('inp-retireAge', 58); setVal('inp-expenses', 3200);
         if(document.getElementById('toggle-expense-partner')) document.getElementById('toggle-expense-partner').checked = false;
-        setVal('inp-invStart', 70000); setVal('inp-invContrib', 600); setVal('inp-invRet', 5.0); 
-        setVal('inp-cashStart', 75000); setVal('inp-cashContrib', 600);
-        if(document.getElementById('toggle-mortgage')) document.getElementById('toggle-mortgage').checked = false;
+        setVal('inp-invStart', 70000); setVal('inp-invContrib', 1000); setVal('inp-invRet', 5.0); 
+        setVal('inp-cashStart', 75000); setVal('inp-cashContrib', 8000);
+        if(document.getElementById('toggle-mortgage')) document.getElementById('toggle-mortgage').checked = true;
+        setVal('inp-mortgagePrincipal', 320000); setVal('inp-loanYrs', 23); setVal('inp-mortgageRate', 2.6); setVal('inp-mortgageShare', 50);
+        if(document.getElementById('inp-maxOA')) document.getElementById('inp-maxOA').checked = true; 
+        setVal('inp-oaStart', 30000); setVal('inp-oaContrib', 0);
         if(document.getElementById('toggle-sa')) document.getElementById('toggle-sa').checked = false;
     }
     
@@ -577,7 +580,6 @@ function loadProfile(type) {
 
     calcLiveMortgage();
     isLoading = false;
-    runSim();
 }
 
 function applyPreset(type) {
