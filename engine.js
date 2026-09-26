@@ -509,10 +509,9 @@ function addMilestone(name = '', amt = '', age = 60) {
 }
 
 // --- New V6 Archetypes Engine ---
-function loadProfile(type) {
-    isLoading = true;
+window.loadProfile = function(type) {
+    if (typeof isLoading !== 'undefined') isLoading = true;
     
-    // Safely update the active CSS class without relying on the global event object
     let cards = document.querySelectorAll('.persona-card');
     cards.forEach(c => c.classList.remove('active'));
     cards.forEach(c => {
@@ -522,72 +521,89 @@ function loadProfile(type) {
     });
 
     if (type === 'young_starter') {
-        setVal('inp-currentAge', 28); setVal('inp-retireAge', 55); setVal('inp-expenses', 3500);
+        if(typeof setVal === 'function') {
+            setVal('inp-currentAge', 28); setVal('inp-retireAge', 55); setVal('inp-expenses', 3500);
+            setVal('inp-invStart', 10000); setVal('inp-invContrib', 500); setVal('inp-invRet', 5.0); 
+            setVal('inp-cashStart', 20000); setVal('inp-cashContrib', 1000);
+        }
         if(document.getElementById('toggle-expense-partner')) document.getElementById('toggle-expense-partner').checked = false;
-        setVal('inp-invStart', 10000); setVal('inp-invContrib', 500); setVal('inp-invRet', 5.0); 
-        setVal('inp-cashStart', 20000); setVal('inp-cashContrib', 1000);
         if(document.getElementById('toggle-mortgage')) document.getElementById('toggle-mortgage').checked = false;
         if(document.getElementById('toggle-sa')) document.getElementById('toggle-sa').checked = false;
     } 
     else if (type === 'hdb_couple' || type === 'median') {
-        setVal('inp-currentAge', 30); setVal('inp-retireAge', 55); setVal('inp-expenses', 5000);
+        if(typeof setVal === 'function') {
+            setVal('inp-currentAge', 30); setVal('inp-retireAge', 55); setVal('inp-expenses', 5000);
+            setVal('inp-expenseShare', 50);
+            setVal('inp-invStart', 30000); setVal('inp-invContrib', 1000); setVal('inp-invRet', 4.5); 
+            setVal('inp-cashStart', 40000); setVal('inp-cashContrib', 1000);
+            setVal('inp-mortgagePrincipal', 420000); setVal('inp-loanYrs', 23); setVal('inp-mortgageRate', 2.6); setVal('inp-mortgageShare', 50);
+            setVal('inp-oaStart', 20000); setVal('inp-oaContrib', 1400);
+        }
         if(document.getElementById('toggle-expense-partner')) document.getElementById('toggle-expense-partner').checked = true; 
-        setVal('inp-expenseShare', 50);
-        setVal('inp-invStart', 30000); setVal('inp-invContrib', 1000); setVal('inp-invRet', 4.5); 
-        setVal('inp-cashStart', 40000); setVal('inp-cashContrib', 1000);
         if(document.getElementById('toggle-mortgage')) document.getElementById('toggle-mortgage').checked = true;
-        setVal('inp-mortgagePrincipal', 420000); setVal('inp-loanYrs', 23); setVal('inp-mortgageRate', 2.6); setVal('inp-mortgageShare', 50);
         if(document.getElementById('inp-maxOA')) document.getElementById('inp-maxOA').checked = true; 
-        setVal('inp-oaStart', 20000); setVal('inp-oaContrib', 1400);
         if(document.getElementById('toggle-sa')) document.getElementById('toggle-sa').checked = false;
     } 
     else if (type === 'growing_family') {
-        setVal('inp-currentAge', 35); setVal('inp-retireAge', 60); setVal('inp-expenses', 8500);
+        if(typeof setVal === 'function') {
+            setVal('inp-currentAge', 35); setVal('inp-retireAge', 60); setVal('inp-expenses', 8500);
+            setVal('inp-expenseShare', 50);
+            setVal('inp-invStart', 120000); setVal('inp-invContrib', 1500); setVal('inp-invRet', 4.5); 
+            setVal('inp-cashStart', 80000); setVal('inp-cashContrib', 700);
+            setVal('inp-mortgagePrincipal', 1100000); setVal('inp-loanYrs', 24); setVal('inp-mortgageRate', 2.8); setVal('inp-mortgageShare', 50);
+            setVal('inp-oaStart', 35000); setVal('inp-oaContrib', 1500);
+        }
         if(document.getElementById('toggle-expense-partner')) document.getElementById('toggle-expense-partner').checked = true; 
-        setVal('inp-expenseShare', 50);
-        setVal('inp-invStart', 120000); setVal('inp-invContrib', 1500); setVal('inp-invRet', 4.5); 
-        setVal('inp-cashStart', 80000); setVal('inp-cashContrib', 700);
         if(document.getElementById('toggle-mortgage')) document.getElementById('toggle-mortgage').checked = true;
-        setVal('inp-mortgagePrincipal', 1100000); setVal('inp-loanYrs', 24); setVal('inp-mortgageRate', 2.8); setVal('inp-mortgageShare', 50);
         if(document.getElementById('inp-maxOA')) document.getElementById('inp-maxOA').checked = true; 
-        setVal('inp-oaStart', 35000); setVal('inp-oaContrib', 1500);
         if(document.getElementById('toggle-sa')) document.getElementById('toggle-sa').checked = false;
     } 
     else if (type === 'pragmatic_saver' || type === 'conservative') {
-        setVal('inp-currentAge', 42); setVal('inp-retireAge', 60); setVal('inp-expenses', 2800);
+        if(typeof setVal === 'function') {
+            setVal('inp-currentAge', 42); setVal('inp-retireAge', 60); setVal('inp-expenses', 2800);
+            setVal('inp-invStart', 20000); setVal('inp-invContrib', 0); setVal('inp-invRet', 4.0); 
+            setVal('inp-cashStart', 60000); setVal('inp-cashContrib', 2500);
+            setVal('inp-mortgagePrincipal', 120000); setVal('inp-loanYrs', 10); setVal('inp-mortgageRate', 2.6); setVal('inp-mortgageShare', 100);
+            setVal('inp-oaStart', 30000); setVal('inp-oaContrib', 1200);
+            setVal('inp-saStart', 140000); setVal('inp-saContrib', 500);
+        }
         if(document.getElementById('toggle-expense-partner')) document.getElementById('toggle-expense-partner').checked = false;
-        setVal('inp-invStart', 20000); setVal('inp-invContrib', 0); setVal('inp-invRet', 4.0); 
-        setVal('inp-cashStart', 60000); setVal('inp-cashContrib', 2500);
         if(document.getElementById('toggle-mortgage')) document.getElementById('toggle-mortgage').checked = true;
-        setVal('inp-mortgagePrincipal', 120000); setVal('inp-loanYrs', 10); setVal('inp-mortgageRate', 2.6); setVal('inp-mortgageShare', 100);
         if(document.getElementById('inp-maxOA')) document.getElementById('inp-maxOA').checked = true; 
-        setVal('inp-oaStart', 30000); setVal('inp-oaContrib', 1200);
         if(document.getElementById('toggle-sa')) document.getElementById('toggle-sa').checked = true; 
-        setVal('inp-saStart', 140000); setVal('inp-saContrib', 500);
     } 
     else if (type === 'self_employed') {
-        setVal('inp-currentAge', 36); setVal('inp-retireAge', 58); setVal('inp-expenses', 3200);
+        if(typeof setVal === 'function') {
+            setVal('inp-currentAge', 36); setVal('inp-retireAge', 58); setVal('inp-expenses', 3200);
+            setVal('inp-invStart', 70000); setVal('inp-invContrib', 1000); setVal('inp-invRet', 5.0); 
+            setVal('inp-cashStart', 75000); setVal('inp-cashContrib', 8000);
+            setVal('inp-mortgagePrincipal', 320000); setVal('inp-loanYrs', 23); setVal('inp-mortgageRate', 2.6); setVal('inp-mortgageShare', 50);
+            setVal('inp-oaStart', 30000); setVal('inp-oaContrib', 0);
+        }
         if(document.getElementById('toggle-expense-partner')) document.getElementById('toggle-expense-partner').checked = false;
-        setVal('inp-invStart', 70000); setVal('inp-invContrib', 1000); setVal('inp-invRet', 5.0); 
-        setVal('inp-cashStart', 75000); setVal('inp-cashContrib', 8000);
         if(document.getElementById('toggle-mortgage')) document.getElementById('toggle-mortgage').checked = true;
-        setVal('inp-mortgagePrincipal', 320000); setVal('inp-loanYrs', 23); setVal('inp-mortgageRate', 2.6); setVal('inp-mortgageShare', 50);
         if(document.getElementById('inp-maxOA')) document.getElementById('inp-maxOA').checked = true; 
-        setVal('inp-oaStart', 30000); setVal('inp-oaContrib', 0);
         if(document.getElementById('toggle-sa')) document.getElementById('toggle-sa').checked = false;
     }
     
     let tp = document.getElementById('toggle-expense-partner');
-    if(tp) document.getElementById('expense-partner-panel').style.display = tp.checked ? 'block' : 'none';
+    if(tp) {
+        let pPanel = document.getElementById('expense-partner-panel');
+        if(pPanel) pPanel.style.display = tp.checked ? 'block' : 'none';
+    }
+    
     let tm = document.getElementById('toggle-mortgage');
-    if(tm) document.getElementById('mortgage-panel').style.display = tm.checked ? 'block' : 'none';
+    if(tm) {
+        let mPanel = document.getElementById('mortgage-panel');
+        if(mPanel) mPanel.style.display = tm.checked ? 'block' : 'none';
+    }
 
     if (typeof calcLiveMortgage === 'function') {
         calcLiveMortgage();
     }
     
-    isLoading = false;
-}
+    if (typeof isLoading !== 'undefined') isLoading = false;
+};
 
 function applyPreset(type) {
     let msg = "";
@@ -1399,34 +1415,40 @@ function applyOAEstimate() {
 }
 
 // --- Progressive Wizard Controller ---
-function unlockPersonas() {
+window.unlockPersonas = function() {
     let sec = document.getElementById('persona-section');
-    if(sec) {
+    if (sec) {
         sec.classList.remove('wizard-lock');
         sec.classList.add('wizard-unlock');
-        setTimeout(() => sec.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+        setTimeout(() => {
+            try { sec.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch(e) {}
+        }, 50);
     }
-}
+};
 
-function selectPersona(type) {
-    // 1. Load the profile inputs safely
-    loadProfile(type);
+window.selectPersona = function(type) {
+    if (typeof window.loadProfile === 'function') {
+        window.loadProfile(type);
+    }
     
-    // 2. Explicitly target and unlock the inputs column
     let inputsSec = document.getElementById('inputs-section');
-    if(inputsSec) {
+    if (inputsSec) {
         inputsSec.classList.remove('wizard-lock');
         inputsSec.classList.add('wizard-unlock');
-        setTimeout(() => inputsSec.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+        setTimeout(() => {
+            try { inputsSec.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch(e) {}
+        }, 50);
     }
-}
+};
 
-function executeSimulation() {
-    // 1. Run the math engine
-    runSim();
+window.executeSimulation = function() {
+    if (typeof runSim === 'function') {
+        runSim();
+    }
     
-    // 2. Explicitly target and unlock the chart dashboard
     let chartSec = document.getElementById('chart-section');
-    if(chartSec) {
+    if (chartSec) {
         chartSec.classList.remove('wizard-lock');
         chartSec.classList.add('wizard-unlock');
+    }
+};
