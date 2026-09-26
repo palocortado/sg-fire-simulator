@@ -1326,9 +1326,6 @@ if (savedState) {
 }
 isLoading = false;
 
-// Initialize using the new HDB Couple default profile
-loadProfile('hdb_couple');
-
 // --- Smart Estimators (Mortgage & CPF) ---
 function toggleMortgageCalc() {
     let pnl = document.getElementById('mortgage-calc-panel');
@@ -1390,4 +1387,28 @@ function applyOAEstimate() {
         toggleOACalc();
         runSim();
     }
+}
+
+// --- Progressive Wizard Controller ---
+function unlockPersonas() {
+    let sec = document.getElementById('persona-section');
+    if(sec) {
+        sec.classList.remove('wizard-lock');
+        sec.classList.add('wizard-unlock');
+        sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+function selectPersona(type) {
+    loadProfile(type);
+    let planner = document.getElementById('planner-split');
+    if(planner) {
+        planner.classList.remove('wizard-lock');
+        planner.classList.add('wizard-unlock');
+        planner.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+function executeSimulation() {
+    runSim();
 }

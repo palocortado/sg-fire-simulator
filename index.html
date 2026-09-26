@@ -17,9 +17,12 @@
     </header>
 
     <main class="app-layout">
-        <div class="welcome-mat">
-            <h3>Plan your path to Financial Independence</h3>
-            <div class="welcome-grid">
+        <div class="welcome-mat" style="text-align: center; padding: 2.5rem 2rem;">
+            <h3 style="font-size: 1.75rem; margin-bottom: 0.75rem;">Plan your path to Financial Independence</h3>
+            <p style="color: var(--text-secondary); max-width: 650px; margin: 0 auto 1.5rem auto; font-size: 1rem; line-height: 1.5;">
+                This interactive tool helps you map out your long-term wealth accumulation, housing commitments, and retirement sustainability in Singapore. Follow the 3 steps below to take control of your financial future.
+            </p>
+            <div class="welcome-grid" style="margin-bottom: 2rem;">
                 <div class="welcome-step">
                     <strong>1. Assess</strong>
                     <p>Map your current household base living expenses, debt, and assets.</p>
@@ -33,38 +36,40 @@
                     <p>Tweak your savings rate, retirement age, and investments to pull that date closer.</p>
                 </div>
             </div>
+            <button type="button" class="btn-primary" onclick="unlockPersonas()" style="padding: 0.85rem 2.5rem; font-size: 1rem; font-weight: 600; border-radius: 8px; cursor: pointer;">Let's go</button>
         </div>
 
-        <section class="persona-section">
+        <section class="persona-section wizard-lock" id="persona-section" style="margin-top: 2rem;">
             <div class="section-heading">
                 <h2>Start with a profile that feels like you</h2>
-                <span class="sub-heading" style="font-style: italic;">You can tweak the numbers to fit your exact situation.</span>
+                <span class="sub-heading" style="font-style: italic;">You can tweak the numbers later to fit your exact situation.</span>
             </div>
             <div class="persona-grid">
-                <button type="button" class="persona-card" onclick="loadProfile('young_starter')">
-                    <div class="persona-name" style="font-weight: 600; font-size: 1.05rem; margin-bottom: 0.35rem; color: var(--text-main);">Young Starter</div>
-                    <div style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.3;">Age 28, renting or living at home, aggressively building a global equity portfolio.</div>
+                <!-- Persona buttons remain the same -->
+                <button type="button" class="persona-card" onclick="selectPersona('young_starter')">
+                    <div class="persona-name" style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.35rem; color: var(--text-main);">🌱 Young Starter</div>
+                    <div style="font-size: 0.825rem; color: var(--text-secondary); line-height: 1.4;">Age 28, renting or living at home, aggressively building a global equity portfolio.</div>
                 </button>
-                <button type="button" class="persona-card active" onclick="loadProfile('hdb_couple')">
-                    <div class="persona-name" style="font-weight: 600; font-size: 1.05rem; margin-bottom: 0.35rem; color: var(--text-main);">First-Time HDB</div>
-                    <div style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.3;">Age 32, balancing a BTO/resale mortgage using CPF OA to preserve cash.</div>
+                <button type="button" class="persona-card" onclick="selectPersona('hdb_couple')">
+                    <div class="persona-name" style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.35rem; color: var(--text-main);">🏢 First-Time HDB</div>
+                    <div style="font-size: 0.825rem; color: var(--text-secondary); line-height: 1.4;">Age 32, balancing a BTO/resale mortgage using CPF OA to preserve cash.</div>
                 </button>
-                <button type="button" class="persona-card" onclick="loadProfile('growing_family')">
-                    <div class="persona-name" style="font-weight: 600; font-size: 1.05rem; margin-bottom: 0.35rem; color: var(--text-main);">Growing Family</div>
-                    <div style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.3;">Age 38, managing higher household expenses and a private bank home loan.</div>
+                <button type="button" class="persona-card" onclick="selectPersona('growing_family')">
+                    <div class="persona-name" style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.35rem; color: var(--text-main);">🏠 Growing Family</div>
+                    <div style="font-size: 0.825rem; color: var(--text-secondary); line-height: 1.4;">Age 38, managing higher household expenses and a private bank home loan.</div>
                 </button>
-                <button type="button" class="persona-card" onclick="loadProfile('pragmatic_saver')">
-                    <div class="persona-name" style="font-weight: 600; font-size: 1.05rem; margin-bottom: 0.35rem; color: var(--text-main);">Pragmatic Saver</div>
-                    <div style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.3;">Age 42, stock-averse, leaning heavily on guaranteed CPF SA 4% returns.</div>
+                <button type="button" class="persona-card" onclick="selectPersona('pragmatic_saver')">
+                    <div class="persona-name" style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.35rem; color: var(--text-main);">🛡️ Pragmatic Saver</div>
+                    <div style="font-size: 0.825rem; color: var(--text-secondary); line-height: 1.4;">Age 42, stock-averse, leaning heavily on guaranteed CPF SA 4% returns.</div>
                 </button>
-                <button type="button" class="persona-card" onclick="loadProfile('self_employed')">
-                    <div class="persona-name" style="font-weight: 600; font-size: 1.05rem; margin-bottom: 0.35rem; color: var(--text-main);">Self-Employed</div>
-                    <div style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.3;">Age 34, handling variable freelance income and a larger cash safety buffer.</div>
+                <button type="button" class="persona-card" onclick="selectPersona('self_employed')">
+                    <div class="persona-name" style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.35rem; color: var(--text-main);">💼 Self-Employed</div>
+                    <div style="font-size: 0.825rem; color: var(--text-secondary); line-height: 1.4;">Age 34, handling variable freelance income and a larger cash safety buffer.</div>
                 </button>
             </div>
         </section>
 
-        <div class="planner-split">
+        <div class="planner-split wizard-lock" id="planner-split" style="margin-top: 2rem;">
             <div class="inputs-column">
                 
                 <!-- Step 1: Timeline & Lifestyle -->
@@ -247,6 +252,27 @@
                     </div>
                 </div>
 
+                <!-- Explicit Calculation Trigger -->
+                <div style="margin-top: 1.5rem;">
+                    <button type="button" class="btn-primary" onclick="executeSimulation()" style="width: 100%; padding: 1rem; font-size: 1rem; font-weight: 600; border-radius: 10px; cursor: pointer; background: #2563eb; color: white; border: none; box-shadow: 0 4px 6px -1px rgba(37,99,235,0.2);">
+                        Calculate My FIRE Path 🚀
+                    </button>
+                </div>
+
+                <!-- Wizard Action Footer Bar -->
+                <div class="wizard-footer-bar">
+                    <div class="mode-switch" style="display:flex; gap:1rem; align-items:center;">
+                        <label style="cursor:pointer;"><input type="radio" name="mode" value="simple" checked> Simple</label>
+                        <label class="disabled-mode" style="opacity:0.4; cursor:not-allowed;"><input type="radio" name="mode" value="advanced" disabled> Advanced 🔒</label>
+                        <label class="disabled-mode" style="opacity:0.4; cursor:not-allowed;"><input type="radio" name="mode" value="expert" disabled> Expert 🔒</label>
+                    </div>
+                    <div class="top-actions" style="display:flex; gap:0.5rem;">
+                        <button type="button" class="btn-secondary" onclick="exportPlan()">Export</button>
+                        <label class="btn-secondary file-label" style="margin:0; display:inline-flex; align-items:center; cursor:pointer;">Import <input type="file" id="importFile" accept=".json" onchange="importPlan(event)" style="display:none;"></label>
+                        <button type="button" class="btn-danger" onclick="clearAllInputs()">Clear</button>
+                    </div>
+                </div>
+            </div>
                 <!-- Engine Room Drawer (Hidden in Simple Mode) -->
                 <div class="card wizard-card advanced-only" id="engine-room" style="display: none;">
                     <div class="wizard-header"><span class="step-num">⚙️</span><h3>Advanced Engine Room</h3></div>
@@ -282,19 +308,6 @@
                                 <input type="text" id="inp-saContrib" value="0" onblur="runSim()">
                             </div>
                         </div>
-                    </div>
-                </div>
-                <!-- Wizard Action Footer Bar -->
-                <div class="wizard-footer-bar">
-                    <div class="mode-switch" style="display:flex; gap:1rem; align-items:center;">
-                        <label style="cursor:pointer;"><input type="radio" name="mode" value="simple" checked> Simple</label>
-                        <label class="disabled-mode" style="opacity:0.4; cursor:not-allowed;"><input type="radio" name="mode" value="advanced" disabled> Advanced 🔒</label>
-                        <label class="disabled-mode" style="opacity:0.4; cursor:not-allowed;"><input type="radio" name="mode" value="expert" disabled> Expert 🔒</label>
-                    </div>
-                    <div class="top-actions" style="display:flex; gap:0.5rem;">
-                        <button type="button" class="btn-secondary" onclick="exportPlan()">Export</button>
-                        <label class="btn-secondary file-label" style="margin:0; display:inline-flex; align-items:center; cursor:pointer;">Import <input type="file" id="importFile" accept=".json" onchange="importPlan(event)" style="display:none;"></label>
-                        <button type="button" class="btn-danger" onclick="clearAllInputs()">Clear</button>
                     </div>
                 </div>
             </div> <!-- End of .inputs-column -->

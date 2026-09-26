@@ -118,3 +118,16 @@ label, .checkbox-row label, .cpf-toggle-box label { font-size: 0.9rem !important
 
 /* Wizard Action Footer */
 .wizard-footer-bar { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem 1.5rem; margin-top: 2rem; }
+
+/* Progressive Disclosure Wizard Locks */
+.wizard-lock { opacity: 0.2; pointer-events: none; filter: grayscale(30%); transition: all 0.4s ease; user-select: none; }
+.wizard-unlock { opacity: 1; pointer-events: auto; filter: none; transition: all 0.4s ease; }
+
+/* Enhanced Visually Appealing Persona Cards */
+.persona-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.persona-card { background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); border: 2px solid #cbd5e1; border-radius: 14px; padding: 1.5rem 1.25rem; text-align: left; cursor: pointer; transition: all 0.25s ease; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.03), 0 2px 4px -1px rgba(0,0,0,0.02); position: relative; overflow: hidden; }
+.persona-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: #94a3b8; transition: background 0.25s ease; }
+.persona-card:hover { border-color: #3b82f6; transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.1); }
+.persona-card:hover::before { background: #3b82f6; }
+.persona-card.active { border-color: #2563eb; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.15); transform: translateY(-3px); }
+.persona-card.active::before { background: #2563eb; }
