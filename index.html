@@ -142,9 +142,13 @@
                             <div>
                                 <label style="display:flex; align-items:center;">
                                     Monthly Investments (SGD)
-                                    <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">The regular monthly amount you inject or add to your investment portfolio to compound and grow your assets over time.</div></div>
+                                    <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Keep this in today's dollars. The engine assumes your future salary bumps will exactly offset inflation and upward creep in your lifestyle. <i>This assumption can be loosened in Advanced mode.</i></div></div>
                                 </label>
                                 <input type="text" id="inp-invContrib" class="num-format" value="1,000" onblur="runSim()">
+                                <div style="font-size: 0.75rem; color: #64748b; margin-top: 4px; line-height: 1.3;">
+                                    Exclude all mortgage payments. This is strictly for stocks, bonds, and other liquid assets.
+                                    <div class="tooltip-container" style="margin-left: 2px;"><span class="info-icon" style="font-size: 0.65rem; padding: 0 0.3rem;">ℹ️</span><div class="tooltip-text">Liquid assets can be easily converted to cash. Housing is not considered an investment in this version of the tool.</div></div>
+                                </div>
                             </div>
                             <div>
                                 <label style="display:flex; align-items:center;">
@@ -163,7 +167,7 @@
                             <div>
                                 <label style="display:flex; align-items:center;">
                                     Liquid Cash (SGD)
-                                    <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Your emergency fund and savings accounts. The engine assumes this yields 1.5% annually. Note: 1.5% requires a High-Yield Savings Account (HYSA) — if you haven't switched to one yet, do so right away! Be aware of bonus interest deposit caps: UOB One ($150k), OCBC 360 ($100k), and DBS Multiplier ($100k).</div></div>
+                                    <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Your emergency fund and savings accounts. The engine assumes this yields 1.5% annually. Note: 1.5% requires a High-Yield Savings Account (HYSA) — if you haven't switched to one yet, do so right away! Be mindful of their respective balance caps.</div></div>
                                 </label>
                                 <input type="text" id="inp-cashStart" class="num-format" value="40,000" onblur="runSim()">
                             </div>
@@ -275,6 +279,8 @@
                                     <div id="oa-est-result" style="font-size:0.75rem; margin-top:0.3rem; color:#15803d;"></div>
                                 </div>
                             </div>
+                        </div>
+                        <div id="disp-mortgage-split" style="display:none; padding: 0.85rem; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 8px; color: #9f1239; font-size: 0.85rem; margin-top: 1rem; line-height: 1.4;">
                         </div>
                     </div>
                 </div>

@@ -481,10 +481,27 @@ function calcLiveMortgage() {
 
         if(document.getElementById('disp-calc-pmt-total')) document.getElementById('disp-calc-pmt-total').innerText = 'Total Monthly Installment: $' + Math.round(totalPmt).toLocaleString();
         if(document.getElementById('disp-calc-pmt-personal')) document.getElementById('disp-calc-pmt-personal').innerText = `Your Personal Liability (${share}%): $` + Math.round(personalPmt).toLocaleString();
+
+        let splitDisp = document.getElementById('disp-mortgage-split');
+        if(splitDisp) {
+            if (personalPmt > 0 && hasMortgage) {
+                let oaContrib = getVal('inp-oaContrib');
+                let isMaxOa = document.getElementById('inp-maxOA') ? document.getElementById('inp-maxOA').checked : true;
+                let customCap = getVal('inp-customOACap') || 0;
+                let allowedOa = isMaxOa ? personalPmt : Math.min(customCap, personalPmt);
+                let oaCovers = Math.min(oaContrib, allowedOa);
+                let cashTopup = Math.max(0, personalPmt - oaCovers);
+                
+                splitDisp.style.display = 'block';
+                splitDisp.innerHTML = `Your CPF OA covers <strong>$${Math.round(oaCovers).toLocaleString()}</strong> of your installment. You are topping up <strong>$${Math.round(cashTopup).toLocaleString()}</strong> in cash monthly (ensure this $${Math.round(cashTopup).toLocaleString()} is excluded from your monthly investment contributions).`;
+            } else {
+                splitDisp.style.display = 'none';
+            }
+        }
     } catch(e) {}
 }
 
-function addIncomeStream(name = '', amt = '', start = 60, end = 95) {
+function addIncomeStream(name = '', amt = '', start = 60, end = 100) {
     if(!document.getElementById('income-streams-container')) return;
     const id = incomeStreamCount++;
     const html = `
@@ -691,7 +708,7 @@ function simulatePath(inputs, isMonteCarlo) {
     let warnings = new Set();
     let peakNW = 0;
 
-    for (let age = currentAge; age <= 95; age++) {
+    for (let age = currentAge; age <= 100; age++) {
         
         let actualInfl = inflation;
         let actualUsdRet = usdRet;
@@ -1045,7 +1062,7 @@ function runSim() {
     }
 
     let realRet = (1 + nomRet) / (1 + inputs.inflation) - 1;
-    let duration = Math.max(1, 95 - inputs.retireAge);
+    let duration = Math.max(1, 100 - inputs.retireAge);
     let calcMultiple = 0;
     if (Math.abs(realRet) < 0.0001) calcMultiple = duration;
     else calcMultiple = (1 - Math.pow(1 + realRet, -duration)) / realRet;
@@ -1057,7 +1074,7 @@ function runSim() {
     let fireCurveData = [];
     let targetAtRetirement = 0;
 
-    for (let age = inputs.currentAge; age <= 95; age++) {
+    for (let age = inputs.currentAge; age <= 100; age++) {
         let yrs = Math.max(0, age - inputs.currentAge);
         let infExp = inputs.expenses * Math.pow(1 + inputs.inflation, yrs);
         let effExpMonthly = infExp * (inputs.expenseShare / 100);
@@ -1093,7 +1110,7 @@ function runSim() {
     updateDOM('val-fireAge', inputs.retireAge);
     
     if (inputs.currentAge > 0) {
-        for(let i=inputs.currentAge; i<=95; i++) labels.push(i);
+        for(let i=inputs.currentAge; i<=100; i++) labels.push(i);
 
         if (!isMC) {
             let res = simulatePath(inputs, false);
@@ -1144,22 +1161,23 @@ function runSim() {
             
             if (res.solvent) {
                 let finalBal = res.pathData[res.pathData.length-1].val;
+                let pvBal = finalBal / Math.pow(1 + inputs.inflation, 100 - inputs.currentAge);
                 
-                updateDOM('val-statusText', "✅ Fully Funded to Age 95");
-                updateDOM('status-main', "✅ Fully Funded to Age 95");
-                updateDOM('val-statusSub', `Projected surplus: $${(finalBal/1000000).toFixed(2)}M`);
-                updateDOM('status-sub', `Projected surplus: $${(finalBal/1000000).toFixed(2)}M`);
+                updateDOM('val-statusText', "✅ Fully Funded to Age 100");
+                updateDOM('status-main', "✅ Fully Funded to Age 100");
+                updateDOM('val-statusSub', `Est. remaining wealth to bequeath: $${(finalBal/1000000).toFixed(2)}M (Worth ~$${(pvBal/1000000).toFixed(2)}M in today's dollars)`);
+                updateDOM('status-sub', `Est. remaining wealth to bequeath: $${(finalBal/1000000).toFixed(2)}M (Worth ~$${(pvBal/1000000).toFixed(2)}M in today's dollars)`);
                 if(cardStatus) cardStatus.className = 'hero-card success';
                 
                 if(document.getElementById('diagnostic-panel')) document.getElementById('diagnostic-panel').style.display = 'none';
                 if(document.getElementById('diag-panel')) document.getElementById('diag-panel').style.display = 'none';
                 if(document.getElementById('autosolver-results')) document.getElementById('autosolver-results').style.display = 'none';
             } else {
-                if (res.depletionAge >= 85) {
+                if (res.depletionAge >= 90) {
                     updateDOM('val-statusText', "🐢 Almost There");
                     updateDOM('status-main', "🐢 Almost There");
                     updateDOM('val-statusSub', `Funds deplete at age ${res.depletionAge}.`);
-                    updateDOM('status-sub', `Funds deplete at age ${res.depletionAge}. A small tweak will get you to 95.`);
+                    updateDOM('status-sub', `Funds deplete at age ${res.depletionAge}. A small tweak will get you to 100.`);
                     if(cardStatus) cardStatus.className = 'hero-card warning';
                 } else {
                     updateDOM('val-statusText', "⚠️ Adjustments Needed");
@@ -1278,7 +1296,7 @@ function renderChart(labels, datasets, inputs) {
     let chartAnnotations = {};
     
     if (inputs && inputs.currentAge > 0) {
-        if (inputs.retireAge > inputs.currentAge && inputs.retireAge <= 95) {
+        if (inputs.retireAge > inputs.currentAge && inputs.retireAge <= 100) {
             let retireIndex = inputs.retireAge - inputs.currentAge;
             if (retireIndex >= 0 && retireIndex < labels.length) {
                 chartAnnotations.lineRetire = {
@@ -1302,7 +1320,7 @@ function renderChart(labels, datasets, inputs) {
 
         if (inputs.hasMortgage) {
             let mortgageEndAge = inputs.currentAge + inputs.loanYrs;
-            if (mortgageEndAge <= 95) {
+            if (mortgageEndAge <= 100) {
                 let mIdx = mortgageEndAge - inputs.currentAge;
                 if (mIdx >= 0 && mIdx < labels.length) {
                     chartAnnotations.lineMortgage = {
@@ -1316,7 +1334,7 @@ function renderChart(labels, datasets, inputs) {
 
         if (inputs.isAdvanced && inputs.milestones) {
             inputs.milestones.forEach((m, i) => {
-                if (m.age >= inputs.currentAge && m.age <= 95) {
+                if (m.age >= inputs.currentAge && m.age <= 100) {
                     let msIdx = m.age - inputs.currentAge;
                     if (msIdx >= 0 && msIdx < labels.length) {
                         let isExpense = m.amt < 0;
