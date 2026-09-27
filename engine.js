@@ -1103,9 +1103,9 @@ function runSim() {
             }
             
             datasets = [
-                { label: 'Accumulation Phase', data: p1, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.2, spanGaps: true, pointStyle: 'rect' },
-                { label: 'Mortgage Drawdown', data: p2, borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.1)', fill: true, tension: 0.2, spanGaps: true, pointStyle: 'rect' },
-                { label: 'Debt-Free Retirement', data: p3, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.2, spanGaps: true, pointStyle: 'rect' }
+                { label: 'Accumulation', data: p1, borderColor: '#06b6d4', backgroundColor: 'rgba(6, 182, 212, 0.1)', fill: true, tension: 0.2, spanGaps: true, pointStyle: 'rect' },
+                { label: 'Mortgage Drawdown', data: p2, borderColor: '#8b5cf6', backgroundColor: 'rgba(139, 92, 246, 0.1)', fill: true, tension: 0.2, spanGaps: true, pointStyle: 'rect' },
+                { label: 'Debt-Free', data: p3, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.2, spanGaps: true, pointStyle: 'rect' }
             ];
 
             if (inputs.showFireCurve) {
@@ -1205,9 +1205,9 @@ function runSim() {
             }
 
             datasets = [
-                { label: '90th Percentile (Optimistic)', data: p90, borderColor: '#10b981', borderDash: [5,5], fill: false, tension: 0.2, pointRadius: 0, pointStyle: 'line' },
-                { label: 'Median Outcome', data: p50, borderColor: '#2563eb', backgroundColor: 'rgba(37, 99, 235, 0.1)', fill: true, tension: 0.2, borderWidth: 3, pointStyle: 'rect' },
-                { label: '10th Percentile (Pessimistic)', data: p10, borderColor: '#f59e0b', borderDash: [5,5], fill: '-1', backgroundColor: 'rgba(245, 158, 11, 0.05)', tension: 0.2, pointRadius: 0, pointStyle: 'line' }
+                { label: '90th Percentile', data: p90, borderColor: '#06b6d4', borderDash: [5,5], fill: false, tension: 0.2, pointRadius: 0, pointStyle: 'line' },
+                { label: 'Median Outcome', data: p50, borderColor: '#8b5cf6', backgroundColor: 'rgba(139, 92, 246, 0.1)', fill: true, tension: 0.2, borderWidth: 3, pointStyle: 'rect' },
+                { label: '10th Percentile', data: p10, borderColor: '#f43f5e', borderDash: [5,5], fill: '-1', backgroundColor: 'rgba(244, 63, 94, 0.05)', tension: 0.2, pointRadius: 0, pointStyle: 'line' }
             ];
 
             if (inputs.showFireCurve) {
@@ -1328,13 +1328,30 @@ function renderChart(labels, datasets, inputs) {
         data: { labels: labels, datasets: datasets },
         options: {
             responsive: true, maintainAspectRatio: false,
+            color: '#94a3b8',
             interaction: { mode: 'index', intersect: false },
             scales: {
-                y: { title: { display: true, text: 'Portfolio Value (SGD)' }, ticks: { callback: v => '$' + (v / 1000000).toFixed(1) + 'M' } }
+                x: { grid: { color: '#334155' } },
+                y: { 
+                    grid: { color: '#334155' }, 
+                    title: { display: true, text: 'Portfolio Value (SGD)', color: '#94a3b8' },
+                    ticks: { 
+                        font: { family: "'JetBrains Mono', monospace" }, 
+                        callback: v => '$' + (v / 1000000).toFixed(1) + 'M',
+                        color: '#94a3b8'
+                    } 
+                }
             },
             plugins: { 
-                legend: { labels: { usePointStyle: true, boxWidth: 15 } },
-                tooltip: { callbacks: { label: c => c.dataset.label + ': $' + Math.round(c.raw).toLocaleString() } },
+                legend: { labels: { usePointStyle: true, boxWidth: 15, color: '#f8fafc' } },
+                tooltip: { 
+                    backgroundColor: '#020617', 
+                    titleFont: { family: "'Inter', sans-serif" },
+                    bodyFont: { family: "'JetBrains Mono', monospace" },
+                    borderColor: '#334155',
+                    borderWidth: 1,
+                    callbacks: { label: c => c.dataset.label + ': $' + Math.round(c.raw).toLocaleString() }
+                },
                 annotation: { annotations: chartAnnotations }
             }
         }
