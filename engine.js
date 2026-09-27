@@ -1139,14 +1139,7 @@ function runSim() {
                 let dispPersonal = document.getElementById('disp-personalMortgage');
                 if (dispPersonal) dispPersonal.innerText = `$${Math.round(personalPmt).toLocaleString()}`;
             }
-            if (inputs.hasMortgage) {
-                let pmt = calcPmt(inputs.mortgagePrincipal, inputs.mortgageRate, inputs.loanYrs);
-                let disp = document.getElementById('disp-monthlyMortgage');
-                if (disp) disp.innerText = `$${Math.round(pmt).toLocaleString()}`;
-            }
 
-            let cardStatus = document.getElementById('hero-status') || document.getElementById('card-status');
-            
             let cardStatus = document.getElementById('hero-status') || document.getElementById('card-status');
             
             if (res.solvent) {
