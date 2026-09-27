@@ -1478,7 +1478,6 @@ window.generateCoaching = function(baseInputs, isSolvent) {
     optsDiv.innerHTML = '<div style="font-size:0.9rem; color:#64748b;">Calculating scenarios...</div>';
     
     setTimeout(() => {
-        setTimeout(() => {
         let html = "<div style='margin-bottom: 1rem; font-size: 0.85rem; color: #475569;'><em>Click any button below to update your inputs. You can combine multiple tweaks to reach your goal.</em></div>";
         
         if (isSolvent) {
