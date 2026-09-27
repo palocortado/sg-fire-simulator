@@ -84,6 +84,11 @@ function setVal(id, val) {
     
     let slider = document.getElementById('slide-' + id.replace('inp-', ''));
     if (slider) slider.value = parseFloat(val);
+
+    // Trigger visual flash for auto-populated inputs
+    el.classList.remove('highlight-pulse');
+    void el.offsetWidth; // Force DOM reflow to restart animation
+    el.classList.add('highlight-pulse');
 }
 
 document.querySelectorAll('.num-format').forEach(el => {
@@ -528,6 +533,7 @@ window.loadProfile = function(type) {
         }
         if(document.getElementById('toggle-expense-partner')) document.getElementById('toggle-expense-partner').checked = false;
         if(document.getElementById('toggle-mortgage')) document.getElementById('toggle-mortgage').checked = false;
+        if(document.getElementById('toggle-mortgage-partner')) document.getElementById('toggle-mortgage-partner').checked = false;
         if(document.getElementById('toggle-sa')) document.getElementById('toggle-sa').checked = false;
     } 
     else if (type === 'hdb_couple' || type === 'median') {
@@ -541,6 +547,7 @@ window.loadProfile = function(type) {
         }
         if(document.getElementById('toggle-expense-partner')) document.getElementById('toggle-expense-partner').checked = true; 
         if(document.getElementById('toggle-mortgage')) document.getElementById('toggle-mortgage').checked = true;
+        if(document.getElementById('toggle-mortgage-partner')) document.getElementById('toggle-mortgage-partner').checked = true;
         if(document.getElementById('inp-maxOA')) document.getElementById('inp-maxOA').checked = true; 
         if(document.getElementById('toggle-sa')) document.getElementById('toggle-sa').checked = false;
     } 
@@ -555,6 +562,7 @@ window.loadProfile = function(type) {
         }
         if(document.getElementById('toggle-expense-partner')) document.getElementById('toggle-expense-partner').checked = true; 
         if(document.getElementById('toggle-mortgage')) document.getElementById('toggle-mortgage').checked = true;
+        if(document.getElementById('toggle-mortgage-partner')) document.getElementById('toggle-mortgage-partner').checked = true;
         if(document.getElementById('inp-maxOA')) document.getElementById('inp-maxOA').checked = true; 
         if(document.getElementById('toggle-sa')) document.getElementById('toggle-sa').checked = false;
     } 
@@ -569,6 +577,7 @@ window.loadProfile = function(type) {
         }
         if(document.getElementById('toggle-expense-partner')) document.getElementById('toggle-expense-partner').checked = false;
         if(document.getElementById('toggle-mortgage')) document.getElementById('toggle-mortgage').checked = true;
+        if(document.getElementById('toggle-mortgage-partner')) document.getElementById('toggle-mortgage-partner').checked = false;
         if(document.getElementById('inp-maxOA')) document.getElementById('inp-maxOA').checked = true; 
         if(document.getElementById('toggle-sa')) document.getElementById('toggle-sa').checked = true; 
     } 
@@ -582,6 +591,7 @@ window.loadProfile = function(type) {
         }
         if(document.getElementById('toggle-expense-partner')) document.getElementById('toggle-expense-partner').checked = false;
         if(document.getElementById('toggle-mortgage')) document.getElementById('toggle-mortgage').checked = true;
+        if(document.getElementById('toggle-mortgage-partner')) document.getElementById('toggle-mortgage-partner').checked = false;
         if(document.getElementById('inp-maxOA')) document.getElementById('inp-maxOA').checked = true; 
         if(document.getElementById('toggle-sa')) document.getElementById('toggle-sa').checked = false;
     }
@@ -602,6 +612,8 @@ window.loadProfile = function(type) {
         calcLiveMortgage();
     }
     
+    if (typeof toggleMortgagePartner === 'function') toggleMortgagePartner();
+
     if (typeof isLoading !== 'undefined') isLoading = false;
 };
 
@@ -1135,6 +1147,8 @@ function runSim() {
 
             let cardStatus = document.getElementById('hero-status') || document.getElementById('card-status');
             
+            let cardStatus = document.getElementById('hero-status') || document.getElementById('card-status');
+            
             if (res.solvent) {
                 let finalBal = res.pathData[res.pathData.length-1].val;
                 
@@ -1175,10 +1189,11 @@ function runSim() {
                     diagMsg = `Your portfolio survived until Age ${res.depletionAge}. Over a long ${res.depletionAge - inputs.retireAge}-year retirement, inflation slowly eroded your purchasing power, and your capital eventually ran dry.`;
                 }
                 updateDOM('diag-message', diagMsg);
-                // Trigger Dynamic Coaching Panel
-                if (typeof generateCoaching === 'function') {
-                    generateCoaching(inputs, res.solvent);
-                }
+            }
+
+            // Trigger Dynamic Coaching Panel for BOTH success and failure states
+            if (typeof generateCoaching === 'function') {
+                generateCoaching(inputs, res.solvent);
             }
 
         } else {
@@ -1463,7 +1478,8 @@ window.generateCoaching = function(baseInputs, isSolvent) {
     optsDiv.innerHTML = '<div style="font-size:0.9rem; color:#64748b;">Calculating scenarios...</div>';
     
     setTimeout(() => {
-        let html = "";
+        setTimeout(() => {
+        let html = "<div style='margin-bottom: 1rem; font-size: 0.85rem; color: #475569;'><em>Click any button below to update your inputs. You can combine multiple tweaks to reach your goal.</em></div>";
         
         if (isSolvent) {
             note.style.display = 'none';
@@ -1479,7 +1495,10 @@ window.generateCoaching = function(baseInputs, isSolvent) {
                 else break;
             }
             if(bestAge < baseInputs.retireAge) {
-                html += `<button class="btn-coach safe" onclick="applyTweak('inp-retireAge', ${bestAge})">🎉 <strong>Retire Earlier:</strong> You can safely achieve Financial Independence by Age ${bestAge}</button>`;
+                html += `<div class="coach-card safe" onclick="applyTweak('inp-retireAge', ${bestAge})">
+                            <div class="coach-text">🎉 <strong>Retire Earlier:</strong> You can safely achieve Financial Independence by Age ${bestAge}</div>
+                            <div class="coach-btn-pill">Apply ➔</div>
+                         </div>`;
             }
             
             // 2. Fatten Lifestyle
@@ -1491,7 +1510,10 @@ window.generateCoaching = function(baseInputs, isSolvent) {
                 else break;
             }
             if(maxExp > baseInputs.expenses) {
-                html += `<button class="btn-coach safe" onclick="applyTweak('inp-expenses', ${maxExp})">🍷 <strong>Fatten Your Lifestyle:</strong> Your wealth can support up to $${maxExp.toLocaleString()}/mo in retirement</button>`;
+                html += `<div class="coach-card safe" onclick="applyTweak('inp-expenses', ${maxExp})">
+                            <div class="coach-text">🍷 <strong>Fatten Your Lifestyle:</strong> Your wealth can support up to $${maxExp.toLocaleString()}/mo in retirement</div>
+                            <div class="coach-btn-pill">Apply ➔</div>
+                         </div>`;
             }
             
             // 3. De-Risk
@@ -1503,10 +1525,13 @@ window.generateCoaching = function(baseInputs, isSolvent) {
                 else break;
             }
             if(minRet < baseInputs.usdRet && minRet > 0) {
-                html += `<button class="btn-coach safe" onclick="applyTweak('inp-invRet', ${(minRet*100).toFixed(1)})">🛡️ <strong>De-Risk Portfolio:</strong> You only need a ${(minRet*100).toFixed(1)}% return to succeed. You can afford safer investments.</button>`;
+                html += `<div class="coach-card safe" onclick="applyTweak('inp-invRet', ${(minRet*100).toFixed(1)})">
+                            <div class="coach-text">🛡️ <strong>De-Risk Portfolio:</strong> You only need a ${(minRet*100).toFixed(1)}% return to succeed. You can afford safer investments.</div>
+                            <div class="coach-btn-pill">Apply ➔</div>
+                         </div>`;
             }
             
-            if(html === "") html = "<div style='font-size:0.9rem;'>Your plan is perfectly balanced!</div>";
+            if(html.indexOf('coach-card') === -1) html += "<div style='font-size:0.9rem;'>Your plan is perfectly balanced!</div>";
             
         } else {
             note.style.display = 'block';
@@ -1521,7 +1546,10 @@ window.generateCoaching = function(baseInputs, isSolvent) {
                 if(simulatePath(testExp, false).solvent) { fixExp = e; break; }
             }
             if(fixExp) {
-                html += `<button class="btn-coach danger" onclick="applyTweak('inp-expenses', ${fixExp})">📉 <strong>Modest Lifestyle:</strong> Reduce your target retirement spending to $${fixExp.toLocaleString()}/mo</button>`;
+                html += `<div class="coach-card danger" onclick="applyTweak('inp-expenses', ${fixExp})">
+                            <div class="coach-text">📉 <strong>Modest Lifestyle:</strong> Reduce your target retirement spending to $${fixExp.toLocaleString()}/mo</div>
+                            <div class="coach-btn-pill">Apply ➔</div>
+                         </div>`;
             }
             
             // 2. Save More
@@ -1532,7 +1560,10 @@ window.generateCoaching = function(baseInputs, isSolvent) {
                 if(simulatePath(testSave, false).solvent) { fixSave = s; break; }
             }
             if(fixSave) {
-                html += `<button class="btn-coach danger" onclick="applyTweak('inp-invContrib', ${fixSave})">📈 <strong>Supercharge Savings:</strong> Increase monthly investments to $${fixSave.toLocaleString()}/mo</button>`;
+                html += `<div class="coach-card danger" onclick="applyTweak('inp-invContrib', ${fixSave})">
+                            <div class="coach-text">📈 <strong>Supercharge Savings:</strong> Increase monthly investments to $${fixSave.toLocaleString()}/mo</div>
+                            <div class="coach-btn-pill">Apply ➔</div>
+                         </div>`;
             }
             
             // 3. Work Longer
@@ -1543,10 +1574,13 @@ window.generateCoaching = function(baseInputs, isSolvent) {
                 if(simulatePath(testAge, false).solvent) { fixAge = a; break; }
             }
             if(fixAge) {
-                html += `<button class="btn-coach danger" onclick="applyTweak('inp-retireAge', ${fixAge})">⏳ <strong>Extend Horizon:</strong> Delay retirement to Age ${fixAge}</button>`;
+                html += `<div class="coach-card danger" onclick="applyTweak('inp-retireAge', ${fixAge})">
+                            <div class="coach-text">⏳ <strong>Extend Horizon:</strong> Delay retirement to Age ${fixAge}</div>
+                            <div class="coach-btn-pill">Apply ➔</div>
+                         </div>`;
             }
             
-            if(html === "") html = "<div style='font-size:0.9rem; color: #b91c1c;'>The shortfall is severe. You may need to manually adjust multiple variables simultaneously.</div>";
+            if(html.indexOf('coach-card') === -1) html += "<div style='font-size:0.9rem; color: #b91c1c;'>The shortfall is severe. You may need to manually adjust multiple variables simultaneously.</div>";
         }
         
         optsDiv.innerHTML = html;
