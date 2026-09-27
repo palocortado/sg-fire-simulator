@@ -238,7 +238,8 @@ label, .checkbox-row label, .cpf-toggle-box label { font-size: 0.9rem !important
 
 /* Input Flash Highlight Animation */
 @keyframes highlight-fade {
-    0% { background-color: #dbeafe; box-shadow: 0 0 0 2px #3b82f6; }
+    0% { background-color: #dbeafe; box-shadow: 0 0 0 2px #2563eb; }
+    60% { background-color: #dbeafe; box-shadow: 0 0 0 2px #3b82f6; } /* Holds the blue glow 60% through */
     100% { background-color: #ffffff; box-shadow: none; }
 }
-.highlight-pulse { animation: highlight-fade 3s ease-out forwards; }
+.highlight-pulse { animation: highlight-fade 3s linear forwards !important; }
