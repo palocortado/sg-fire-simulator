@@ -243,3 +243,15 @@ label, .checkbox-row label, .cpf-toggle-box label { font-size: 0.9rem !important
     100% { background-color: #ffffff; box-shadow: none; }
 }
 .highlight-pulse { animation: highlight-fade 3s linear forwards !important; }
+
+.input-warning-text {
+    font-size: 0.75rem;
+    color: #b45309;
+    background: #fffbeb;
+    padding: 0.4rem 0.6rem;
+    border-radius: 6px;
+    border: 1px solid #fde68a;
+    margin-top: 6px;
+    line-height: 1.3;
+    display: none;
+}

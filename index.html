@@ -99,19 +99,19 @@
                             <input type="number" id="inp-currentAge" value="32" oninput="runSim()">
                         </div>
                         <div>
-                            <label style="display:flex; align-items:center;">
-                                Target Retire Age
-                                <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">The age you want the option to stop working. Your CPF OA and SA inflows will drop to zero at this age in the simulation.</div></div>
-                            </label>
-                            <input type="number" id="inp-retireAge" value="55" oninput="runSim()">
-                        </div>
+                                <label style="display:flex; align-items:center;">
+                                    Target Financial Freedom Age
+                                    <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">The age you no longer need a paycheck. You can keep working, take a lower-paying passion job, or start a side-hustle—but your investments now generate enough to cover your household living expenses with the lifestyle you want. The tool assumes that your CPF contributions, monthly savings and monthly investments drop to zero at this age.</div></div>
+                                </label>
+                                <input type="number" id="inp-retireAge" value="55" oninput="runSim()">
+                            </div>
                     </div>
-                    <div class="form-row" style="margin-top: 1rem;">
-                        <label style="display:flex; align-items:center;">
-                            Target Retirement Lifestyle (Monthly)
-                            <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">This isn't just bare essentials—it should reflect the life you want to live (travel, hobbies, dining out). You can tweak this later to compare a modest "Lean" retirement against a lavish "Fat" retirement. The engine automatically inflates this over time.</div></div>
+                    <div class="inline-input-row" style="margin-bottom: 1rem;">
+                        <label for="inp-expenses" style="display:flex; align-items:center;">
+                            Target Monthly Retirement Household Living Expenses (SGD)
+                            <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">The monthly amount needed to fund a fulfilling lifestyle during your retirement phase. Nudge this higher to account for hidden or future costs you may not be paying today, such as comprehensive health insurance, travel, or new hobbies.</div></div>
                         </label>
-                        <input type="text" id="inp-expenses" class="num-format" value="5,000" onblur="runSim()">
+                        <input type="text" id="inp-expenses" class="num-format" value="4,000" onblur="runSim()">
                     </div>
                     <div class="form-row checkbox-row">
                         <label><input type="checkbox" id="toggle-expense-partner" onchange="document.getElementById('expense-partner-panel').style.display = this.checked ? 'block' : 'none'; runSim();"> Share expenses with a partner</label>
@@ -167,7 +167,7 @@
                             <div>
                                 <label style="display:flex; align-items:center;">
                                     Liquid Cash (SGD)
-                                    <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Your emergency fund and savings accounts. The engine assumes this yields 1.5% annually. Note: 1.5% requires a High-Yield Savings Account (HYSA) — if you haven't switched to one yet, do so right away! Be mindful of their respective balance caps.</div></div>
+                                    <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Your emergency fund and savings accounts. The engine assumes this yields 1.5% annually. Note: 1.5% requires a high-yield savings account — if you haven't switched to one yet, do so right away! Be mindful of their respective balance caps.</div></div>
                                 </label>
                                 <input type="text" id="inp-cashStart" class="num-format" value="40,000" onblur="runSim()">
                             </div>
@@ -279,6 +279,8 @@
                                     <div id="oa-est-result" style="font-size:0.75rem; margin-top:0.3rem; color:#15803d;"></div>
                                 </div>
                             </div>
+                        </div>
+                        <div id="disp-mortgage-split" style="display:none; padding: 0.85rem; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 8px; color: #9f1239; font-size: 0.85rem; margin-top: 1rem; line-height: 1.4;">
                         </div>
                         <div id="disp-mortgage-split" style="display:none; padding: 0.85rem; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 8px; color: #9f1239; font-size: 0.85rem; margin-top: 1rem; line-height: 1.4;">
                         </div>

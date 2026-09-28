@@ -952,10 +952,46 @@ function updateDOM(id, val, isHTML=false) {
     }
 }
 
+function checkInputWarnings() {
+    const setWarn = (id, condition, text) => {
+        let inputEl = document.getElementById(id);
+        if (!inputEl) return;
+        let warnEl = document.getElementById(id + '-warn');
+        if (!warnEl) {
+            warnEl = document.createElement('div');
+            warnEl.id = id + '-warn';
+            warnEl.className = 'input-warning-text';
+            inputEl.parentNode.appendChild(warnEl);
+        }
+        if (condition) {
+            warnEl.innerHTML = text;
+            warnEl.style.display = 'block';
+        } else {
+            warnEl.style.display = 'none';
+        }
+    };
+
+    setWarn('inp-usdRet', getVal('inp-usdRet') > 8.5, '<i>Warning: Highly aggressive. For context, over the last 20 years, the MSCI World Index averaged 8.2% annually, while the US-heavy S&P 500 averaged 11.8% over the last 30 years. (Note: This input is in nominal terms; the engine will subtract your inflation input to calculate your real return).</i>');
+    setWarn('inp-inflation', getVal('inp-inflation') < 1.5, '<i>Note: Highly optimistic. Singapore\'s average headline inflation was 1.72% over the last 10 years, 2.14% over the last 20 years, and 1.68% over the past 30 years.</i>');
+    
+    let cashYield = getVal('inp-cashYield');
+    setWarn('inp-cashYield', cashYield > 2.0, '<i>Note: Most bank savings accounts that offer high yields cap the maximum balance that earns this interest rate.</i>');
+    setWarn('inp-cashYield', cashYield < 0.5 && cashYield > 0, '<i>Note: You should consider switching from a basic savings account to a high-yield savings account to protect your cash from inflation.</i>');
+    
+    let mortRate = getVal('inp-mortgageRate');
+    setWarn('inp-mortgageRate', mortRate > 3.5, '<i>Note: This is unusually high for Singapore. As of 2026, bank loan rates range between 1.35% and 1.8%, and the HDB concessionary rate is fixed at 2.6%.</i>');
+    setWarn('inp-mortgageRate', mortRate < 1.3 && mortRate > 0, '<i>Note: This is highly optimistic. Bank rates in Singapore rarely drop below 1.35%, and the HDB rate sits at 2.6%.</i>');
+    
+    let retAge = getVal('inp-retireAge');
+    setWarn('inp-retireAge', retAge < 40 && retAge > 0, '<i>Note: Extreme early financial freedom requires massive savings rates and exposes your capital to 50+ years of sequence-of-returns risk.</i>');
+}
+
 function runSim() {
     if (isLoading) return;
     updateContexts(); 
 
+    if (typeof checkInputWarnings === 'function') checkInputWarnings();
+        
     const isAdvanced = document.body.className.includes('advanced-mode');
     
     // SAFE CHECKS: Allows new UI without crashing math engine
@@ -1163,8 +1199,8 @@ function runSim() {
                 let finalBal = res.pathData[res.pathData.length-1].val;
                 let pvBal = finalBal / Math.pow(1 + inputs.inflation, 100 - inputs.currentAge);
                 
-                updateDOM('val-statusText', "✅ Fully Funded to Age 100");
-                updateDOM('status-main', "✅ Fully Funded to Age 100");
+                updateDOM('val-statusText', "✅ Financial Independence Secured to Age 100");
+                updateDOM('status-main', "✅ Financial Independence Secured to Age 100");
                 updateDOM('val-statusSub', `Est. remaining wealth to bequeath: $${(finalBal/1000000).toFixed(2)}M (Worth ~$${(pvBal/1000000).toFixed(2)}M in today's dollars)`);
                 updateDOM('status-sub', `Est. remaining wealth to bequeath: $${(finalBal/1000000).toFixed(2)}M (Worth ~$${(pvBal/1000000).toFixed(2)}M in today's dollars)`);
                 if(cardStatus) cardStatus.className = 'hero-card success';
@@ -1183,23 +1219,9 @@ function runSim() {
                     updateDOM('val-statusText', "⚠️ Adjustments Needed");
                     updateDOM('status-main', "⚠️ Adjustments Needed");
                     updateDOM('val-statusSub', `Funds deplete at age ${res.depletionAge}.`);
-                    updateDOM('status-sub', `Funds deplete at age ${res.depletionAge}. Try investing a bit more or retiring later.`);
+                    updateDOM('status-sub', `Funds deplete at age ${res.depletionAge}. Try investing a bit more or delaying financial freedom.`);
                     if(cardStatus) cardStatus.className = 'hero-card danger';
                 }
-                
-                if(document.getElementById('diagnostic-panel')) document.getElementById('diagnostic-panel').style.display = 'block';
-                if(document.getElementById('diag-panel')) document.getElementById('diag-panel').style.display = 'block';
-                if(document.getElementById('autosolver-results')) document.getElementById('autosolver-results').style.display = 'none';
-                
-                let diagMsg = `Your portfolio crashed at Age ${res.depletionAge}.`;
-                if (res.depletionAge <= inputs.retireAge) {
-                    diagMsg = `Your portfolio crashed at Age ${res.depletionAge} before you even retired. Your living costs and debt completely overwhelmed your income.`;
-                } else if (inputs.hasMortgage && res.depletionAge <= (inputs.currentAge + inputs.loanYrs)) {
-                    diagMsg = `Your portfolio crashed at Age ${res.depletionAge}. Your investments could not sustain the aggressive double-drain of both your living expenses and your monthly mortgage payments in early retirement.`;
-                } else {
-                    diagMsg = `Your portfolio survived until Age ${res.depletionAge}. Over a long ${res.depletionAge - inputs.retireAge}-year retirement, inflation slowly eroded your purchasing power, and your capital eventually ran dry.`;
-                }
-                updateDOM('diag-message', diagMsg);
             }
 
             // Trigger Dynamic Coaching Panel for BOTH success and failure states
@@ -1486,7 +1508,6 @@ window.generateCoaching = function(baseInputs, isSolvent) {
     if (!panel || !optsDiv) return;
     
     panel.style.display = 'block';
-    optsDiv.innerHTML = '<div style="font-size:0.9rem; color:#64748b;">Calculating scenarios...</div>';
     
     setTimeout(() => {
         let html = "<div style='margin-bottom: 1rem; font-size: 0.85rem; color: #475569;'><em>Click any button below to update your inputs. You can combine multiple tweaks to reach your goal.</em></div>";
@@ -1496,101 +1517,76 @@ window.generateCoaching = function(baseInputs, isSolvent) {
             document.getElementById('coach-title').innerText = '💡 Optimization Opportunities';
             document.getElementById('coach-title').style.color = '#047857';
             
-            // 1. Retire Earlier
-            let testAge = JSON.parse(JSON.stringify(baseInputs));
-            let bestAge = testAge.retireAge;
-            for(let a = testAge.retireAge - 1; a >= testAge.currentAge; a--) {
-                testAge.retireAge = a;
-                if(simulatePath(testAge, false).solvent) bestAge = a;
-                else break;
-            }
-            if(bestAge < baseInputs.retireAge) {
-                html += `<div class="coach-card safe" onclick="applyTweak('inp-retireAge', ${bestAge})">
-                            <div class="coach-text">🎉 <strong>Retire Earlier:</strong> You can safely achieve Financial Independence by Age ${bestAge}</div>
-                            <div class="coach-btn-pill">Apply ➔</div>
+            // Time: Claim Freedom Earlier
+            let nextAge = baseInputs.retireAge - 1;
+            if (nextAge > baseInputs.currentAge) {
+                html += `<div class="coach-card safe" onclick="applyTweak('inp-retireAge', ${nextAge})">
+                            <div class="coach-text">🎉 <strong>Claim Freedom Earlier:</strong> Pull your financial freedom age forward by 1 year to Age ${nextAge}</div>
+                            <div class="coach-btn-pill">-1 Year ➔</div>
                          </div>`;
             }
             
-            // 2. Fatten Lifestyle
-            let testExp = JSON.parse(JSON.stringify(baseInputs));
-            let maxExp = testExp.expenses;
-            for(let e = testExp.expenses + 100; e <= testExp.expenses + 10000; e+=100) {
-                testExp.expenses = e;
-                if(simulatePath(testExp, false).solvent) maxExp = e;
-                else break;
-            }
-            if(maxExp > baseInputs.expenses) {
-                html += `<div class="coach-card safe" onclick="applyTweak('inp-expenses', ${maxExp})">
-                            <div class="coach-text">🍷 <strong>Fatten Your Lifestyle:</strong> Your wealth can support up to $${maxExp.toLocaleString()}/mo in retirement</div>
-                            <div class="coach-btn-pill">Apply ➔</div>
+            // Expenses: Upgrade Lifestyle
+            let nextExp = Math.round((baseInputs.expenses * 1.05) / 50) * 50;
+            html += `<div class="coach-card safe" onclick="applyTweak('inp-expenses', ${nextExp})">
+                        <div class="coach-text">🍷 <strong>Upgrade Lifestyle:</strong> Increase your target monthly retirement household living expenses by 5% to $${nextExp.toLocaleString()}/mo</div>
+                        <div class="coach-btn-pill">+5% ➔</div>
+                     </div>`;
+            
+            // Returns: De-Risk Portfolio
+            let currRet = baseInputs.usdRet * 100;
+            if (currRet > 3.0) {
+                let nextRet = (currRet - 0.5).toFixed(1);
+                html += `<div class="coach-card safe" onclick="applyTweak('inp-invRet', ${nextRet})">
+                            <div class="coach-text">🛡️ <strong>De-Risk Portfolio:</strong> Reduce your reliance on market growth, or increase your margin of safety by lowering expected returns to ${nextRet}%</div>
+                            <div class="coach-btn-pill">-0.5% ➔</div>
                          </div>`;
             }
-            
-            // 3. De-Risk
-            let testRisk = JSON.parse(JSON.stringify(baseInputs));
-            let minRet = testRisk.usdRet;
-            for(let r = testRisk.usdRet - 0.005; r >= 0; r -= 0.005) {
-                testRisk.usdRet = r;
-                if(simulatePath(testRisk, false).solvent) minRet = r;
-                else break;
-            }
-            if(minRet < baseInputs.usdRet && minRet > 0) {
-                html += `<div class="coach-card safe" onclick="applyTweak('inp-invRet', ${(minRet*100).toFixed(1)})">
-                            <div class="coach-text">🛡️ <strong>De-Risk Portfolio:</strong> You only need a ${(minRet*100).toFixed(1)}% return to succeed. You can afford safer investments.</div>
-                            <div class="coach-btn-pill">Apply ➔</div>
-                         </div>`;
-            }
-            
-            if(html.indexOf('coach-card') === -1) html += "<div style='font-size:0.9rem;'>Your plan is perfectly balanced!</div>";
             
         } else {
             note.style.display = 'block';
             document.getElementById('coach-title').innerText = '🔧 How to achieve Financial Independence';
             document.getElementById('coach-title').style.color = '#1e3a8a';
             
-            // 1. Spend Less
-            let testExp = JSON.parse(JSON.stringify(baseInputs));
-            let fixExp = null;
-            for(let e = testExp.expenses - 100; e >= 1000; e -= 100) {
-                testExp.expenses = e;
-                if(simulatePath(testExp, false).solvent) { fixExp = e; break; }
-            }
-            if(fixExp) {
-                html += `<div class="coach-card danger" onclick="applyTweak('inp-expenses', ${fixExp})">
-                            <div class="coach-text">📉 <strong>Modest Lifestyle:</strong> Reduce your target retirement spending to $${fixExp.toLocaleString()}/mo</div>
-                            <div class="coach-btn-pill">Apply ➔</div>
+            // Investments: Supercharge Investments
+            let currInv = baseInputs.usdContrib;
+            let nextInv = currInv < 500 ? 500 : Math.round((currInv * 1.1) / 50) * 50;
+            html += `<div class="coach-card danger" onclick="applyTweak('inp-invContrib', ${nextInv})">
+                        <div class="coach-text">📈 <strong>Supercharge Investments:</strong> Increase monthly investments by 10% to $${nextInv.toLocaleString()}/mo</div>
+                        <div class="coach-btn-pill">+10% ➔</div>
+                     </div>`;
+
+            // Cash: Build Cash Buffer
+            let currCash = baseInputs.cashContrib;
+            let nextCash = currCash < 500 ? 500 : Math.round((currCash * 1.1) / 50) * 50;
+            html += `<div class="coach-card danger" onclick="applyTweak('inp-cashContrib', ${nextCash})">
+                        <div class="coach-text">🏦 <strong>Build Cash Buffer:</strong> Increase monthly cash savings by 10% to $${nextCash.toLocaleString()}/mo</div>
+                        <div class="coach-btn-pill">+10% ➔</div>
+                     </div>`;
+                     
+            // Expenses: Trim the Fat
+            let nextExp = Math.round((baseInputs.expenses * 0.95) / 50) * 50;
+            html += `<div class="coach-card danger" onclick="applyTweak('inp-expenses', ${nextExp})">
+                        <div class="coach-text">📉 <strong>Trim the Fat:</strong> Reduce target monthly retirement household living expenses by 5% to $${nextExp.toLocaleString()}/mo</div>
+                        <div class="coach-btn-pill">-5% ➔</div>
+                     </div>`;
+            
+            // Returns: Optimize Yields
+            let currRet = baseInputs.usdRet * 100;
+            if (currRet < 8.5) {
+                let nextRet = (currRet + 0.5).toFixed(1);
+                html += `<div class="coach-card danger" onclick="applyTweak('inp-invRet', ${nextRet})">
+                            <div class="coach-text">🚀 <strong>Optimize Yields:</strong> Change your mix of investments to yield a 0.5% higher return on your global portfolio (Target: ${nextRet}%)</div>
+                            <div class="coach-btn-pill">+0.5% ➔</div>
                          </div>`;
             }
-            
-            // 2. Save More
-            let testSave = JSON.parse(JSON.stringify(baseInputs));
-            let fixSave = null;
-            for(let s = testSave.usdContrib + 100; s <= 20000; s += 100) {
-                testSave.usdContrib = s;
-                if(simulatePath(testSave, false).solvent) { fixSave = s; break; }
-            }
-            if(fixSave) {
-                html += `<div class="coach-card danger" onclick="applyTweak('inp-invContrib', ${fixSave})">
-                            <div class="coach-text">📈 <strong>Supercharge Savings:</strong> Increase monthly investments to $${fixSave.toLocaleString()}/mo</div>
-                            <div class="coach-btn-pill">Apply ➔</div>
-                         </div>`;
-            }
-            
-            // 3. Work Longer
-            let testAge = JSON.parse(JSON.stringify(baseInputs));
-            let fixAge = null;
-            for(let a = testAge.retireAge + 1; a <= 75; a++) {
-                testAge.retireAge = a;
-                if(simulatePath(testAge, false).solvent) { fixAge = a; break; }
-            }
-            if(fixAge) {
-                html += `<div class="coach-card danger" onclick="applyTweak('inp-retireAge', ${fixAge})">
-                            <div class="coach-text">⏳ <strong>Extend Horizon:</strong> Delay retirement to Age ${fixAge}</div>
-                            <div class="coach-btn-pill">Apply ➔</div>
-                         </div>`;
-            }
-            
-            if(html.indexOf('coach-card') === -1) html += "<div style='font-size:0.9rem; color: #b91c1c;'>The shortfall is severe. You may need to manually adjust multiple variables simultaneously.</div>";
+
+            // Time: Extend Horizon
+            let nextAge = baseInputs.retireAge + 1;
+            html += `<div class="coach-card danger" onclick="applyTweak('inp-retireAge', ${nextAge})">
+                        <div class="coach-text">⏳ <strong>Extend Horizon:</strong> Delay financial freedom by 1 year to Age ${nextAge}</div>
+                        <div class="coach-btn-pill">+1 Year ➔</div>
+                     </div>`;
         }
         
         optsDiv.innerHTML = html;
