@@ -1603,6 +1603,11 @@ window.applyTweak = function(id, val) {
                 chartSec.classList.add('wizard-unlock');
             }
             runSim();
+            
+            // Smooth scroll back to the chart and hero results
+            if (chartSec) {
+                chartSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
         }
     }
 };
