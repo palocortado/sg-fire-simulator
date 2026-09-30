@@ -502,6 +502,10 @@ function simulatePath(inputs) {
             saBal = 0;
         }
 
+        // NEW: Capture the start-of-year balance before compounding
+        let startLiquidSGD = cashRes + sgdPort + (usdPort * fx) + saBal + oaBal;
+        pathData.push({ age, val: startLiquidSGD });
+
         for (let m = 1; m <= 12; m++) {
             usdPort *= (1 + (usdRet / 12));
             sgdPort *= (1 + (sgdRet / 12));
@@ -571,9 +575,6 @@ function simulatePath(inputs) {
             if (totalLiquid < 0 && solvent) { solvent = false; depletionAge = age; }
             if (!solvent) { cashRes = 0; sgdPort = 0; usdPort = 0; saBal = 0; }
         }
-
-        let totalLiquidSGD = cashRes + sgdPort + (usdPort * fx) + saBal + oaBal;
-        pathData.push({ age, val: totalLiquidSGD });
     }
     return { pathData, solvent, depletionAge, peakNW };
 }
@@ -776,7 +777,10 @@ function renderChart(labels, datasets, inputs) {
             responsive: true, maintainAspectRatio: false,
             interaction: { mode: 'index', intersect: false },
             scales: { y: { ticks: { callback: v => '$' + (v / 1000000).toFixed(1) + 'M' } } },
-            plugins: { annotation: { annotations: chartAnnotations } }
+            plugins: { 
+                annotation: { annotations: chartAnnotations },
+                tooltip: { callbacks: { label: c => c.dataset.label + ': $' + Math.round(c.raw).toLocaleString('en-US') } }
+            }
         }
     });
 }
