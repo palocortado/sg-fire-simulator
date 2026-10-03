@@ -421,3 +421,53 @@ body.bank-loan-active .not-bank { display: none !important; }
     .cf-head { display: none; }
     .cf-row-income, .cf-row-milestone { grid-template-columns: 1fr 1fr; padding-bottom: 0.5rem; border-bottom: 1px dashed #e2e8f0; }
 }
+
+
+/* =============================================================================
+   V6 Batch 5
+   ============================================================================= */
+
+/* R16: assumption presets */
+.preset-row { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin-top: 0.85rem; font-size: 0.85rem; color: var(--text-secondary); }
+.preset-custom { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; color: #6d28d9; background: #ede9fe; border: 1px solid #c4b5fd; border-radius: 999px; padding: 1px 8px; }
+
+/* R14: CPF LIFE block */
+.cpf-life-block { margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed #bbf7d0; }
+select.select-input { width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem; font-weight: 600; background: #fff; }
+body:not(.owns-home) .pledge-row { display: none !important; }
+
+/* R8: status lines and SWR card */
+.status-line { margin-top: 0.55rem; font-size: 0.95rem; font-weight: 600; background: rgba(255,255,255,0.18); padding: 0.45rem 0.7rem; border-radius: 8px; }
+.swr-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.85rem; }
+.swr-readout { font-size: 1.6rem; font-weight: 800; color: #0f172a; margin: 0.15rem 0; }
+input:disabled { background: #f1f5f9 !important; color: #94a3b8 !important; }
+
+/* R22: property downgrade sub-row */
+.ms-dg { display: none; grid-column: 1 / -1; grid-template-columns: repeat(3, 1fr); gap: 0.4rem; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 6px; padding: 0.5rem; }
+.milestone-stream.is-dg .ms-dg { display: grid; }
+.milestone-stream.is-dg .ms-amt { visibility: hidden; }
+.ms-dg label { font-size: 0.7rem !important; font-weight: 600 !important; color: #64748b !important; display: flex; flex-direction: column; gap: 0.2rem; }
+.ms-dg-note { grid-column: 1 / -1; font-size: 0.72rem; color: #64748b; line-height: 1.35; }
+@media (max-width: 640px) { .ms-dg { grid-template-columns: 1fr; } }
+
+/* R11: coaching Compare button */
+.coach-actions { display: flex; align-items: center; gap: 0.4rem; flex-shrink: 0; }
+.coach-compare { background: #fff; color: #7c3aed; border: 1px solid #c4b5fd; border-radius: 99px; padding: 5px 12px; font-size: 0.72rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.coach-compare:hover { background: #7c3aed; color: #fff; }
+
+/* R11: what-if comparison and builder */
+.scenario-panel, .scen-builder { margin-top: 1rem; padding-top: 0.85rem; border-top: 1px solid #e2e8f0; }
+.scen-head { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 0.5rem; font-size: 0.9rem; }
+.scen-table-wrap { overflow-x: auto; }
+.scen-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.scen-table th { text-align: left; font-size: 0.7rem; font-weight: 600; color: #64748b; padding: 0.35rem 0.4rem; border-bottom: 1px solid #e2e8f0; }
+.scen-table td { padding: 0.45rem 0.4rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+.scen-swatch { display: inline-block; width: 18px; height: 3px; margin-right: 6px; vertical-align: middle; border-radius: 2px; }
+.scen-actions { white-space: nowrap; text-align: right; }
+.btn-scen-apply { background: #2563eb; color: #fff; border: none; border-radius: 6px; padding: 4px 10px; font-size: 0.75rem; font-weight: 700; cursor: pointer; margin-right: 4px; }
+.btn-scen-remove { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; border-radius: 6px; padding: 3px 7px; font-size: 0.75rem; cursor: pointer; }
+.scen-quick { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.4rem 0; }
+.scen-row { display: grid; grid-template-columns: 1.6fr 1fr auto; gap: 0.4rem; margin-bottom: 0.4rem; }
+.scen-row select { padding: 0.4rem; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.82rem; background: #fff; }
+.btn-small { padding: 0.45rem 0.9rem; font-size: 0.82rem; }
+body.example-mode .scen-builder { display: none !important; }

@@ -105,6 +105,18 @@
                         <span><span class="req-tag req-tag-demo">Required</span> fill in your own numbers</span>
                         <span><span class="assume-pill">Assumption</span> pre-filled estimate you can change</span>
                     </div>
+
+                    <!-- Advanced: assumption presets (R16) -->
+                    <div class="advanced-only preset-row">
+                        <span>Assumption set:</span>
+                        <div class="segmented-control segmented-mini">
+                            <label><input type="radio" name="preset" value="cautious" onchange="applyPreset('cautious')"> Cautious</label>
+                            <label><input type="radio" name="preset" value="balanced" onchange="applyPreset('balanced')"> Balanced</label>
+                            <label><input type="radio" name="preset" value="optimistic" onchange="applyPreset('optimistic')"> Optimistic</label>
+                        </div>
+                        <span id="preset-custom" class="preset-custom" style="display:none;">Custom</span>
+                        <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">One click sets inflation, investment returns, cash yield and the long-run bank mortgage rate together.<br><br><strong>Cautious:</strong> inflation 3.0%, Global 5.0% (SGD) / 5.5% (USD), Singapore 4.5%, cash 1.0%, mortgage 3.0%.<br><strong>Balanced</strong> (the defaults): inflation 2.5%, Global 6.5% / 7.0%, Singapore 6.0%, cash 1.5%, mortgage 2.5%.<br><strong>Optimistic:</strong> inflation 2.0%, Global 7.5% / 8.0%, Singapore 7.0%, cash 2.0%, mortgage 2.0%.<br><br>If you change any of these yourself, the set shows as Custom. To see your plan under another set without changing your inputs, use the what-if tools under the chart.</div></div>
+                    </div>
                 </div>
 
                 <!-- Step 1: Timeline & Lifestyle -->
@@ -234,7 +246,7 @@
                             <div>
                                 <label class="lbl">
                                     <span>Expected Return (Nominal %, <span class="ccy-label">SGD</span> terms)</span>
-                                                                        <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Enter the headline return before inflation; the engine calculates your real return automatically.<span class="ccy-text-sgd"><br><br>In SGD terms, MSCI World returned about 6.2% a year since 2001. This already includes the effect of the SGD strengthening against the USD. Default: 6.5%.</span><span class="ccy-text-usd"><br><br>In USD terms, MSCI World returned about 7.5% a year since 2001, and developed-market equities about 8.5% a year from 1900 to 2025. Currency movements are applied separately through FX drift. Default: 7.0%.</span></div></div>
+                                    <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Enter the headline return before inflation; the engine calculates your real return automatically.<span class="ccy-text-sgd"><br><br>In SGD terms, MSCI World returned about 6.2% a year since 2001. This already includes the effect of the SGD strengthening against the USD. Default: 6.5%.</span><span class="ccy-text-usd"><br><br>In USD terms, MSCI World returned about 7.5% a year since 2001, and developed-market equities about 8.5% a year from 1900 to 2025. Currency movements are applied separately through FX drift. Default: 7.0%.</span></div></div>
                                     <span class="assume-pill">Assumption</span>
                                 </label>
                                 <input type="number" id="inp-globalRet" class="assumption-input" value="6.5" step="0.1" oninput="runSim()">
@@ -323,8 +335,8 @@
                     <!-- CPF (R10 + R24) -->
                     <div>
                         <h4 class="section-h4" style="display:flex; align-items:center;">
-                            CPF (locked until 55)
-                            <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">CPF can't fund an early retirement before 55, so the chart shows it as a separate dashed line until then, and adds it to your available wealth at 55. Your OA can still pay your mortgage at any age.<br><br>The engine uses the statutory floor interest rates (OA 2.5%, SA 4%) and doesn't include extra interest.<br><br>CPF contributions only apply to the first S$8,000 of your monthly salary (the 2026 Ordinary Wage ceiling). The ceiling rises in steps every few years, not with inflation, so for high earners the engine's inflation-linked CPF inflows may slightly overstate future contributions.<br><br><strong>Simplification:</strong> at 55 the engine releases your full OA and SA balances. In reality, an amount up to your retirement sum stays in your Retirement Account and pays out monthly through CPF LIFE from 65. A more realistic model is planned.</div></div>
+                            CPF
+                            <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text"><strong>Before 55:</strong> your OA and SA are locked, shown as a dashed line. Your OA can still pay your mortgage.<br><br><strong>At 55:</strong> your SA, then your OA, move into a Retirement Account (RA) up to your Full Retirement Sum (S$220,400 for people turning 55 in 2026; the engine grows this 3.5% a year for later years). Anything above that, plus up to S$5,000, becomes available to you. With a property pledge (Advanced), only the Basic Retirement Sum (half) stays in the RA.<br><br><strong>From 65:</strong> your RA pays you a monthly CPF LIFE income for life instead of a lump sum. The engine uses the CPF Board's Standard Plan table (about S$1,780 a month from 65 for a Full Retirement Sum set aside in 2026). The RA then drops out of your wealth line, because it's income, not savings you can spend.<br><br>The engine uses the floor interest rates (OA 2.5%, SA/RA 4%) without extra interest. It doesn't model the optional 20% RA withdrawal at 65, which permanently lowers your payouts.<br><br>CPF contributions only apply to the first S$8,000 of monthly salary (2026). The ceiling rises in steps, not with inflation, so inflation-linked CPF inflows may slightly overstate future contributions for high earners.<br><br>If you're already 55 or older, enter your Retirement Account balance as your SA balance.</div></div>
                         </h4>
                         <div class="cpf-toggle-box">
                             <div class="cpf-question">
@@ -362,7 +374,7 @@
                                     </div>
                                 </div>
                                 <div class="cpf-nocontrib-only field-note cpf-note">
-                                    Common if you're self-employed (you mainly contribute to MediSave, which this tool doesn't model) or between jobs. Your balances above still earn interest, unlock at 55, and your OA can still pay your mortgage.
+                                    Common if you're self-employed (you mainly contribute to MediSave, which this tool doesn't model) or between jobs. Your balances above still earn interest, move into your Retirement Account at 55 and fund CPF LIFE from 65, and your OA can still pay your mortgage.
                                 </div>
 
                                 <div class="cpf-contrib-only">
@@ -390,6 +402,46 @@
                                         </div>
                                     </div>
                                 </div>
+
+                                <!-- Advanced: retirement sums and CPF LIFE (R14) -->
+                                <div class="advanced-only cpf-life-block">
+                                    <div class="cpf-sub">Retirement Account and CPF LIFE</div>
+                                    <div class="form-grid-2">
+                                        <div>
+                                            <label class="lbl">
+                                                Retirement Sum Growth (% / yr)
+                                                <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Your Full Retirement Sum is fixed in the year you turn 55. It's S$220,400 for people turning 55 in 2026 and S$228,200 for 2027 (+3.5%). The engine grows it by this rate until the year you turn 55.</div></div>
+                                                <span class="assume-pill">Assumption</span>
+                                            </label>
+                                            <input type="number" id="inp-frsGrowth" class="assumption-input" value="3.5" step="0.1" oninput="runSim()">
+                                            <div class="assume-note">The announced 2026→2027 increase.</div>
+                                        </div>
+                                        <div>
+                                            <label class="lbl">
+                                                CPF LIFE Start Age
+                                                <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">You can start CPF LIFE payouts at any age from 65 to 70. Each year you wait raises your payouts by up to about 7%. For a Full Retirement Sum set aside in 2026, the CPF Board estimates about S$1,780 a month from 65 and S$2,380 from 70.</div></div>
+                                                <span class="assume-pill">Assumption</span>
+                                            </label>
+                                            <input type="number" id="inp-lifeAge" class="assumption-input" value="65" step="1" min="65" max="70" oninput="runSim()">
+                                            <div class="assume-note">Between 65 and 70.</div>
+                                        </div>
+                                        <div>
+                                            <label class="lbl">
+                                                CPF LIFE Plan
+                                                <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text"><strong>Standard:</strong> the same monthly amount for life (the default).<br><br><strong>Escalating:</strong> starts about 20% lower, then rises 2% a year to help keep up with inflation.<br><br>The Basic Plan isn't modelled.</div></div>
+                                            </label>
+                                            <select id="inp-lifePlan" class="select-input" onchange="runSim()">
+                                                <option value="standard">Standard Plan</option>
+                                                <option value="escalating">Escalating Plan</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-row checkbox-row pledge-row" style="margin-top:0.6rem;">
+                                        <label><input type="checkbox" id="inp-pledge" onchange="runSim()"> Pledge my property at 55 (keep only the Basic Retirement Sum in CPF)
+                                            <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">If you own a property with a lease lasting until you're at least 95, you can pledge it and keep only the Basic Retirement Sum (half the Full Retirement Sum) in your Retirement Account. More of your CPF becomes available at 55, but your CPF LIFE payouts are lower.</div></div>
+                                        </label>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -400,6 +452,11 @@
                     <div class="wizard-header"><span class="step-num">3</span><h3>Housing & Mortgage</h3></div>
                     <div class="form-row checkbox-row">
                         <label><input type="checkbox" id="toggle-mortgage" onchange="syncPanels(); runSim();"> I have an active home loan</label>
+                    </div>
+                    <div id="ownhome-row" class="form-row checkbox-row advanced-only">
+                        <label><input type="checkbox" id="toggle-ownhome" onchange="syncPanels(); runSim();"> I own my home outright (no loan)
+                            <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Only used for the CPF property pledge option in Step 2. Your home's value is not counted as wealth in this tool.</div></div>
+                        </label>
                     </div>
                     <div id="mortgage-panel" class="sub-panel" style="display:none;">
                         <!-- Advanced: loan type (R9) -->
@@ -513,7 +570,7 @@
                     <div class="field-note" style="margin-bottom:0.75rem;">
                         Regular income at any age: rental income, part-time or consulting work, an annuity, or a pension from working overseas. While you're working, it's saved the same way you already save (split across your investments and cash in the same proportions as your monthly contributions). In retirement, it covers part of your spending first.<br><br>
                         <strong>Rental property:</strong> enter the <em>net</em> monthly rent after property tax, maintenance, agent fees, vacancy and any mortgage on that property. Amounts grow with inflation unless you tick <strong>Fixed</strong> (e.g. a fixed-rent lease or a level annuity).<br><br>
-                        Don't add CPF LIFE payouts here. The engine already counts your CPF balances from 55.
+                        Don't add CPF LIFE payouts here. The engine already models CPF LIFE from your payout age.
                     </div>
                     <div class="cf-head cf-row-income">
                         <span>Name</span><span>Amount/mo (Today's SGD)</span><span>From age</span><span>To age</span><span></span><span></span>
@@ -526,13 +583,33 @@
                         One-off amounts in today's dollars, adjusted for inflation to the year they happen.<br><br>
                         <strong>Windfalls</strong> (e.g. an inheritance, a large bonus, selling a car) are saved the same way you already save, as a one-off top-up to your investments and cash.<br><br>
                         <strong>Expenses</strong> (e.g. a child's university fees, a wedding, a home renovation) are paid from your cash and investments.<br><br>
-                        <strong>Property downgrade:</strong> enter as a windfall the net cash you expect to release (sale price minus the outstanding loan, the new home's cost and transaction costs). Part of the proceeds may have to be refunded to your CPF OA (the CPF you used for the property plus accrued interest). That portion stays locked until 55, so enter only the cash portion here.
+                        <strong>Property downgrade:</strong> choose this type and enter the sale price, the new home's cost and the CPF you've used for your home (with accrued interest, shown in the CPF app). The engine repays your loan, refunds your CPF (locked again if you're under 55, or into your Retirement Account), deducts 3% costs, and saves the rest.
                     </div>
                     <div class="cf-head cf-row-milestone">
                         <span>Description</span><span>Type</span><span>Amount (Today's SGD)</span><span>Age</span><span></span>
                     </div>
                     <div id="milestones-container" class="cf-container"></div>
                     <button type="button" class="btn-add" onclick="addMilestone(); runSim();">+ Add windfall or expense</button>
+                </div>
+
+                <!-- Step 5: Safe Withdrawal Rate (Advanced, R8) -->
+                <div class="card wizard-card advanced-only">
+                    <div class="wizard-header"><span class="step-num">5</span><h3>Safe Withdrawal Rate</h3></div>
+                    <div class="swr-box">
+                        <div class="lbl" style="font-size:0.85rem; color: var(--text-secondary);">
+                            Your plan's withdrawal rate
+                            <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Your first-year retirement spending divided by the savings you'd need on the day you stop working. The engine works this out by simulating your plan to age 100, including your mortgage, CPF at 55, CPF LIFE and any income streams.<br><br>The widely quoted "4% rule" comes from US research on 30-year retirements. Shorter retirements, or ones with CPF LIFE income, can support higher rates; longer ones usually need lower rates.<br><br>Use the override if you want a stricter rate as an extra safety margin. It raises the Finish Line on the chart, but your pass/fail result still comes from the full simulation.</div></div>
+                        </div>
+                        <div id="swr-readout" class="swr-readout">—</div>
+                        <div id="swr-note" class="field-note"></div>
+                    </div>
+                    <div class="form-row checkbox-row" style="margin-top:0.75rem;">
+                        <label><input type="checkbox" id="inp-swrOverride" onchange="document.getElementById('inp-swrRate').disabled = !this.checked; runSim();"> Use my own withdrawal rate for the Finish Line</label>
+                    </div>
+                    <div class="inline-input-row">
+                        <label for="inp-swrRate">My withdrawal rate (%)</label>
+                        <input type="number" id="inp-swrRate" class="assumption-input" value="3.5" step="0.1" oninput="runSim()" disabled>
+                    </div>
                 </div>
 
                 <!-- Explicit Calculation Trigger -->
@@ -549,6 +626,8 @@
                     <div id="card-status" class="hero-card" style="margin-bottom: 1rem; padding: 1.5rem; border-radius: 12px; color: white;">
                         <h2 id="status-main" style="font-size: 1.5rem; margin-bottom: 0.25rem;">⏳ Awaiting Inputs</h2>
                         <p id="status-sub" style="font-size: 1rem; opacity: 0.9;">Fill in the essentials on the left to see your results.</p>
+                        <p id="status-fi" class="status-line" style="display:none;"></p>
+                        <p id="status-cpf" class="status-line" style="display:none;"></p>
                         <p id="status-assumptions" class="status-assumptions" style="display:none;"></p>
                     </div>
                     <div class="card chart-card">
@@ -573,6 +652,32 @@
                         </div>
                         <div style="position: relative; height: 350px; width: 100%;">
                             <canvas id="fireChart"></canvas>
+                        </div>
+
+                        <!-- What-if comparison (R11) -->
+                        <div id="scenario-panel" class="scenario-panel" style="display:none;">
+                            <div class="scen-head"><strong>What-if comparison</strong><span class="field-note">Previews only. Nothing changes until you click Apply.</span></div>
+                            <div class="scen-table-wrap">
+                                <table class="scen-table">
+                                    <thead><tr><th></th><th>Financial freedom age</th><th>Wealth at 65 (today's $)</th><th>Money lasts to</th><th></th></tr></thead>
+                                    <tbody id="scen-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div id="scen-builder" class="advanced-only scen-builder">
+                            <div class="scen-head"><strong>Build a what-if</strong>
+                                <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">See how your plan would look with different numbers, without changing your inputs. Up to two what-ifs show on the chart as dashed lines. They're cleared when you change your plan or reload the page.</div></div>
+                            </div>
+                            <div class="scen-quick">
+                                <button type="button" class="btn-secondary" onclick="quickScenario('fees')">Lower fees (+1.3% return)</button>
+                                <button type="button" class="btn-secondary" onclick="quickScenario('cautious')">Cautious assumptions</button>
+                                <button type="button" class="btn-secondary" onclick="quickScenario('optimistic')">Optimistic assumptions</button>
+                            </div>
+                            <div id="scen-custom-rows"></div>
+                            <div class="scen-quick">
+                                <button type="button" class="btn-add" onclick="addBuilderRow()">+ Change an input</button>
+                                <button type="button" class="btn-primary btn-small" onclick="showCustomScenario()">Show what-if</button>
+                            </div>
                         </div>
                     </div>
                     <!-- Dynamic Coaching Panel -->

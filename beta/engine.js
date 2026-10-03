@@ -1,52 +1,32 @@
 /* =============================================================================
    Financial Independence Simulator for Singapore — engine.js
-   Version: V6 staging, Batch 3 
+   Version: V6 staging, Batch 5
    -----------------------------------------------------------------------------
-
-   -----------------------------------------------------------------------------
-   
-// Batch 4 (roadmap R7, R9, R10, R23, R24):
-//   R7  Custom cash flows UI; income and windfalls saved the way you already save
-//   R9  Mortgage: HDB/Bank selector (Advanced), rate history to Q2 2026, two-stage bank rate, 5% warning
-//   R10 CPF questions: "Do you have CPF savings?" / "Are you contributing monthly?"
-//   R23 Loads in Simple unless Advanced was clearly in use
-//   R24 CPF layout: balances first, one estimator for OA + SA inflows, SA checkbox removed
-   
-   Batch 3 scope (roadmap R1–R6): 
-   - R1 Finish Line checkbox moved to the chart header 
-   - R2 Global return note/tooltip follow the SGD/USD toggle 
-   - R3 Tooltips kept inside the window; bottom sheet on small screens 
-   - R4 CPF estimator fills OA and SA (2026 allocation rates); fixes above 60 
-   - R5 Calculate and coaching buttons scroll to the result card - R6 CPF tooltip mentions the S$8,000 Ordinary Wage ceiling 
-   
-   Batch 2 scope (on top of Batch 1):
-     - Personal inputs start blank with placeholder examples; assumptions are
-       pre-filled and marked; "Required" tags; essentials gate before results
-     - Personas demoted to optional, clearly labelled example plans
-     - Future / Today's Dollars chart toggle (roadmap item 2)
-     - Finish Line toggle moved to Advanced and renamed (roadmap item 3)
-     - Label suffixes "(Today's SGD)" / "(Nominal %)" (roadmap item 1)
-     - Cash buffer guardrail warnings (roadmap item 5)
-     - CPF SA available in both modes; home loan toggle off by default
-   Batch 1 scope:
-     - Single DEFAULTS object; blank-vs-zero input handling
-     - Simple mode: one SGD portfolio. Advanced mode: Global + Singapore buckets
-     - Reversible Simple <-> Advanced switching
-     - Global Investments currency toggle (SGD / USD) for value, contributions, return
-     - Contributions grow with inflation + "real contribution growth" (Advanced)
-     - CPF liquidity gate: OA + SA locked until 55, then pooled into liquid wealth
-     - Day 1 chart anchor (snapshot taken before each year's compounding)
-     - calcLiveMortgage() removed; mortgage readout moved into runSim()
-     - en-US number formatting throughout
-     - Monte Carlo, Auto-Solver and Presets archived (commented) at end of file
+   Batch 5 (roadmap R8, R11, R13, R14, R16, R22; R12 unchanged by design):
+     - R14 CPF realism at 55: Retirement Account up to your Full Retirement Sum
+       (or Basic with a property pledge), excess + S$5,000 withdrawable,
+       CPF LIFE monthly income from your payout age (Standard or Escalating)
+     - R8  Simulation-based finish line; earliest "stop working" age in both modes;
+           safe withdrawal rate readout and override (Advanced)
+     - R13 Years without enough money are shaded on the chart
+     - R16 Cautious / Balanced / Optimistic assumption presets (Advanced)
+     - R22 Property downgrade as a one-off event, with CPF refund
+     - R11 What-if comparison: Compare on coaching cards; custom what-ifs (Advanced)
+   Batch 4 (R7, R9, R10, R23, R24): custom cash flows; HDB/bank loan with two-stage
+     rate; CPF questions; Simple by default; CPF layout and OA+SA estimator
+   Batch 3 (R1–R6): finish line placement; currency-aware notes; tooltips;
+     CPF estimator; auto-scroll; wage-ceiling note
+   Batch 2: blank personal inputs with placeholders; marked assumptions; essentials
+     gate; example plans; Today's Dollars; labels; cash buffer warnings
+   Batch 1: DEFAULTS; blank-vs-zero; Simple/Advanced buckets; SGD/USD; contribution
+     growth; CPF lock until 55; Day 1 chart anchor; en-US formatting; archives
    ============================================================================= */
-
 let fireChart;
 let incomeStreamCount = 0;
 let milestoneCount = 0;
 let isLoading = true;
 
-const APP_VERSION = "6.0-batch4";
+const APP_VERSION = "6.0-batch5";
 const STORAGE_KEY = 'fireSimState_v6';
 const LEGACY_STORAGE_KEYS = ['fireSimState', 'fireSimState_v5'];
 
@@ -88,8 +68,15 @@ const DEFAULTS = Object.freeze({
 
     // CPF
     oaRate: 2.5,              // statutory floor, %
-    saRate: 4.0,              // statutory floor, %
-    cpfUnlockAge: 55
+    saRate: 4.0,              // statutory floor, % (SA and Retirement Account)
+    cpfUnlockAge: 55,
+    frs2026: 220400,          // Full Retirement Sum for members turning 55 in 2026
+    frsGrowth: 3.5,           // % a year (2026 -> 2027 announced increase)
+    lifeAge: 65,              // CPF LIFE payout start age (65–70)
+    lifePlan: 'standard',     // 'standard' or 'escalating'
+
+    // Safe withdrawal rate override (Advanced)
+    swrRate: 3.5              // %
 });
 
 // Field ID -> starting value. '' = blank (personal input, shows a placeholder example).
@@ -124,15 +111,20 @@ const FIELD_DEFAULTS = {
     'inp-mortgageRate': DEFAULTS.mortgageRate,
     'inp-mortgageRateLong': DEFAULTS.mortgageRateLong,
     'inp-lockYrs': DEFAULTS.lockYrs,
-    'inp-mortgageShare': DEFAULTS.mortgageShare
+    'inp-mortgageShare': DEFAULTS.mortgageShare,
+    'inp-frsGrowth': DEFAULTS.frsGrowth,
+    'inp-lifeAge': DEFAULTS.lifeAge,
+    'inp-lifePlan': DEFAULTS.lifePlan,
+    'inp-swrRate': DEFAULTS.swrRate
 };
 
 // Fields reset to their default by "Clear" (assumptions). All other fields are blanked.
 const ASSUMPTION_FIELDS = ['inp-expenseShare', 'inp-inflation', 'inp-realContribGrowth',
     'inp-invRet', 'inp-globalRet', 'inp-fxRate', 'inp-fxDrift', 'inp-sgRet', 'inp-cashYield', 'inp-mortgageRate', 'inp-mortgageShare',
-    'inp-mortgageRateLong', 'inp-lockYrs'];
+    'inp-mortgageRateLong', 'inp-lockYrs', 'inp-frsGrowth', 'inp-lifeAge', 'inp-lifePlan', 'inp-swrRate'];
 
-const PERSISTED_TOGGLES = ['toggle-expense-partner', 'toggle-mortgage', 'toggle-mortgage-partner', 'inp-maxOA', 'inp-showFireCurve'];
+const PERSISTED_TOGGLES = ['toggle-expense-partner', 'toggle-mortgage', 'toggle-mortgage-partner', 'inp-maxOA', 'inp-showFireCurve',
+    'toggle-ownhome', 'inp-pledge', 'inp-swrOverride'];
 
 // Yes/No and HDB/Bank choices (radio groups) and their defaults
 const CHOICE_DEFAULTS = { cpfHas: 'yes', cpfContrib: 'yes', loanType: 'hdb' };
@@ -241,6 +233,7 @@ function syncPanels() {
     show('expense-partner-panel', isChecked('toggle-expense-partner'));
     show('mortgage-panel', isChecked('toggle-mortgage'));
     show('mortgage-partner-panel', isChecked('toggle-mortgage-partner'));
+    show('ownhome-row', !isChecked('toggle-mortgage'));
 
     // R10: CPF questions drive what is shown
     const ch = getChoices();
@@ -255,6 +248,8 @@ function syncPanels() {
     if (hdbLabel) hdbLabel.classList.toggle('disabled', !hasCpf);
     if (!hasCpf && ch.loanType === 'hdb') { setRadio('loanType', 'bank'); swapLoanRateDefault('bank'); }
     document.body.classList.toggle('bank-loan-active', getMode() !== 'simple' && getRadio('loanType', 'hdb') === 'bank');
+    // R14: property pledge option only for home owners
+    document.body.classList.toggle('owns-home', isChecked('toggle-mortgage') || isChecked('toggle-ownhome'));
 }
 
 function toggleMortgagePartner() { syncPanels(); }
@@ -308,6 +303,10 @@ function advancedInUse() {
     if (isChecked('toggle-mortgage') && getRadio('loanType', 'hdb') === 'bank') return true;
     if (isChecked('inp-showFireCurve')) return true;
     if (readIncomeStreams().length || readMilestones().length) return true;
+    if (differs('inp-frsGrowth', DEFAULTS.frsGrowth) || differs('inp-lifeAge', DEFAULTS.lifeAge)) return true;
+    const plan = document.getElementById('inp-lifePlan');
+    if (plan && plan.value !== DEFAULTS.lifePlan) return true;
+    if (isChecked('inp-pledge') || isChecked('inp-swrOverride') || isChecked('toggle-ownhome')) return true;
     return false;
 }
 
@@ -317,6 +316,7 @@ function setMode(mode) {
     if (prev === mode) return;
     if (prev === 'simple' && mode === 'advanced') onEnterAdvanced();
     if (prev === 'advanced' && mode === 'simple') onEnterSimple();
+    scenarios = [];
     applyModeClass(mode);
     if (!isLoading) runSim();
 }
@@ -483,7 +483,10 @@ function getState() {
             name: row.querySelector('.ms-name').value,
             type: row.querySelector('.ms-type') ? row.querySelector('.ms-type').value : 'windfall',
             amt: row.querySelector('.ms-amt').value,
-            age: row.querySelector('.ms-age').value
+            age: row.querySelector('.ms-age').value,
+            sale: row.querySelector('.ms-sale') ? row.querySelector('.ms-sale').value : '',
+            newHome: row.querySelector('.ms-newhome') ? row.querySelector('.ms-newhome').value : '',
+            cpfUsed: row.querySelector('.ms-cpfused') ? row.querySelector('.ms-cpfused').value : ''
         });
     });
     return {
@@ -523,7 +526,7 @@ function loadState(state) {
             const sc = document.getElementById('income-streams-container');
             if (sc) { sc.innerHTML = ''; (state.incomeStreams || []).forEach(st => addIncomeStream(st.name, st.amt, st.start, st.end, st.fixed)); }
             const mc = document.getElementById('milestones-container');
-            if (mc) { mc.innerHTML = ''; (state.milestones || []).forEach(m => addMilestone(m.name, m.amt, m.age, m.type)); }
+            if (mc) { mc.innerHTML = ''; (state.milestones || []).forEach(m => addMilestone(m.name, m.amt, m.age, m.type, m)); }
         } else if (state.inputs) {
             // --- Legacy V5 format: migrate user-editable fields only ---
             const p = state.inputs;
@@ -595,7 +598,9 @@ function clearAllInputs() {
             if (ASSUMPTION_FIELDS.includes(id)) setFieldDefault(id);
             else setVal(id, '', false);
         });
-        ['toggle-expense-partner', 'toggle-mortgage', 'toggle-mortgage-partner', 'inp-showFireCurve'].forEach(id => setChecked(id, false));
+        ['toggle-expense-partner', 'toggle-mortgage', 'toggle-mortgage-partner', 'inp-showFireCurve', 'toggle-ownhome', 'inp-pledge', 'inp-swrOverride'].forEach(id => setChecked(id, false));
+        scenarios = [];
+        const rows = document.getElementById('scen-custom-rows'); if (rows) rows.innerHTML = '';
         setChecked('inp-maxOA', true);
         setChoices(null);
         setGlobalCcyState('SGD');
@@ -682,26 +687,40 @@ function addIncomeStream(name = '', amount = '', start = '', end = '', fixed = f
         </div>`);
 }
 
-// type: 'windfall' or 'expense'. Older saves stored expenses as negative amounts.
-function addMilestone(name = '', amount = '', age = '', type = '') {
+// type: 'windfall', 'expense' or 'downgrade' (R22). Older saves stored expenses as negative amounts.
+function addMilestone(name = '', amount = '', age = '', type = '', extra = {}) {
     const c = document.getElementById('milestones-container');
     if (!c) return;
     const id = milestoneCount++;
     const n = parseFloat(String(amount).replace(/,/g, ''));
     if (!type) type = (Number.isFinite(n) && n < 0) ? 'expense' : 'windfall';
     const shown = Number.isFinite(n) ? fmt(Math.abs(n)) : '';
+    const ex = k => { const v = parseFloat(String((extra && extra[k]) || '').replace(/,/g, '')); return Number.isFinite(v) ? fmt(v) : ''; };
     c.insertAdjacentHTML('beforeend', `
-        <div class="cf-row cf-row-milestone milestone-stream" id="milestone-${id}">
+        <div class="cf-row cf-row-milestone milestone-stream ${type === 'downgrade' ? 'is-dg' : ''}" id="milestone-${id}">
             <input type="text" class="ms-name" placeholder="e.g. Inheritance" value="${escapeHtml(name)}" onchange="runSim()" aria-label="Description">
-            <select class="ms-type" onchange="runSim()" aria-label="Type">
+            <select class="ms-type" onchange="onMsTypeChange(this)" aria-label="Type">
                 <option value="windfall" ${type === 'windfall' ? 'selected' : ''}>Windfall</option>
                 <option value="expense" ${type === 'expense' ? 'selected' : ''}>Expense</option>
+                <option value="downgrade" ${type === 'downgrade' ? 'selected' : ''}>Downgrade</option>
             </select>
             <input type="text" class="num-format ms-amt" placeholder="e.g. 50,000" value="${escapeHtml(shown)}" aria-label="Amount (Today's SGD)">
             <input type="number" class="ms-age" placeholder="Age" value="${escapeHtml(age)}" oninput="runSim()" aria-label="Age">
             <button type="button" class="btn-remove" onclick="removeCfRow('milestone-${id}')" aria-label="Remove">✕</button>
+            <div class="ms-dg">
+                <label>Sale price (Today's SGD)<input type="text" class="num-format ms-sale" placeholder="e.g. 900,000" value="${ex('sale')}"></label>
+                <label>New home cost (Today's SGD)<input type="text" class="num-format ms-newhome" placeholder="e.g. 450,000" value="${ex('newHome')}"></label>
+                <label>CPF used + interest (as of today)<input type="text" class="num-format ms-cpfused" placeholder="e.g. 150,000" value="${ex('cpfUsed')}"></label>
+                <div class="ms-dg-note">If you co-own, enter your share of the sale price and new home. The engine repays your share of the loan, refunds the CPF you used (plus 2.5% a year) to your CPF, deducts 3% selling and buying costs, and saves the rest the way you already save. The new home is assumed bought without a loan.</div>
+            </div>
         </div>`);
 }
+
+window.onMsTypeChange = function (sel) {
+    const row = sel.closest('.milestone-stream');
+    if (row) row.classList.toggle('is-dg', sel.value === 'downgrade');
+    runSim();
+};
 
 // Blank "from" = from now; blank "to" = age 100. Rows without an amount are ignored.
 function readIncomeStreams() {
@@ -721,15 +740,24 @@ function readIncomeStreams() {
     return out;
 }
 
-// Returns signed amounts: windfalls positive, expenses negative. Rows without amount or age are ignored.
+// Returns events: windfalls positive, expenses negative, downgrades with their own fields.
+// Rows without the needed amounts or an age are ignored.
 function readMilestones() {
     const out = [];
+    const num = (row, cls) => { const el = row.querySelector(cls); const v = el ? parseFloat(String(el.value).replace(/,/g, '')) : NaN; return Number.isFinite(v) ? v : null; };
     document.querySelectorAll('.milestone-stream').forEach(row => {
-        const a = parseFloat(String(row.querySelector('.ms-amt').value).replace(/,/g, ''));
         const age = parseFloat(row.querySelector('.ms-age').value);
-        if (!Number.isFinite(a) || a === 0 || !Number.isFinite(age)) return;
-        const type = row.querySelector('.ms-type') ? row.querySelector('.ms-type').value : (a < 0 ? 'expense' : 'windfall');
-        out.push({ amt: type === 'expense' ? -Math.abs(a) : Math.abs(a), age: age });
+        if (!Number.isFinite(age)) return;
+        const type = row.querySelector('.ms-type') ? row.querySelector('.ms-type').value : 'windfall';
+        if (type === 'downgrade') {
+            const sale = num(row, '.ms-sale');
+            if (!sale) return;
+            out.push({ type, age, amt: 0, sale, newHome: num(row, '.ms-newhome') || 0, cpfUsed: num(row, '.ms-cpfused') || 0 });
+            return;
+        }
+        const a = num(row, '.ms-amt');
+        if (!a) return;
+        out.push({ type, amt: type === 'expense' ? -Math.abs(a) : Math.abs(a), age });
     });
     return out;
 }
@@ -881,7 +909,7 @@ function collectInputs() {
             yield: (adv ? rateOr('inp-cashYield', DEFAULTS.cashYield) : DEFAULTS.cashYield) / 100
         },
 
-                cpf: (() => {
+        cpf: (() => {
             const ch = getChoices();
             const has = ch.cpfHas === 'yes';
             const contributing = has && ch.cpfContrib === 'yes';
@@ -894,7 +922,11 @@ function collectInputs() {
                 saContrib: contributing ? amt('inp-saContrib') : 0,
                 oaRate: DEFAULTS.oaRate / 100,
                 saRate: DEFAULTS.saRate / 100,
-                unlockAge: DEFAULTS.cpfUnlockAge
+                unlockAge: DEFAULTS.cpfUnlockAge,
+                frsGrowth: (adv ? rateOr('inp-frsGrowth', DEFAULTS.frsGrowth) : DEFAULTS.frsGrowth) / 100,
+                lifeAge: adv ? Math.min(70, Math.max(65, Math.round(rateOr('inp-lifeAge', DEFAULTS.lifeAge)))) : DEFAULTS.lifeAge,
+                lifePlan: adv && document.getElementById('inp-lifePlan') ? document.getElementById('inp-lifePlan').value : DEFAULTS.lifePlan,
+                pledge: adv && isChecked('inp-pledge') && (isChecked('toggle-mortgage') || isChecked('toggle-ownhome'))
             };
         })(),
 
@@ -921,6 +953,7 @@ function collectInputs() {
         milestones: adv ? readMilestones() : [],
         currentExpenses: adv ? readNum('inp-currentExpenses') : null,
         showFireCurve: adv && isChecked('inp-showFireCurve'),
+        swr: { override: adv && isChecked('inp-swrOverride'), rate: rateOr('inp-swrRate', DEFAULTS.swrRate) / 100 },
         chartView: getChartView()
     };
 }
@@ -928,32 +961,62 @@ function collectInputs() {
 // -----------------------------------------------------------------------------
 // Core simulation (deterministic). All outputs in nominal SGD.
 //   - Snapshot is taken at the START of each age (Day 1 anchor), before
-//     milestones and the 12 months of compounding.
-//   - CPF OA + SA are locked (excluded from liquid wealth, not drawable for
-//     spending) until cpf.unlockAge; then they join the liquid pool and keep
-//     earning their statutory rates. OA can pay the mortgage at any age.
+//     one-off events and the 12 months of compounding.
+//   - CPF (R14): OA + SA are locked until 55. At 55, SA then OA move into a
+//     Retirement Account (RA) up to your Full Retirement Sum (or the Basic
+//     Retirement Sum with a property pledge). Anything above that, plus up to
+//     S$5,000, becomes withdrawable (held in OA, counted as liquid). The RA stays
+//     locked, earns 4%, and becomes a CPF LIFE monthly income at your payout age.
+//   - OA can pay the mortgage at any age.
 //   - Global bucket is held in its own currency; converted at `fx`, which
 //     drifts yearly in USD mode.
 //   - Contributions grow yearly by (1 + inflation) x (1 + realContribGrowth).
+//   - Can restart from a saved state (used by the finish line and SWR search).
 // -----------------------------------------------------------------------------
-function simulatePath(inp) {
+const CPF_LIFE_RATE_65 = 1780 / 330100;   // CPF Board table: S$330,100 in RA at 65 -> ~S$1,780/mo (Standard Plan)
+const CPF_LIFE_DEFER_PER_YR = 0.019;      // payout per RA dollar rises ~1.9%/yr of deferral (table: S$2,380 at 70)
+const CPF_ESCALATING_START = 0.80;        // Escalating Plan starts ~20% lower ...
+const CPF_ESCALATING_GROWTH = 0.02;       // ... and rises 2% a year
+const CPF_MIN_WITHDRAWAL = 5000;          // withdrawable at 55 even if the retirement sum isn't met
+const DOWNGRADE_COSTS = 0.03;             // selling + buying costs, % of sale price
+
+function cpfTargets(inp) {
+    // Retirement sums are fixed in the year you turn 55: S$220,400 FRS for the 2026 cohort, grown yearly
+    const frs = DEFAULTS.frs2026 * Math.pow(1 + inp.cpf.frsGrowth, DEFAULTS.cpfUnlockAge - inp.currentAge);
+    return { frs, brs: frs / 2, target: inp.cpf.pledge ? frs / 2 : frs };
+}
+
+function cpfLifeMonthly(raBalance, inp) {
+    const defer = Math.max(0, inp.cpf.lifeAge - 65);
+    let p = raBalance * CPF_LIFE_RATE_65 * (1 + CPF_LIFE_DEFER_PER_YR * defer);
+    if (inp.cpf.lifePlan === 'escalating') p *= CPF_ESCALATING_START;
+    return p;
+}
+
+function simulatePath(inp, opts = {}) {
     const g = inp.glob, s = inp.sg, c = inp.cash, cpf = inp.cpf, m = inp.mortgage;
-    const currentAge = inp.currentAge, retireAge = inp.retireAge;
-
-    let glob = g.start, sg = s.start, cash = c.start;
-    let oa = cpf.oaStart, sa = cpf.hasSA ? cpf.saStart : 0;
-    let fx = g.isUSD ? g.fx : 1;
-    let priceIdx = 1, contribIdx = 1;
-    let cpfUnlocked = currentAge >= cpf.unlockAge;
-
-    let remPrincipal = m.has ? m.principal : 0;
+    const currentAge = inp.currentAge;
+    const startAge = opts.startAge !== undefined ? opts.startAge : currentAge;
+    const retireAge = opts.retireAge !== undefined ? opts.retireAge : inp.retireAge;
+    const record = opts.record !== false;
+    const recordStates = !!opts.recordStates;
+    const stopOnFail = !!opts.stopOnFail;
+    const T = cpfTargets(inp);
     const mortgageEndAge = currentAge + (m.has ? m.years : 0);
 
-    const path = [];
-    let solvent = true, depletionAge = null, peakLiquid = 0, totalShortfall = 0;
+    const st = opts.state ? Object.assign({}, opts.state) : {
+        glob: g.start, sg: s.start, cash: c.start,
+        oa: cpf.oaStart, sa: cpf.hasSA ? cpf.saStart : 0, ra: 0,
+        rem: m.has ? m.principal : 0,
+        at55: false, lifeOn: false, lifePay: 0, lifeStart: 0
+    };
 
-    const liquidOf = () => cash + sg + glob * fx + (cpfUnlocked ? oa + sa : 0);
-    const lockedOf = () => (cpfUnlocked ? 0 : oa + sa);
+    const path = [], states = [];
+    let solvent = true, depletionAge = null, peakLiquid = 0, totalShortfall = 0;
+    let fx = 1;
+
+    const liquidOf = () => st.cash + st.sg + st.glob * fx + (st.at55 ? st.oa : 0);
+    const lockedOf = () => (st.at55 ? st.ra : st.oa + st.sa);
     const flagDepletion = age => { if (solvent) { solvent = false; depletionAge = age; } };
 
     // Proportional withdrawal across all liquid buckets. Returns any unpaid amount.
@@ -962,84 +1025,135 @@ function simulatePath(inp) {
         if (total <= 0) return amount;
         const take = Math.min(amount, total);
         const keep = 1 - take / total;
-        cash *= keep; sg *= keep; glob *= keep;
-        if (cpfUnlocked) { oa *= keep; sa *= keep; }
+        st.cash *= keep; st.sg *= keep; st.glob *= keep;
+        if (st.at55) st.oa *= keep;
         return amount - take;
     };
 
-    for (let age = currentAge; age <= 100; age++) {
-        if (age > currentAge) {
-            priceIdx *= (1 + inp.inflation);
-            contribIdx *= (1 + inp.inflation) * (1 + inp.realContribGrowth);
-            if (g.isUSD) fx *= (1 + g.fxDrift);
+    // CPF at 55: SA first, then OA, into the RA up to the target; the rest is withdrawable
+    const doCpf55 = () => {
+        const total = st.sa + st.oa;
+        // Full (or Basic, with a pledge) sum met: everything above it is available.
+        // Not met: up to S$5,000 is still available.
+        const released = total >= T.target ? total - T.target : Math.min(total, CPF_MIN_WITHDRAWAL);
+        st.ra += total - released;
+        st.oa = released;
+        st.sa = 0;
+        st.at55 = true;
+    };
+
+    // Money into CPF after 55 (e.g. a downgrade refund): RA up to the target, the rest withdrawable
+    const toCpf = amt => {
+        if (!st.at55) { st.oa += amt; return; }
+        const room = st.lifeOn ? 0 : Math.max(0, T.target - st.ra);
+        const toRA = Math.min(room, amt);
+        st.ra += toRA;
+        st.oa += amt - toRA;
+    };
+
+    for (let age = startAge; age <= 100; age++) {
+        const yrs = age - currentAge;
+        const priceIdx = Math.pow(1 + inp.inflation, yrs);
+        const contribIdx = Math.pow((1 + inp.inflation) * (1 + inp.realContribGrowth), yrs);
+        fx = g.isUSD ? g.fx * Math.pow(1 + g.fxDrift, yrs) : 1;
+
+        if (cpf.has && !st.at55 && age >= DEFAULTS.cpfUnlockAge) doCpf55();
+        if (cpf.has && st.at55 && !st.lifeOn && age >= cpf.lifeAge && st.ra > 0) {
+            st.lifePay = cpfLifeMonthly(st.ra, inp);
+            st.lifeStart = age;
+            st.lifeOn = true;
+            st.ra = 0;
         }
-        if (!cpfUnlocked && age >= cpf.unlockAge) cpfUnlocked = true;
 
         const isWorking = age < retireAge;
-        const mortgageActive = m.has && age < mortgageEndAge && remPrincipal > 0.5;
+        const mortgageActive = m.has && age < mortgageEndAge && st.rem > 0.5;
         const phase = isWorking ? 1 : (mortgageActive ? 2 : 3);
+        const lifeNow = st.lifeOn ? st.lifePay * (inp.cpf.lifePlan === 'escalating' ? Math.pow(1 + CPF_ESCALATING_GROWTH, age - st.lifeStart) : 1) : 0;
 
         // Day 1 anchor: record before anything happens this year
         const liquidNow = liquidOf();
-        path.push({ age, liquid: Math.max(0, liquidNow), locked: lockedOf(), phase });
-        if (liquidNow > peakLiquid) peakLiquid = liquidNow;
+        if (recordStates) states.push(Object.assign({}, st));
+        if (record) {
+            path.push({ age, liquid: Math.max(0, liquidNow), locked: lockedOf(), phase, rem: st.rem, lifePay: lifeNow, short: 0 });
+            if (liquidNow > peakLiquid) peakLiquid = liquidNow;
+        }
         if (age === 100) break;
+        let yearShort = 0;
 
-                // R7: money coming in (income streams, windfalls) is saved the way you already save:
-        // split across Global / Singapore / cash in proportion to your monthly contributions.
-        // If all contributions are zero, it goes to cash.
+        // R7: money coming in is saved the way you already save (split by monthly contributions)
         const depositSplit = amountSGD => {
             const wG = g.contrib * fx, wS = s.contrib, wC = c.contrib;
             const tot = wG + wS + wC;
-            if (tot <= 0) { cash += amountSGD; return; }
-            glob += (amountSGD * wG / tot) / fx;
-            sg += amountSGD * wS / tot;
-            cash += amountSGD * wC / tot;
+            if (tot <= 0) { st.cash += amountSGD; return; }
+            st.glob += (amountSGD * wG / tot) / fx;
+            st.sg += amountSGD * wS / tot;
+            st.cash += amountSGD * wC / tot;
+        };
+        const payOut = amount => {
+            const unpaid = withdraw(amount);
+            if (unpaid > 0.5) { flagDepletion(age); totalShortfall += unpaid; yearShort += unpaid; }
         };
 
-        // Windfalls and one-off expenses (today's SGD, inflation-indexed) at the start of the year
+        // One-off events at the start of the year (today's SGD, inflation-indexed)
         inp.milestones.forEach(ms => {
             if (ms.age !== age) return;
+            if (ms.type === 'downgrade') {
+                // R22: sell, repay your share of the loan, refund CPF used (+2.5%/yr), buy the new home outright
+                const sale = ms.sale * priceIdx;
+                const newHome = ms.newHome * priceIdx;
+                const costs = DOWNGRADE_COSTS * sale;
+                const loan = m.has ? st.rem * m.share : 0;
+                if (m.has) st.rem = 0;
+                const refund = cpf.has ? Math.min(ms.cpfUsed * Math.pow(1 + cpf.oaRate, yrs), Math.max(0, sale - loan)) : 0;
+                if (refund > 0) toCpf(refund);
+                const net = sale - costs - loan - refund - newHome;
+                if (net > 0) depositSplit(net); else if (net < 0) payOut(-net);
+                return;
+            }
             const v = ms.amt * priceIdx;
             if (v > 0) depositSplit(v);
-            else if (v < 0) {
-                const unpaid = withdraw(-v);
-                if (unpaid > 0.5) { flagDepletion(age); totalShortfall += unpaid; }
-            }
+            else if (v < 0) payOut(-v);
         });
 
         // R9: bank loans in Advanced mode reprice to the long-run rate after the lock-in period
-        const yearRate = (m.twoStage && (age - currentAge) >= m.lockYrs) ? m.rateLong : m.rate;
-        const monthlyPmt = mortgageActive ? calcPmt(remPrincipal, yearRate, mortgageEndAge - age) : 0;
+        const mortActiveNow = m.has && age < mortgageEndAge && st.rem > 0.5;
+        const yearRate = (m.twoStage && yrs >= m.lockYrs) ? m.rateLong : m.rate;
+        const monthlyPmt = mortActiveNow ? calcPmt(st.rem, yearRate, mortgageEndAge - age) : 0;
         const personalPmt = monthlyPmt * m.share;
         const monthlySpend = isWorking ? 0 : inp.expenses * priceIdx * (inp.expenseShare / 100);
-        let monthlyIncome = 0;
-        inp.incomeStreams.forEach(st => {
-            if (age >= st.start && age <= st.end) monthlyIncome += st.amt * (st.fixed ? 1 : priceIdx);
+        let monthlyIncome = lifeNow;
+        inp.incomeStreams.forEach(sm => {
+            if (age >= sm.start && age <= sm.end) monthlyIncome += sm.amt * (sm.fixed ? 1 : priceIdx);
         });
 
         for (let mo = 1; mo <= 12; mo++) {
-            glob *= 1 + g.ret / 12;
-            sg *= 1 + s.ret / 12;
-            cash *= 1 + c.yield / 12;
-            oa *= 1 + cpf.oaRate / 12;
-            sa *= 1 + cpf.saRate / 12;
+            st.glob *= 1 + g.ret / 12;
+            st.sg *= 1 + s.ret / 12;
+            st.cash *= 1 + c.yield / 12;
+            st.oa *= 1 + cpf.oaRate / 12;
+            st.sa *= 1 + cpf.saRate / 12;
+            st.ra *= 1 + cpf.saRate / 12;
 
             if (isWorking) {
-                glob += g.contrib * contribIdx;   // in the Global bucket's own currency
-                sg += s.contrib * contribIdx;
-                cash += c.contrib * contribIdx;
-                oa += cpf.oaContrib * contribIdx;
-                if (cpf.hasSA) sa += cpf.saContrib * contribIdx;
+                st.glob += g.contrib * contribIdx;   // in the Global bucket's own currency
+                st.sg += s.contrib * contribIdx;
+                st.cash += c.contrib * contribIdx;
+                if (!st.at55) {
+                    st.oa += cpf.oaContrib * contribIdx;
+                    if (cpf.hasSA) st.sa += cpf.saContrib * contribIdx;
+                } else {
+                    st.oa += cpf.oaContrib * contribIdx;
+                    if (cpf.hasSA) toCpf(cpf.saContrib * contribIdx);   // SA share now goes to the RA until the target is met
+                }
             }
 
             let need = monthlySpend;
-            if (monthlyPmt > 0 && remPrincipal > 0) {
-                const interest = remPrincipal * yearRate / 12;
-                remPrincipal = Math.max(0, remPrincipal - (monthlyPmt - interest));
+            if (monthlyPmt > 0 && st.rem > 0) {
+                const interest = st.rem * yearRate / 12;
+                st.rem = Math.max(0, st.rem - (monthlyPmt - interest));
                 const oaTarget = (isWorking && !m.payWithOA) ? Math.min(m.customOACap, personalPmt) : personalPmt;
-                const fromOA = Math.min(Math.max(0, oa), oaTarget);
-                oa -= fromOA;
+                const fromOA = Math.min(Math.max(0, st.oa), oaTarget);
+                st.oa -= fromOA;
                 // While working, any cash top-up comes out of salary (excluded from the savings inputs).
                 // In retirement, it is drawn from liquid wealth.
                 if (!isWorking) need += personalPmt - fromOA;
@@ -1047,59 +1161,105 @@ function simulatePath(inp) {
 
             const net = need - monthlyIncome;
             if (net < 0) depositSplit(-net);
-            else if (net > 0) {
-                const unpaid = withdraw(net);
-                if (unpaid > 0.5) { flagDepletion(age); totalShortfall += unpaid; }
-            }
+            else if (net > 0) payOut(net);
         }
+        if (record && yearShort > 0) path[path.length - 1].short = yearShort;
+        if (stopOnFail && !solvent) break;
     }
 
-    const recoveredAfterUnlock = depletionAge !== null && depletionAge < cpf.unlockAge &&
-        path.some(p => p.age >= cpf.unlockAge && p.liquid > 1);
+    // Ran out before 55 but CPF covers spending from 55 onwards (a bridging gap, not a lifelong shortfall)
+    const recoveredAfterUnlock = depletionAge !== null && depletionAge < DEFAULTS.cpfUnlockAge &&
+        path.length > 0 && path[path.length - 1].age === 100 &&
+        path.filter(p => p.age >= DEFAULTS.cpfUnlockAge).every(p => p.short === 0);
+    const lifeEntry = path.find(p => p.lifePay > 0);
 
-    return { path, solvent, depletionAge, peakLiquid, totalShortfall, recoveredAfterUnlock };
+    return { path, states, solvent, depletionAge, peakLiquid, totalShortfall, recoveredAfterUnlock,
+             cpfLifeMonthly: lifeEntry ? lifeEntry.lifePay : 0, cpfLifeAge: lifeEntry ? lifeEntry.age : null, targets: T };
 }
 
 // SGD-equivalent return of the Global bucket
 function sgdReturnOfGlobal(g) { return g.isUSD ? (1 + g.ret) * (1 + g.fxDrift) - 1 : g.ret; }
 
 // -----------------------------------------------------------------------------
-// Finish line (interim V5 method — replaced by the simulation-derived
-// finish line, Option C, in the SWR batch)
+// R8: Earliest age you could stop working and still last to 100
 // -----------------------------------------------------------------------------
-function buildFinishLine(inp) {
-    const gSGD = inp.glob.start * (inp.glob.isUSD ? inp.glob.fx : 1);
-    const parts = [
-        [gSGD, sgdReturnOfGlobal(inp.glob)],
-        [inp.sg.start, inp.sg.ret],
-        [inp.cash.start, inp.cash.yield],
-        [inp.cpf.oaStart, inp.cpf.oaRate],
-        [inp.cpf.hasSA ? inp.cpf.saStart : 0, inp.cpf.saRate]
-    ];
-    const total = parts.reduce((a, p) => a + p[0], 0);
-    const nomRet = total > 0 ? parts.reduce((a, p) => a + p[0] * p[1], 0) / total : sgdReturnOfGlobal(inp.glob);
-    const realRet = (1 + nomRet) / (1 + inp.inflation) - 1;
-    const duration = Math.max(1, 100 - inp.retireAge);
-    const multiple = Math.abs(realRet) < 0.0001 ? duration : (1 - Math.pow(1 + realRet, -duration)) / realRet;
-
-    const curve = [];
-    let targetAtRetirement = 0;
-    const m = inp.mortgage;
-    const pmt = m.has ? calcPmt(m.principal, m.rate, m.years) : 0;
-    for (let age = inp.currentAge; age <= 100; age++) {
-        const yrs = age - inp.currentAge;
-        const annualSpend = inp.expenses * Math.pow(1 + inp.inflation, yrs) * (inp.expenseShare / 100) * 12;
-        let remPrincipal = 0;
-        if (m.has && age < inp.currentAge + m.years) {
-            const n = (inp.currentAge + m.years - age) * 12;
-            const r = m.rate / 12;
-            remPrincipal = r === 0 ? pmt * n : (pmt / r) * (1 - Math.pow(1 + r, -n));
-        }
-        const target = annualSpend * multiple + remPrincipal * m.share;
-        if (age === inp.retireAge) targetAtRetirement = target;
-        curve.push(target);
+const FREEDOM_SEARCH_MAX_AGE = 85;
+function earliestFreedomAge(inp) {
+    for (let a = inp.currentAge; a <= FREEDOM_SEARCH_MAX_AGE; a++) {
+        if (simulatePath(inp, { retireAge: a, record: false, stopOnFail: true }).solvent) return a;
     }
-    return { curve, targetAtRetirement, multiple, realRet, duration };
+    return null;
+}
+
+// -----------------------------------------------------------------------------
+// R8: Finish line (Option C). Smallest liquid wealth at `age` that lasts to 100
+// if you stop working at that age, keeping your projected asset mix, CPF and
+// remaining mortgage at that age. Locked CPF is not scaled.
+// -----------------------------------------------------------------------------
+function requiredCapitalAt(inp, states, age, hint) {
+    const idx = age - inp.currentAge;
+    const st0 = states[idx];
+    if (!st0) return null;
+    const g = inp.glob;
+    const fx = g.isUSD ? g.fx * Math.pow(1 + g.fxDrift, idx) : 1;
+    const parts = { cash: st0.cash, sg: st0.sg, glob: st0.glob * fx, oa: st0.at55 ? st0.oa : 0 };
+    const L0 = parts.cash + parts.sg + parts.glob + parts.oa;
+    const w = L0 > 1
+        ? { cash: parts.cash / L0, sg: parts.sg / L0, glob: parts.glob / L0, oa: parts.oa / L0 }
+        : { cash: 0, sg: 0, glob: 1, oa: 0 };
+    const test = L => {
+        const st = Object.assign({}, st0, {
+            cash: w.cash * L, sg: w.sg * L, glob: (w.glob * L) / fx,
+            oa: st0.at55 ? w.oa * L : st0.oa
+        });
+        return simulatePath(inp, { startAge: age, retireAge: age, state: st, record: false, stopOnFail: true }).solvent;
+    };
+    if (test(0)) return 0;
+    const annualSpend = inp.expenses * inp.expenseShare / 100 * 12 * Math.pow(1 + inp.inflation, idx);
+    let lo = 0, hi = (hint && hint > 0) ? hint * 1.05 : Math.max(100000, annualSpend * 40 + st0.rem);
+    if (hint && hint > 0) {
+        if (!test(hi)) { lo = hi; hi *= 1.5; }
+        else if (test(hint * 0.95)) hi = hint * 0.95;
+        else lo = hint * 0.95;
+    }
+    let guard = 0;
+    while (!test(hi) && guard < 25) { lo = hi; hi *= 2; guard++; }
+    if (guard >= 25) return null;
+    for (let i = 0; i < 40; i++) {
+        const mid = (lo + hi) / 2;
+        if (test(mid)) hi = mid; else lo = mid;
+        if (hi - lo < Math.max(500, hi * 0.004)) break;
+    }
+    return hi;
+}
+
+function annualSpendAt(inp, age) {
+    return inp.expenses * inp.expenseShare / 100 * 12 * Math.pow(1 + inp.inflation, age - inp.currentAge);
+}
+
+function buildFinishLine(inp, base) {
+    const curve = [];
+    let prev = null;
+    for (let age = inp.currentAge; age <= 100; age++) {
+        let req = requiredCapitalAt(inp, base.states, age, prev);
+        prev = req;
+        if (req !== null && inp.swr.override && inp.swr.rate > 0) {
+            const st = base.states[age - inp.currentAge];
+            const remShare = st ? st.rem * inp.mortgage.share : 0;
+            req = Math.max(req, annualSpendAt(inp, age) / inp.swr.rate + remShare);
+        }
+        curve.push(req);
+    }
+    return curve;
+}
+
+// R8: the withdrawal rate your plan supports at your target financial freedom age
+function computeSwr(inp, base) {
+    const R = inp.retireAge;
+    if (R < inp.currentAge || R >= 100) return null;
+    const required = requiredCapitalAt(inp, base.states, R);
+    const annualSpend = annualSpendAt(inp, R);
+    return { age: R, years: 100 - R, required, annualSpend, rate: (required && required > 0) ? annualSpend / required : null };
 }
 
 // -----------------------------------------------------------------------------
@@ -1115,6 +1275,9 @@ const WARN_TEXT = {
     mortHigh: 'Note: This is high for Singapore. Average mortgage rates peaked at about 4.7% in late 2023, and averaged 2.0%–3.2% over the 5 to 20 years to Q2 2026. HDB concessionary loans are 2.6%.',
     mortLow: "Note: This is optimistic. Average mortgage rates in Singapore haven't been below about 1.0% in the 20 years to Q2 2026 (the low point, about 1.04%, was around 2012–2014).",
     longLow: 'Note: Optimistic for a long-run rate. Average mortgage rates were about 2.0% over the 15 and 20 years to Q2 2026, and about 2.5% over the last 10.',
+    swrHigh: 'Above the widely cited ~4% guideline for a 30-year retirement. A run of poor market returns early in retirement could drain your savings faster than this projection shows.',
+    swrLow: 'Very conservative. You may be planning to work years longer than you need to.',
+    lifeAge: 'CPF LIFE payouts can start between 65 and 70. The engine uses the nearest allowed age.',
     retireEarly: 'Note: Extreme early financial freedom requires massive savings rates and exposes your capital to 50+ years of sequence-of-returns risk.'
 };
 
@@ -1147,6 +1310,13 @@ function checkInputWarnings(inp) {
     setWarn('inp-mortgageRate', [[gt('inp-mortgageRate', 5.0), WARN_TEXT.mortHigh], [lt('inp-mortgageRate', 1.0) && v('inp-mortgageRate') > 0, WARN_TEXT.mortLow]]);
     setWarn('inp-mortgageRateLong', [[gt('inp-mortgageRateLong', 5.0), WARN_TEXT.mortHigh], [lt('inp-mortgageRateLong', 1.5), WARN_TEXT.longLow]]);
     setWarn('inp-retireAge', [[lt('inp-retireAge', 40) && v('inp-retireAge') > 0, WARN_TEXT.retireEarly]]);
+    // R8: SWR override thresholds (only when the override is on)
+    const ovr = isChecked('inp-swrOverride');
+    setWarn('inp-swrRate', [
+        [ovr && gt('inp-swrRate', 4.5), WARN_TEXT.swrHigh],
+        [ovr && lt('inp-swrRate', 2.5) && v('inp-swrRate') > 0, WARN_TEXT.swrLow]
+    ]);
+    setWarn('inp-lifeAge', [[(lt('inp-lifeAge', 65) || gt('inp-lifeAge', 70)), WARN_TEXT.lifeAge]]);
 
     // Cash buffer guardrails (roadmap item 5): only while still working, only once cash is entered
     const buf = cashBufferMonths(inp);
@@ -1228,6 +1398,13 @@ function setStatus(cls, main, sub) {
     updateDOM('status-sub', sub);
 }
 
+function setLine(id, text) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (text) { el.innerText = text; el.style.display = 'block'; }
+    else el.style.display = 'none';
+}
+
 function getChartView() {
     const r = document.querySelector('input[name="chartView"]:checked');
     return r ? r.value : 'today';
@@ -1236,12 +1413,31 @@ function setChartView(v) {
     document.querySelectorAll('input[name="chartView"]').forEach(r => { r.checked = (r.value === v); });
 }
 
+// Heavier work (finish line, what-ifs) waits until typing pauses
+let simTimer = null;
 function runSim() {
     if (isLoading) return;
+    clearTimeout(simTimer);
+    const heavy = (getMode() !== 'simple' && isChecked('inp-showFireCurve')) || scenarios.length > 0;
+    if (heavy) simTimer = setTimeout(runSimNow, 120);
+    else runSimNow();
+}
+
+function freedomLine(inp, age) {
+    if (age === null) return `🏁 Even working until ${FREEDOM_SEARCH_MAX_AGE} isn't enough at your current pace. Try the tweaks below.`;
+    if (age < inp.retireAge) { const d = inp.retireAge - age; return `🏁 You could stop working at age ${age}, ${d} year${d === 1 ? '' : 's'} before your target.`; }
+    if (age === inp.retireAge) return `🏁 You'll have enough to stop working at age ${age}, right on target.`;
+    return `🏁 At your current pace, you'll have enough to stop working at age ${age}.`;
+}
+
+function runSimNow() {
+    if (isLoading) return;
+    clearTimeout(simTimer);
 
     const inp = collectInputs();
     checkInputWarnings(inp);
     updateMortgageReadout(inp);
+    detectPreset();
 
     const essentials = getEssentials(inp);
     updateRequiredUI(essentials);
@@ -1255,15 +1451,18 @@ function runSim() {
         updateDOM('status-main', `⏳ ${done} of ${essentials.length} essentials entered`);
         updateDOM('status-sub', 'Still needed: ' + missing.map(e => e.label).join('; ') + '.');
         if (assumptionsLine) assumptionsLine.style.display = 'none';
+        setLine('status-fi', ''); setLine('status-cpf', '');
         const panel = document.getElementById('coaching-panel'); if (panel) panel.style.display = 'none';
+        renderScenarioPanel([]);
+        updateSwrUI(inp, null);
         renderChart([], [], null);
         saveState();
         return;
     }
 
-    const res = simulatePath(inp);
-    const fl = buildFinishLine(inp);
-    const labels = res.path.map(p => p.age);
+    const base = simulatePath(inp, { recordStates: true });
+    const freedomAge = earliestFreedomAge(inp);
+    const labels = base.path.map(p => p.age);
 
     // Today's Dollars: divide each point by cumulative inflation since today (roadmap item 2)
     const today = inp.chartView === 'today';
@@ -1272,13 +1471,13 @@ function runSim() {
 
     // Phase-segmented liquid wealth lines
     const p1 = [], p2 = [], p3 = [];
-    res.path.forEach((pt, i) => {
+    base.path.forEach((pt, i) => {
         const val = adj(pt.liquid, i);
         p1.push(pt.phase === 1 ? val : null);
         p2.push(pt.phase === 2 ? val : null);
         p3.push(pt.phase === 3 ? val : null);
         if (i > 0) {
-            const prev = res.path[i - 1].phase;
+            const prev = base.path[i - 1].phase;
             if (pt.phase === 2 && prev === 1) p1[i] = val;
             if (pt.phase === 3 && prev === 2) p2[i] = val;
             if (pt.phase === 3 && prev === 1) p1[i] = val;
@@ -1291,56 +1490,288 @@ function runSim() {
         { label: 'Debt-Free Retirement', data: p3, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.2, spanGaps: true, pointStyle: 'rect' }
     ];
 
-    // Locked CPF (separate dashed line until unlock)
-    const lockedData = res.path.map((p, i) => (p.locked > 0 ? adj(p.locked, i) : null));
+    // Locked CPF: OA + SA before 55, then the Retirement Account until CPF LIFE starts
+    const lockedData = base.path.map((p, i) => (p.locked > 0.5 ? adj(p.locked, i) : null));
     const hasLocked = lockedData.some(v => v !== null);
     if (hasLocked) {
-        datasets.push({ label: 'CPF (locked until 55)', data: lockedData, borderColor: '#64748b', borderDash: [6, 4], fill: false, tension: 0.2, pointRadius: 0, borderWidth: 2, pointStyle: 'line' });
-    }
-    if (inp.showFireCurve) {
-        datasets.push({ label: 'Financial Freedom Target (The Finish Line)', data: fl.curve.map(adj), borderColor: '#ef4444', borderDash: [2, 4], fill: false, tension: 0.2, pointRadius: 0, borderWidth: 1.5, pointStyle: 'line' });
+        datasets.push({ label: 'CPF (locked: OA/SA, then Retirement Account)', data: lockedData, borderColor: '#64748b', borderDash: [6, 4], fill: false, tension: 0.2, pointRadius: 0, borderWidth: 2, pointStyle: 'line' });
     }
 
+    // R8: simulation-based finish line
+    if (inp.showFireCurve) {
+        const curve = buildFinishLine(inp, base);
+        datasets.push({ label: 'Financial Freedom Target (The Finish Line)', data: curve.map(adj), borderColor: '#ef4444', borderDash: [2, 4], fill: false, tension: 0.2, pointRadius: 0, borderWidth: 1.5, pointStyle: 'line' });
+    }
+
+    // R11: what-if lines
+    const scenResults = computeScenarios(inp, base, freedomAge);
+    scenResults.slice(1).forEach((r, k) => {
+        datasets.push({ label: 'What-if: ' + r.label, data: r.path.map((p, i) => adj(p.liquid, i)), borderColor: SCEN_COLORS[k], borderDash: [8, 5], fill: false, tension: 0.2, pointRadius: 0, borderWidth: 2.5, pointStyle: 'line' });
+    });
+
     // Status card
-    if (res.solvent) {
-        const finalBal = res.path[res.path.length - 1].liquid;
+    if (base.solvent) {
+        const finalBal = base.path[base.path.length - 1].liquid;
         const pvBal = finalBal / Math.pow(1 + inp.inflation, 100 - inp.currentAge);
         setStatus('success', '✅ Financial Independence Secured to Age 100',
             `Est. remaining wealth at 100: ${moneyM(finalBal)} (worth ~${moneyM(pvBal)} in today's dollars)`);
-    } else if (res.recoveredAfterUnlock) {
-        const gap = DEFAULTS.cpfUnlockAge - res.depletionAge;
+    } else if (base.recoveredAfterUnlock) {
+        const gap = DEFAULTS.cpfUnlockAge - base.depletionAge;
         setStatus('danger', '⚠️ Adjustments Needed',
-            `Your cash and investments run out at age ${res.depletionAge}, ${gap} year${gap === 1 ? '' : 's'} before your CPF unlocks at 55. You need enough outside CPF to bridge that gap.`);
-    } else if (res.depletionAge >= 90) {
-        setStatus('warning', '🐢 Almost There', `Funds deplete at age ${res.depletionAge}. A small tweak will get you to 100.`);
+            `Your cash and investments run out at age ${base.depletionAge}, ${gap} year${gap === 1 ? '' : 's'} before your CPF becomes available at 55. You need enough outside CPF to bridge that gap.`);
+    } else if (base.depletionAge >= 90) {
+        setStatus('warning', '🐢 Almost There', `Funds deplete at age ${base.depletionAge}. A small tweak will get you to 100.`);
     } else {
-        setStatus('danger', '⚠️ Adjustments Needed', `Funds deplete at age ${res.depletionAge}. Try investing a bit more or delaying financial freedom.`);
+        setStatus('danger', '⚠️ Adjustments Needed', `Funds deplete at age ${base.depletionAge}. Try investing a bit more or delaying financial freedom.`);
     }
+    setLine('status-fi', freedomLine(inp, freedomAge));
+    if (inp.cpf.has && base.cpfLifeMonthly > 0) {
+        const pv = base.cpfLifeMonthly / Math.pow(1 + inp.inflation, base.cpfLifeAge - inp.currentAge);
+        const esc = inp.cpf.lifePlan === 'escalating' ? ', rising 2% a year' : '';
+        setLine('status-cpf', `🧓 CPF LIFE pays about ${money(base.cpfLifeMonthly)}/month from age ${base.cpfLifeAge}${esc} (about ${money(pv)} in today's dollars).`);
+    } else setLine('status-cpf', '');
 
     // Simple mode: disclose hidden assumptions under the result
     if (assumptionsLine) {
         if (inp.mode === 'simple') {
-            assumptionsLine.innerText = `Assumes ${DEFAULTS.inflation}% inflation, ${DEFAULTS.cashYield}% cash yield${inp.cpf.has ? ` and CPF floor rates (OA ${DEFAULTS.oaRate}%, SA ${DEFAULTS.saRate}%)` : ''}. Change these in Advanced.`;
+            const cpfTxt = inp.cpf.has ? `, CPF floor rates (OA ${DEFAULTS.oaRate}%, SA/RA ${DEFAULTS.saRate}%) and CPF LIFE Standard Plan from 65` : '';
+            assumptionsLine.innerText = `Assumes ${DEFAULTS.inflation}% inflation, ${DEFAULTS.cashYield}% cash yield${cpfTxt}. Change these in Advanced.`;
             assumptionsLine.style.display = 'block';
         } else {
             assumptionsLine.style.display = 'none';
         }
     }
 
-    // Coaching is switched off while an example plan is showing
+    updateSwrUI(inp, inp.isAdvanced ? computeSwr(inp, base) : null);
+
+    // Coaching and what-ifs are switched off while an example plan is showing
     if (exampleState) {
         const panel = document.getElementById('coaching-panel'); if (panel) panel.style.display = 'none';
+        renderScenarioPanel([]);
     } else {
-        generateCoaching(inp, res.solvent);
+        generateCoaching(inp, base.solvent);
+        renderScenarioPanel(scenResults);
     }
-    renderChart(labels, datasets, inp, hasLocked);
+    renderChart(labels, datasets, inp, hasLocked, base);
     saveState();
 }
 
 // -----------------------------------------------------------------------------
+// R8: Safe withdrawal rate display
+// -----------------------------------------------------------------------------
+function updateSwrUI(inp, info) {
+    const inpRate = document.getElementById('inp-swrRate');
+    if (inpRate) inpRate.disabled = !isChecked('inp-swrOverride');
+    if (!info) { updateDOM('swr-readout', '—'); updateDOM('swr-note', inp && inp.isAdvanced ? '' : ''); return; }
+    if (info.required === 0) {
+        updateDOM('swr-readout', 'Not needed');
+        updateDOM('swr-note', `Your CPF LIFE payouts and income streams cover your spending from age ${info.age}, so no invested savings are needed at that point.`);
+        return;
+    }
+    if (info.required === null || info.rate === null) {
+        updateDOM('swr-readout', 'Not reachable');
+        updateDOM('swr-note', 'No amount of savings at that age keeps the plan going to 100. Check your one-off expenses and income streams.');
+        return;
+    }
+    const pct = info.rate * 100;
+    updateDOM('swr-readout', pct.toFixed(2) + '%');
+    let note = `First-year spending of ${money(info.annualSpend)} ÷ ${money(info.required)} needed at age ${info.age} (future dollars). `;
+    if (pct > 4) {
+        const why = [`your money only needs to last ${info.years} years`];
+        if (inp.cpf.has) why.push('CPF LIFE income from ' + inp.cpf.lifeAge + ' covers part of your spending');
+        if (inp.incomeStreams.length) why.push('your income streams help');
+        note += 'Higher than the 4% rule of thumb because ' + why.join(', and ') + '.';
+    } else if (pct < 3) {
+        note += `Lower than the 4% rule of thumb because your money needs to last ${info.years} years${info.age < DEFAULTS.cpfUnlockAge ? ' and you have to bridge the years before CPF is available' : ''}.`;
+    } else note += 'In line with common 3–4% guidelines.';
+    updateDOM('swr-note', note);
+}
+
+// -----------------------------------------------------------------------------
+// R16: Assumption presets (Advanced)
+// -----------------------------------------------------------------------------
+const PRESETS = {
+    cautious:   { label: 'Cautious',   inflation: 3.0, globalRetSGD: 5.0, globalRetUSD: 5.5, sgRet: 4.5, cashYield: 1.0, mortgageRateLong: 3.0 },
+    balanced:   { label: 'Balanced',   inflation: 2.5, globalRetSGD: 6.5, globalRetUSD: 7.0, sgRet: 6.0, cashYield: 1.5, mortgageRateLong: 2.5 },
+    optimistic: { label: 'Optimistic', inflation: 2.0, globalRetSGD: 7.5, globalRetUSD: 8.0, sgRet: 7.0, cashYield: 2.0, mortgageRateLong: 2.0 }
+};
+
+function presetChanges(name) {
+    const p = PRESETS[name];
+    return [
+        { id: 'inp-inflation', val: p.inflation },
+        { id: 'inp-globalRet', val: globalCcyState === 'USD' ? p.globalRetUSD : p.globalRetSGD },
+        { id: 'inp-sgRet', val: p.sgRet },
+        { id: 'inp-cashYield', val: p.cashYield },
+        { id: 'inp-mortgageRateLong', val: p.mortgageRateLong }
+    ];
+}
+
+window.applyPreset = function (name) {
+    if (!PRESETS[name]) return;
+    presetChanges(name).forEach(ch => setVal(ch.id, ch.val.toFixed(1)));
+    runSim();
+};
+
+function detectPreset() {
+    let match = null;
+    Object.keys(PRESETS).forEach(name => {
+        const ok = presetChanges(name).every(ch => {
+            const v = readNum(ch.id);
+            return v !== null && Math.abs(v - ch.val) < 0.001;
+        });
+        if (ok) match = name;
+    });
+    setRadio('preset', match || '__none');
+    const custom = document.getElementById('preset-custom');
+    if (custom) custom.style.display = match ? 'none' : 'inline-block';
+}
+
+// -----------------------------------------------------------------------------
+// R11: What-if scenarios (previews only; not saved; cleared when your plan changes)
+// -----------------------------------------------------------------------------
+const SCEN_COLORS = ['#7c3aed', '#db2777'];
+let scenarios = [];          // [{ label, changes: [{ id, val }] }]
+let scenarioSig = null;      // signature of your plan when the what-ifs were made
+
+const SCEN_FIELDS = {
+    'inp-retireAge':      { label: 'Financial freedom age', set: (i, v) => { i.retireAge = v; } },
+    'inp-expenses':       { label: 'Retirement expenses /mo', set: (i, v) => { i.expenses = v; } },
+    'inp-invContrib':     { label: 'Monthly investments', set: (i, v) => { i.glob.contrib = v; } },
+    'inp-globalContrib':  { label: 'Global investments /mo', set: (i, v) => { i.glob.contrib = v; } },
+    'inp-sgContrib':      { label: 'Singapore investments /mo', set: (i, v) => { i.sg.contrib = v; } },
+    'inp-cashContrib':    { label: 'Cash savings /mo', set: (i, v) => { i.cash.contrib = v; } },
+    'inp-invRet':         { label: 'Portfolio return %', set: (i, v) => { i.glob.ret = v / 100; } },
+    'inp-globalRet':      { label: 'Global return %', set: (i, v) => { i.glob.ret = v / 100; } },
+    'inp-sgRet':          { label: 'Singapore return %', set: (i, v) => { i.sg.ret = v / 100; } },
+    'inp-inflation':      { label: 'Inflation %', set: (i, v) => { i.inflation = v / 100; } },
+    'inp-cashYield':      { label: 'Cash yield %', set: (i, v) => { i.cash.yield = v / 100; } },
+    'inp-mortgageRateLong': { label: 'Long-run mortgage rate %', set: (i, v) => { if (i.mortgage.twoStage) i.mortgage.rateLong = v / 100; } }
+};
+
+function planSignature(inp) {
+    const copy = Object.assign({}, inp, { chartView: null, showFireCurve: null, swr: null });
+    return JSON.stringify(copy);
+}
+
+function scenarioInputs(inp, changes) {
+    const i = structuredClone(inp);
+    changes.forEach(ch => { const f = SCEN_FIELDS[ch.id]; if (f) f.set(i, ch.val); });
+    return i;
+}
+
+function summarise(label, inp, res, freedomAge) {
+    const i65 = 65 - inp.currentAge;
+    const at65 = (i65 >= 0 && res.path[i65]) ? res.path[i65].liquid / Math.pow(1 + inp.inflation, i65) : null;
+    return { label, path: res.path, freedomAge, wealth65: at65, lastsTo: res.solvent ? '100+' : String(res.depletionAge) };
+}
+
+function computeScenarios(inp, base, freedomAge) {
+    if (!scenarios.length) return [];
+    if (planSignature(inp) !== scenarioSig) { scenarios = []; return []; }
+    const out = [summarise('Your plan', inp, base, freedomAge)];
+    scenarios.forEach(sc => {
+        const si = scenarioInputs(inp, sc.changes);
+        const r = simulatePath(si);
+        out.push(summarise(sc.label, si, r, earliestFreedomAge(si)));
+    });
+    return out;
+}
+
+function addScenario(label, changes) {
+    const inp = collectInputs();
+    const max = inp.isAdvanced ? 2 : 1;
+    scenarios.push({ label, changes });
+    while (scenarios.length > max) scenarios.shift();
+    scenarioSig = planSignature(inp);
+    runSimNow();
+    scrollToResult();
+}
+
+window.compareTweak = function (id, val, label) {
+    addScenario(label, [{ id, val }]);
+};
+
+window.applyScenario = function (k) {
+    const sc = scenarios[k];
+    if (!sc) return;
+    sc.changes.forEach(ch => {
+        const el = document.getElementById(ch.id);
+        const decimals = el && el.step && el.step.indexOf('.') !== -1;
+        setVal(ch.id, decimals ? Number(ch.val).toFixed(1) : ch.val);
+    });
+    scenarios = [];
+    runSimNow();
+    scrollToResult();
+};
+
+window.removeScenario = function (k) {
+    scenarios.splice(k, 1);
+    runSimNow();
+};
+
+function renderScenarioPanel(results) {
+    const panel = document.getElementById('scenario-panel');
+    const body = document.getElementById('scen-body');
+    if (!panel || !body) return;
+    if (!results.length) { panel.style.display = 'none'; body.innerHTML = ''; return; }
+    const cell = v => v === null || v === undefined ? '—' : v;
+    body.innerHTML = results.map((r, k) => {
+        const name = k === 0 ? '<strong>Your plan</strong>' : `<span class="scen-swatch" style="background:${SCEN_COLORS[k - 1]}"></span>${escapeHtml(r.label)}`;
+        const actions = k === 0 ? '' : `<button type="button" class="btn-scen-apply" onclick="applyScenario(${k - 1})">Apply</button><button type="button" class="btn-scen-remove" onclick="removeScenario(${k - 1})" aria-label="Remove">✕</button>`;
+        return `<tr><td>${name}</td><td>${cell(r.freedomAge === null ? 'Not by ' + FREEDOM_SEARCH_MAX_AGE : r.freedomAge)}</td><td>${r.wealth65 === null ? '—' : moneyM(r.wealth65)}</td><td>${r.lastsTo}</td><td class="scen-actions">${actions}</td></tr>`;
+    }).join('');
+    panel.style.display = 'block';
+}
+
+// Custom what-if builder (Advanced)
+const BUILDER_FIELDS = ['inp-retireAge', 'inp-expenses', 'inp-globalContrib', 'inp-sgContrib', 'inp-cashContrib', 'inp-globalRet', 'inp-sgRet', 'inp-inflation'];
+
+window.addBuilderRow = function () {
+    const box = document.getElementById('scen-custom-rows');
+    if (!box || box.children.length >= 3) return;
+    const opts = BUILDER_FIELDS.map(id => `<option value="${id}">${SCEN_FIELDS[id].label}</option>`).join('');
+    box.insertAdjacentHTML('beforeend', `
+        <div class="scen-row">
+            <select class="scen-field" onchange="prefillBuilder(this)">${opts}</select>
+            <input type="number" class="scen-val" step="any">
+            <button type="button" class="btn-remove" onclick="this.parentNode.remove()" aria-label="Remove">✕</button>
+        </div>`);
+    prefillBuilder(box.lastElementChild.querySelector('.scen-field'));
+};
+
+window.prefillBuilder = function (sel) {
+    const v = readNum(sel.value);
+    const input = sel.parentNode.querySelector('.scen-val');
+    if (input) input.value = v === null ? '' : v;
+};
+
+window.showCustomScenario = function () {
+    const rows = document.querySelectorAll('#scen-custom-rows .scen-row');
+    const changes = [];
+    rows.forEach(r => {
+        const id = r.querySelector('.scen-field').value;
+        const v = parseFloat(r.querySelector('.scen-val').value);
+        if (Number.isFinite(v)) changes.push({ id, val: v });
+    });
+    if (!changes.length) return;
+    const label = changes.map(ch => `${SCEN_FIELDS[ch.id].label} ${ch.id.includes('Contrib') || ch.id === 'inp-expenses' ? fmt(ch.val) : ch.val}`).join(', ');
+    addScenario(label, changes);
+};
+
+window.quickScenario = function (kind) {
+    if (kind === 'fees') {
+        const cur = rateOr('inp-globalRet', globalDefaultRet(globalCcyState));
+        addScenario('Lower fees (+1.3% return)', [{ id: 'inp-globalRet', val: round2(cur + 1.3) }]);
+    } else if (PRESETS[kind]) {
+        addScenario(PRESETS[kind].label + ' assumptions', presetChanges(kind));
+    }
+};
+
+// -----------------------------------------------------------------------------
 // Chart
 // -----------------------------------------------------------------------------
-function renderChart(labels, datasets, inp, hasLocked = false) {
+function renderChart(labels, datasets, inp, hasLocked = false, base = null) {
     const canvas = document.getElementById('fireChart');
     if (!canvas || typeof Chart === 'undefined') return;
     const ctx = canvas.getContext('2d');
@@ -1356,18 +1787,26 @@ function renderChart(labels, datasets, inp, hasLocked = false) {
                 label: { display: true, content: 'Financial Freedom Age', position: 'start', backgroundColor: '#7c3aed', color: '#fff', font: { size: 11 } }
             };
         }
-        if (hasLocked && inp.currentAge < DEFAULTS.cpfUnlockAge) {
+        if (inp.cpf.has && inp.currentAge < DEFAULTS.cpfUnlockAge) {
             ann.lineCPF = {
                 type: 'line', xMin: idx(DEFAULTS.cpfUnlockAge), xMax: idx(DEFAULTS.cpfUnlockAge),
                 borderColor: 'rgba(100, 116, 139, 0.4)', borderWidth: 1,
-                label: { display: true, content: '🔓 CPF unlocks', position: 'end', backgroundColor: 'transparent', color: '#475569', font: { size: 12 } }
+                label: { display: true, content: '🔓 CPF at 55', position: 'end', backgroundColor: 'transparent', color: '#475569', font: { size: 12 } }
             };
         }
-        if (inp.mortgage.has && inp.mortgage.years > 0) {
-            const endAge = inp.currentAge + inp.mortgage.years;
-            if (endAge <= 100) {
+        if (base && base.cpfLifeAge && base.cpfLifeAge > inp.currentAge) {
+            ann.lineLife = {
+                type: 'line', xMin: idx(base.cpfLifeAge), xMax: idx(base.cpfLifeAge),
+                borderColor: 'rgba(22, 163, 74, 0.35)', borderWidth: 1,
+                label: { display: true, content: '🧓 CPF LIFE', position: 'end', backgroundColor: 'transparent', color: '#15803d', font: { size: 12 }, yAdjust: 40 }
+            };
+        }
+        // Mortgage free: first age the loan balance reaches zero (allows for a downgrade sale)
+        if (base && inp.mortgage.has) {
+            const k = base.path.findIndex((p, i) => i > 0 && p.rem <= 0.5 && base.path[i - 1].rem > 0.5);
+            if (k > 0) {
                 ann.lineMortgage = {
-                    type: 'line', xMin: idx(endAge), xMax: idx(endAge),
+                    type: 'line', xMin: k, xMax: k,
                     borderColor: 'rgba(245, 158, 11, 0.3)', borderWidth: 1,
                     label: { display: true, content: '🏠 Mortgage Free', position: 'end', backgroundColor: 'transparent', color: '#f59e0b', font: { size: 12 }, yAdjust: 20 }
                 };
@@ -1375,13 +1814,32 @@ function renderChart(labels, datasets, inp, hasLocked = false) {
         }
         (inp.milestones || []).forEach((ms, i) => {
             if (ms.age >= inp.currentAge && ms.age <= 100) {
+                const icon = ms.type === 'downgrade' ? '🏡' : (ms.amt < 0 ? '💸' : '💰');
                 ann['milestone_' + i] = {
                     type: 'line', xMin: idx(ms.age), xMax: idx(ms.age),
                     borderColor: 'rgba(100, 116, 139, 0.3)', borderWidth: 1, borderDash: [2, 2],
-                    label: { display: true, content: ms.amt < 0 ? '💸' : '💰', position: 'end', backgroundColor: 'transparent', font: { size: 14 }, yAdjust: 40 + i * 15 }
+                    label: { display: true, content: icon, position: 'end', backgroundColor: 'transparent', font: { size: 14 }, yAdjust: 60 + i * 15 }
                 };
             }
         });
+        // R13: shade the years when there isn't enough money to cover spending
+        if (base) {
+            let k = 0, n = 0;
+            while (k < base.path.length) {
+                if (base.path[k].short > 0) {
+                    let e = k;
+                    while (e + 1 < base.path.length && base.path[e + 1].short > 0) e++;
+                    const endAge = base.path[e].age + 1;
+                    const untilCpf = endAge === DEFAULTS.cpfUnlockAge;
+                    ann['gap_' + n++] = {
+                        type: 'box', xMin: k - 0.5, xMax: Math.min(e + 0.5, base.path.length - 1),
+                        backgroundColor: 'rgba(239, 68, 68, 0.12)', borderColor: 'rgba(239, 68, 68, 0.4)', borderWidth: 1,
+                        label: { display: true, content: untilCpf ? 'No money to live on until CPF unlocks' : 'Not enough money to cover spending', position: 'start', color: '#b91c1c', font: { size: 11 } }
+                    };
+                    k = e + 1;
+                } else k++;
+            }
+        }
     }
 
     fireChart = new Chart(ctx, {
@@ -1479,6 +1937,9 @@ function runOAEstimate() {
 
 // Fills OA and SA inflows. If you've already entered an OA inflow that differs from the
 // estimate by more than 10%, your figure is kept unless you choose to replace it.
+// Link built from parts so chat/markdown tools can't mangle the tag when this file is copied
+const OA_LINK = '<' + 'a href="#" onclick="applyOAEstimate(true); return false;">Use the estimate for OA too<' + '/a>';
+
 function applyOAEstimate(replaceOA) {
     const est = runOAEstimate();
     if (!est) return;
@@ -1490,7 +1951,7 @@ function applyOAEstimate(replaceOA) {
         const pnl = document.getElementById('oa-calc-panel');
         if (pnl) pnl.style.display = 'none';
     } else {
-        updateDOM('oa-est-result', `SA inflow set to <strong>${money(est.sa)}/mo</strong>. We kept your OA inflow of <strong>${money(cur)}/mo</strong> (estimate: ${money(est.oa)}/mo). :void(0)" onclick="applyOAEstimate(true)">Use the estimate for OA too</a>`, true);
+        updateDOM('oa-est-result', `SA inflow set to <strong>${money(est.sa)}/mo</strong>. We kept your OA inflow of <strong>${money(cur)}/mo</strong> (estimate: ${money(est.oa)}/mo). ${OA_LINK}`, true);
     }
     runSim();
 }
@@ -1563,7 +2024,7 @@ function scrollToResult() {
 
 window.executeSimulation = function () {
     showMissing = true;
-    runSim();
+    runSimNow();
     unlockSection('chart-section');
     // If essentials are missing, take the user to the first one; otherwise to the result
     const first = document.querySelector('.field-missing');
@@ -1577,10 +2038,15 @@ window.executeSimulation = function () {
 // -----------------------------------------------------------------------------
 // Coaching engine
 // -----------------------------------------------------------------------------
-function coachCard(cls, id, val, text, pill) {
+// R11: each card applies on click; "Compare" previews it as a what-if instead
+function coachCard(cls, id, val, text, pill, cmp) {
+    const label = String(cmp || pill).replace(/['"<>]/g, '');
     return `<div class="coach-card ${cls}" onclick="applyTweak('${id}', ${val})">
                 <div class="coach-text">${text}</div>
-                <div class="coach-btn-pill">${pill}</div>
+                <div class="coach-actions">
+                    <button type="button" class="coach-compare" onclick="event.stopPropagation(); compareTweak('${id}', ${val}, '${label}')">Compare</button>
+                    <div class="coach-btn-pill">${pill}</div>
+                </div>
             </div>`;
 }
 
@@ -1605,37 +2071,37 @@ window.generateCoaching = function (inp, isSolvent) {
     const retCap = (adv && inp.glob.isUSD) ? 8.5 : 8.0;
     const currRet = inp.glob.ret * 100;
 
-    let html = "<div style='margin-bottom: 1rem; font-size: 0.85rem; color: #475569;'><em>Click any button below to update your inputs. You can combine multiple tweaks to reach your goal.</em></div>";
+    let html = "<div style='margin-bottom: 1rem; font-size: 0.85rem; color: #475569;'><em>Click a suggestion to apply it, or <strong>Compare</strong> to preview it on the chart first. You can combine several tweaks.</em></div>";
 
     if (isSolvent) {
         if (note) note.style.display = 'none';
         if (title) { title.innerText = '💡 Optimization Opportunities'; title.style.color = '#047857'; }
         const nextAge = inp.retireAge - 1;
         if (nextAge > inp.currentAge) {
-            html += coachCard('safe', 'inp-retireAge', nextAge, `🎉 <strong>Claim Freedom Earlier:</strong> Pull your financial freedom age forward by 1 year to Age ${nextAge}`, '-1 Year ➔');
+            html += coachCard('safe', 'inp-retireAge', nextAge, `🎉 <strong>Claim Freedom Earlier:</strong> Pull your financial freedom age forward by 1 year to Age ${nextAge}`, '-1 Year ➔', `Stop working at ${nextAge}`);
         }
         const nextExp = Math.round((inp.expenses * 1.05) / 50) * 50;
-        html += coachCard('safe', 'inp-expenses', nextExp, `🍷 <strong>Upgrade Lifestyle:</strong> Increase your target monthly retirement household living expenses by 5% to ${money(nextExp)}/mo`, '+5% ➔');
+        html += coachCard('safe', 'inp-expenses', nextExp, `🍷 <strong>Upgrade Lifestyle:</strong> Increase your target monthly retirement household living expenses by 5% to ${money(nextExp)}/mo`, '+5% ➔', `Spend ${money(nextExp)}/mo`);
         if (currRet > 3.0) {
             const nextRet = round2(currRet - 0.5);
-            html += coachCard('safe', retId, nextRet, `🛡️ <strong>De-Risk Portfolio:</strong> Increase your margin of safety by lowering expected returns${retCcy} to ${nextRet}%`, '-0.5% ➔');
+            html += coachCard('safe', retId, nextRet, `🛡️ <strong>De-Risk Portfolio:</strong> Increase your margin of safety by lowering expected returns${retCcy} to ${nextRet}%`, '-0.5% ➔', `Return ${nextRet}%`);
         }
     } else {
         if (note) note.style.display = 'block';
         if (title) { title.innerText = '🔧 How to achieve Financial Independence'; title.style.color = '#1e3a8a'; }
         const nextInv = invCurr < 500 ? 500 : Math.round((invCurr * 1.1) / 50) * 50;
-        html += coachCard('danger', invId, nextInv, `📈 <strong>Supercharge Investments:</strong> Increase monthly investments${invBucket} to ${invCcyPrefix}${fmt(nextInv)}/mo`, '+10% ➔');
+        html += coachCard('danger', invId, nextInv, `📈 <strong>Supercharge Investments:</strong> Increase monthly investments${invBucket} to ${invCcyPrefix}${fmt(nextInv)}/mo`, '+10% ➔', `Invest ${invCcyPrefix}${fmt(nextInv)}/mo`);
         const currCash = inp.cash.contrib;
         const nextCash = currCash < 500 ? 500 : Math.round((currCash * 1.1) / 50) * 50;
-        html += coachCard('danger', 'inp-cashContrib', nextCash, `🏦 <strong>Build Cash Buffer:</strong> Increase monthly cash savings to ${money(nextCash)}/mo`, '+10% ➔');
+        html += coachCard('danger', 'inp-cashContrib', nextCash, `🏦 <strong>Build Cash Buffer:</strong> Increase monthly cash savings to ${money(nextCash)}/mo`, '+10% ➔', `Save ${money(nextCash)}/mo cash`);
         const nextExp = Math.round((inp.expenses * 0.95) / 50) * 50;
-        html += coachCard('danger', 'inp-expenses', nextExp, `📉 <strong>Trim the Fat:</strong> Reduce target monthly retirement household living expenses by 5% to ${money(nextExp)}/mo`, '-5% ➔');
+        html += coachCard('danger', 'inp-expenses', nextExp, `📉 <strong>Trim the Fat:</strong> Reduce target monthly retirement household living expenses by 5% to ${money(nextExp)}/mo`, '-5% ➔', `Spend ${money(nextExp)}/mo`);
         if (currRet < retCap) {
             const nextRet = round2(currRet + 0.5);
-            html += coachCard('danger', retId, nextRet, `🚀 <strong>Optimize Yields:</strong> Change your mix of investments to yield a 0.5% higher return${retCcy} (Target: ${nextRet}%)`, '+0.5% ➔');
+            html += coachCard('danger', retId, nextRet, `🚀 <strong>Optimize Yields:</strong> Change your mix of investments to yield a 0.5% higher return${retCcy} (Target: ${nextRet}%)`, '+0.5% ➔', `Return ${nextRet}%`);
         }
         const nextAge = inp.retireAge + 1;
-        html += coachCard('danger', 'inp-retireAge', nextAge, `⏳ <strong>Extend Horizon:</strong> Delay financial freedom by 1 year to Age ${nextAge}`, '+1 Year ➔');
+        html += coachCard('danger', 'inp-retireAge', nextAge, `⏳ <strong>Extend Horizon:</strong> Delay financial freedom by 1 year to Age ${nextAge}`, '+1 Year ➔', `Stop working at ${nextAge}`);
     }
     optsDiv.innerHTML = html;
 };
@@ -1647,7 +2113,8 @@ window.applyTweak = function (id, val) {
         chartSec.classList.remove('wizard-lock');
         chartSec.classList.add('wizard-unlock');
     }
-    runSim();
+    scenarios = [];
+    runSimNow();
     scrollToResult();
 };
 
@@ -1738,7 +2205,7 @@ function initTooltips() {
 // -----------------------------------------------------------------------------
 function initApp() {
     initTooltips();
-        // Thousands separators on all money fields, including rows added later (R7)
+    // Thousands separators on all money fields, including rows added later (R7)
     document.addEventListener('focusin', e => {
         const t = e.target;
         if (t && t.classList && t.classList.contains('num-format')) t.value = t.value.replace(/,/g, '');
@@ -1788,7 +2255,7 @@ if (typeof document !== 'undefined') {
     initApp();
 }
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { simulatePath, calcPmt, buildFinishLine, DEFAULTS };
+    module.exports = { simulatePath, calcPmt, buildFinishLine, earliestFreedomAge, requiredCapitalAt, computeSwr, cpfTargets, DEFAULTS };
 }
 
 
@@ -1866,75 +2333,4 @@ if (typeof module !== 'undefined' && module.exports) {
    ============================================================================= */
 
 
-/* =============================================================================
-   ARCHIVE — V5 Auto-Solver (INACTIVE; superseded by the Coaching Engine)
-   -----------------------------------------------------------------------------
-   Brute-force search for a single input change that makes the plan solvent.
-   Could be revived to power "one-click fix" coaching cards. Needs updating to
-   V6 input structure (inp.glob.contrib, inp.retireAge, inp.expenses).
-
-   function runAutoSolver() {
-       let baseInputs = getState().inputs;
-       let resultsDiv = document.getElementById('autosolver-results');
-       if (!resultsDiv) return;
-       resultsDiv.style.display = 'block';
-       resultsDiv.innerHTML = '<div style="font-size:0.85rem; color:#d97706;">Calculating solutions...</div>';
-       setTimeout(() => {
-           let options = [];
-           // 1. Increase monthly contributions in steps of 100 until solvent
-           let test1 = JSON.parse(JSON.stringify(baseInputs));
-           let originalContrib = test1.usdContrib;
-           for (let c = originalContrib + 100; c <= 20000; c += 100) {
-               test1.usdContrib = c;
-               if (simulatePath(test1, false).solvent) {
-                   options.push({ text: `📈 Invest an extra $${(c - originalContrib).toLocaleString('en-US')}/mo globally`, action: () => { setVal('inp-usdContrib', c); runSim(); } });
-                   break;
-               }
-           }
-           // 2. Delay retirement age one year at a time until solvent (max 80)
-           let test2 = JSON.parse(JSON.stringify(baseInputs));
-           let originalRet = test2.retireAge;
-           for (let a = originalRet + 1; a <= 80; a += 1) {
-               test2.retireAge = a;
-               if (simulatePath(test2, false).solvent) {
-                   options.push({ text: `⏳ Delay retirement by ${a - originalRet} years (Retire at ${a})`, action: () => { setVal('inp-retireAge', a); runSim(); } });
-                   break;
-               }
-           }
-           // 3. Cut expenses in steps of 100 until solvent (min 500)
-           let test3 = JSON.parse(JSON.stringify(baseInputs));
-           let originalExp = test3.expenses;
-           for (let e = originalExp - 100; e >= 500; e -= 100) {
-               test3.expenses = e;
-               if (simulatePath(test3, false).solvent) {
-                   options.push({ text: `📉 Cut target household spending by $${(originalExp - e).toLocaleString('en-US')}/mo`, action: () => { setVal('inp-expenses', e); runSim(); } });
-                   break;
-               }
-           }
-           // Render options as clickable rows (window['solveOption' + i] = opt.action)
-       }, 50);
-   }
-   ============================================================================= */
-
-
-/* =============================================================================
-   ARCHIVE — V5 Return Presets (INACTIVE)
-   -----------------------------------------------------------------------------
-   One-click assumption sets. Candidate for Advanced mode. Values are V5's and
-   should be re-based on the V6 defaults review before reuse.
-
-   function applyPreset(type) {
-       let msg = "";
-       if (type === 'highly-conservative') {
-           setVal('inp-usdRet', 5.0); setVal('inp-sgdRet', 2.5); setVal('inp-inflation', 3.5);
-           msg = "Applied Highly Conservative: Global 5.0%, SG 2.5%, Inflation 3.5%";
-       } else if (type === 'somewhat-conservative') {
-           setVal('inp-usdRet', 6.0); setVal('inp-sgdRet', 3.5); setVal('inp-inflation', 3.0);
-           msg = "Applied Somewhat Conservative: Global 6.0%, SG 3.5%, Inflation 3.0%";
-       } else if (type === 'balanced') {
-           setVal('inp-usdRet', 7.0); setVal('inp-sgdRet', 5.0); setVal('inp-inflation', 2.5);
-           msg = "Applied Balanced: Global 7.0%, SG 5.0%, Inflation 2.5%";
-       }
-       // Displayed in #preset-banner / #preset-banner-text, then runSim().
-   }
-   ============================================================================= */
+/* =======================
