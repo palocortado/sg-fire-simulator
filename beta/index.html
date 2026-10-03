@@ -101,15 +101,6 @@
                     </div>
                     <div id="mode-notice" class="mode-notice" style="display:none;"></div>
 
-                    <!-- Advanced: Finish Line toggle (roadmap item 3) -->
-                    <div class="advanced-only finish-line-row">
-                        <label class="checkbox-inline">
-                            <input type="checkbox" id="inp-showFireCurve" onchange="runSim()">
-                            Financial Freedom Target (The Finish Line)
-                            <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Adds a red dashed line to the chart showing roughly how much wealth you'd need at each age to stop working and still last to 100. It rises over time because your living expenses grow with inflation. It drops as your mortgage is paid down, because there's less debt left to cover. When your wealth line is above it, you could stop working at that age.</div></div>
-                        </label>
-                    </div>
-
                     <div class="legend-row">
                         <span><span class="req-tag req-tag-demo">Required</span> fill in your own numbers</span>
                         <span><span class="assume-pill">Assumption</span> pre-filled estimate you can change</span>
@@ -243,11 +234,11 @@
                             <div>
                                 <label class="lbl">
                                     <span>Expected Return (Nominal %, <span class="ccy-label">SGD</span> terms)</span>
-                                    <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Enter the headline return before inflation; the engine calculates your real return automatically. MSCI World returned about 6.2% a year in SGD terms since 2001 (7.5% in USD terms). Developed-market equities returned about 8.5% a year in USD from 1900 to 2025. Defaults: 6.5% in SGD, 7.0% in USD.</div></div>
+                                                                        <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Enter the headline return before inflation; the engine calculates your real return automatically.<span class="ccy-text-sgd"><br><br>In SGD terms, MSCI World returned about 6.2% a year since 2001. This already includes the effect of the SGD strengthening against the USD. Default: 6.5%.</span><span class="ccy-text-usd"><br><br>In USD terms, MSCI World returned about 7.5% a year since 2001, and developed-market equities about 8.5% a year from 1900 to 2025. Currency movements are applied separately through FX drift. Default: 7.0%.</span></div></div>
                                     <span class="assume-pill">Assumption</span>
                                 </label>
                                 <input type="number" id="inp-globalRet" class="assumption-input" value="6.5" step="0.1" oninput="runSim()">
-                                <div class="assume-note">MSCI World ~6.2%/yr in SGD since 2001.</div>
+                                <div class="assume-note"><span class="ccy-text-sgd">MSCI World ~6.2%/yr in SGD since 2001.</span><span class="ccy-text-usd">MSCI World ~7.5%/yr in USD since 2001; developed markets ~8.5%/yr in USD since 1900.</span></div>
                             </div>
                             <div class="usd-only">
                                 <label class="lbl">
@@ -344,13 +335,13 @@
                                 <div>
                                     <div style="display:flex; justify-content:space-between; align-items: center; margin-bottom: 2px;">
                                         <label for="inp-oaContrib" style="margin:0;">Monthly OA Inflow (Today's SGD)</label>
-                                        <a href="javascript:void(0)" onclick="toggleOACalc()" class="btn-micro" style="background:#dcfce7; border-color:#86efac; color:#166534;">Estimate</a>
+                                                                                <a href="javascript:void(0)" onclick="toggleOACalc()" class="btn-micro" style="background:#dcfce7; border-color:#86efac; color:#166534;" title="Estimate your OA and SA inflows from your salary">Estimate</a>
                                     </div>
                                     <input type="text" id="inp-oaContrib" class="num-format" placeholder="e.g. 1,400 – or use Estimate">
                                 </div>
-                                <!-- Hidden CPF OA Estimator -->
+                                <!-- Hidden CPF OA + SA Estimator -->
                                 <div id="oa-calc-panel" class="helper-panel" style="display:none; grid-column: 1 / -1; border-color: #bbf7d0; background: #dcfce7;">
-                                    <label style="color: #166534;">Gross Monthly Salary (SGD)</label>
+                                    <label style="color: #166534;">Gross Monthly Salary (SGD) — fills in your OA and SA inflows</label>
                                     <div style="display:flex; gap:0.5rem; align-items:center;">
                                         <input type="text" id="est-salary" class="num-format" placeholder="e.g. 6,000" oninput="runOAEstimate()" style="flex-grow:1;">
                                         <button type="button" class="btn-secondary" onclick="applyOAEstimate()">Apply</button>
@@ -485,6 +476,14 @@
                                 </div>
                                 <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text"><strong>Today's Dollars</strong> shows what future amounts would buy at today's prices, using your inflation assumption. This is the best way to judge your real purchasing power.<br><br><strong>Future Dollars</strong> shows the actual dollar amounts you'd expect to see in your accounts in that year.</div></div>
                             </div>
+                        </div>
+                        <!-- Advanced: Finish Line toggle (R1: moved here from the inputs column) -->
+                        <div class="advanced-only chart-options-row">
+                            <label class="checkbox-inline">
+                                <input type="checkbox" id="inp-showFireCurve" onchange="runSim()">
+                                Show Financial Freedom Target (The Finish Line)
+                                <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Adds a red dashed line to the chart showing roughly how much wealth you'd need at each age to stop working and still last to 100. It rises over time because your living expenses grow with inflation. It drops as your mortgage is paid down, because there's less debt left to cover. When your wealth line is above it, you could stop working at that age.</div></div>
+                            </label>
                         </div>
                         <div style="position: relative; height: 350px; width: 100%;">
                             <canvas id="fireChart"></canvas>

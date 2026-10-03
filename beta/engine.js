@@ -1,6 +1,15 @@
 /* =============================================================================
    Financial Independence Simulator for Singapore — engine.js
-   Version: V6 staging, Batch 2
+   Version: V6 staging, Batch 3 
+   
+   Batch 3 scope (roadmap R1–R6): 
+   - R1 Finish Line checkbox moved to the chart header 
+   - R2 Global return note/tooltip follow the SGD/USD toggle 
+   - R3 Tooltips kept inside the window; bottom sheet on small screens 
+   - R4 CPF estimator fills OA and SA (2026 allocation rates); fixes above 60 
+   - R5 Calculate and coaching buttons scroll to the result card - R6 CPF tooltip mentions the S$8,000 Ordinary Wage ceiling 
+   -----------------------------------------------------------------------------
+
    -----------------------------------------------------------------------------
    Batch 2 scope (on top of Batch 1):
      - Personal inputs start blank with placeholder examples; assumptions are
@@ -29,7 +38,7 @@ let incomeStreamCount = 0;
 let milestoneCount = 0;
 let isLoading = true;
 
-const APP_VERSION = "6.0-batch2";
+const APP_VERSION = "6.0-batch3";
 const STORAGE_KEY = 'fireSimState_v6';
 const LEGACY_STORAGE_KEYS = ['fireSimState', 'fireSimState_v5'];
 
@@ -1263,32 +1272,55 @@ function toggleOACalc() {
     if (pnl) pnl.style.display = pnl.style.display === 'none' ? 'block' : 'none';
 }
 
+// CPF contribution and allocation rates from 1 Jan 2026 (Singapore Citizens and 3rd-year+ PRs).
+// total = employer + employee rate on wages up to the Ordinary Wage ceiling;
+// oa/sa = share of that contribution allocated to each account (CPF Board allocation table).
+// From 55 the SA is closed; that share goes to the Retirement Account, which this tool treats as OA-equivalent later.
+const CPF_OW_CEILING = 8000;
+const CPF_RATE_BANDS = [
+    { maxAge: 35,       total: 0.37,  oa: 0.6217, sa: 0.1621 },
+    { maxAge: 45,       total: 0.37,  oa: 0.5677, sa: 0.1891 },
+    { maxAge: 50,       total: 0.37,  oa: 0.5136, sa: 0.2162 },
+    { maxAge: 55,       total: 0.37,  oa: 0.4055, sa: 0.3108 },
+    { maxAge: 60,       total: 0.34,  oa: 0.3530, sa: 0 },
+    { maxAge: 65,       total: 0.25,  oa: 0.1400, sa: 0 },
+    { maxAge: 70,       total: 0.165, oa: 0.0607, sa: 0 },
+    { maxAge: Infinity, total: 0.125, oa: 0.0800, sa: 0 }
+];
+
+// Returns { oa, sa } monthly estimates, or null if not computable
 function runOAEstimate() {
     const salary = amt('est-salary');
     const age = readNum('inp-currentAge');
+    if (salary <= 0) { updateDOM('oa-est-result', ''); return null; }
     if (age === null) {
-        updateDOM('oa-est-result', salary > 0 ? 'Enter your current age in Step 1 first; CPF allocation rates depend on age.' : '');
-        return 0;
+        updateDOM('oa-est-result', 'Enter your current age in Step 1 first; CPF allocation rates depend on age.');
+        return null;
     }
-    const cappedSalary = Math.min(salary, 8000); // 2026 CPF Ordinary Wage Ceiling
-    let oaRate = 0.23;
-    if (age > 35 && age <= 45) oaRate = 0.21;
-    else if (age > 45 && age <= 50) oaRate = 0.19;
-    else if (age > 50 && age <= 55) oaRate = 0.15;
-    else if (age > 55 && age <= 60) oaRate = 0.12;
-    else if (age > 60) oaRate = 0.035;
-    const est = Math.round(cappedSalary * oaRate);
-    updateDOM('oa-est-result', salary > 0 ? `Estimated OA Inflow: ${money(est)}/mo` : '');
-    return est;
+    const band = CPF_RATE_BANDS.find(b => age <= b.maxAge);
+    const wage = Math.min(salary, CPF_OW_CEILING);
+    const contrib = wage * band.total;
+    const oa = Math.round(contrib * band.oa);
+    const sa = Math.round(contrib * band.sa);
+    let msg = `Estimated OA inflow: <strong>${money(oa)}/mo</strong>`;
+    msg += age <= 55 ? ` · SA inflow: <strong>${money(sa)}/mo</strong>` : ' · SA: closed from 55 (that share goes to your Retirement Account)';
+    if (salary > CPF_OW_CEILING) msg += `<br>Only the first ${money(CPF_OW_CEILING)} of salary attracts CPF.`;
+    msg += '<br><span style="opacity:0.8">Uses 2026 rates for citizens and 3rd-year+ PRs. PRs in their first two years contribute less.</span>';
+    updateDOM('oa-est-result', msg, true);
+    return { oa, sa };
 }
 
 function applyOAEstimate() {
     const est = runOAEstimate();
-    if (est > 0) {
-        setVal('inp-oaContrib', est);
-        toggleOACalc();
-        runSim();
+    if (!est) return;
+    setVal('inp-oaContrib', est.oa);
+    if (est.sa > 0) {
+        setChecked('toggle-sa', true);
+        syncPanels();
+        setVal('inp-saContrib', est.sa);
     }
+    toggleOACalc();
+    runSim();
 }
 
 // -----------------------------------------------------------------------------
@@ -1344,14 +1376,28 @@ window.startOwnPlan = function () {
 window.unlockPersonas = window.toggleExamplePicker;
 window.selectPersona = window.loadExample;
 
+// R5: scroll so the result card sits just below the top of the window (and below the example banner)
+function scrollToResult() {
+    const card = document.getElementById('card-status');
+    if (!card) return;
+    const banner = document.getElementById('example-banner');
+    const offset = (banner && banner.style.display !== 'none' ? banner.offsetHeight : 0) + 16;
+    setTimeout(() => {
+        const y = card.getBoundingClientRect().top + window.pageYOffset - offset;
+        try { window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' }); } catch (e) { window.scrollTo(0, Math.max(0, y)); }
+    }, 60);
+}
+
 window.executeSimulation = function () {
     showMissing = true;
     runSim();
     unlockSection('chart-section');
-    // If essentials are missing, take the user to the first one
+    // If essentials are missing, take the user to the first one; otherwise to the result
     const first = document.querySelector('.field-missing');
     if (first) {
         try { first.scrollIntoView({ behavior: 'smooth', block: 'center' }); first.focus({ preventScroll: true }); } catch (e) {}
+    } else {
+        scrollToResult();
     }
 };
 
@@ -1429,13 +1475,96 @@ window.applyTweak = function (id, val) {
         chartSec.classList.add('wizard-unlock');
     }
     runSim();
-    if (chartSec) chartSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    scrollToResult();
 };
+
+// -----------------------------------------------------------------------------
+// R3: Tooltips — one floating bubble, kept inside the window.
+// Desktop: shows on hover. Touch / click: toggles. Small screens: bottom sheet.
+// The inline .tooltip-text elements remain in the HTML as the content source.
+// -----------------------------------------------------------------------------
+let ttFloat = null, ttOwner = null, ttPinned = false;
+
+function ttEnsure() {
+    if (ttFloat) return ttFloat;
+    ttFloat = document.createElement('div');
+    ttFloat.id = 'tt-float';
+    ttFloat.setAttribute('role', 'tooltip');
+    document.body.appendChild(ttFloat);
+    ttFloat.addEventListener('click', e => {
+        if (e.target.classList.contains('tt-close')) hideTooltip(true);
+    });
+    return ttFloat;
+}
+
+function showTooltip(container, pinned) {
+    const src = container.querySelector('.tooltip-text');
+    const icon = container.querySelector('.info-icon') || container;
+    if (!src) return;
+    const tt = ttEnsure();
+    tt.innerHTML = '<button type="button" class="tt-close" aria-label="Close">×</button>' + src.innerHTML;
+    ttOwner = container;
+    ttPinned = !!pinned;
+    const vw = document.documentElement.clientWidth;
+    const vh = window.innerHeight;
+    if (vw <= 640) {
+        tt.className = 'visible sheet';
+        tt.style.left = ''; tt.style.top = '';
+        return;
+    }
+    tt.className = 'visible';
+    const r = icon.getBoundingClientRect();
+    const w = tt.offsetWidth, h = tt.offsetHeight, m = 8;
+    let left = r.left + r.width / 2 - w / 2;
+    left = Math.max(m, Math.min(left, vw - w - m));
+    let top = r.top - h - m;                       // prefer above the icon
+    if (top < m) top = Math.min(r.bottom + m, vh - h - m); // otherwise below
+    tt.style.left = left + 'px';
+    tt.style.top = Math.max(m, top) + 'px';
+}
+
+function hideTooltip(force) {
+    if (!ttFloat) return;
+    if (ttPinned && !force) return;
+    ttFloat.className = '';
+    ttOwner = null;
+    ttPinned = false;
+}
+
+function initTooltips() {
+    const canHover = window.matchMedia && window.matchMedia('(hover: hover)').matches;
+    if (canHover) {
+        document.addEventListener('mouseover', e => {
+            const c = e.target.closest && e.target.closest('.tooltip-container');
+            if (c && c !== ttOwner && !ttPinned) showTooltip(c, false);
+        });
+        document.addEventListener('mouseout', e => {
+            const c = e.target.closest && e.target.closest('.tooltip-container');
+            if (c && !c.contains(e.relatedTarget)) hideTooltip(false);
+        });
+    }
+    // Click / tap: pin open (and stop the click toggling a checkbox inside the same label)
+    document.addEventListener('click', e => {
+        const c = e.target.closest && e.target.closest('.tooltip-container');
+        if (c) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (ttOwner === c && ttPinned) hideTooltip(true);
+            else showTooltip(c, true);
+            return;
+        }
+        if (ttFloat && !ttFloat.contains(e.target)) hideTooltip(true);
+    }, true);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') hideTooltip(true); });
+    window.addEventListener('scroll', () => { if (!ttPinned) hideTooltip(false); else if (ttOwner && document.documentElement.clientWidth > 640) showTooltip(ttOwner, true); }, { passive: true });
+    window.addEventListener('resize', () => hideTooltip(true));
+}
 
 // -----------------------------------------------------------------------------
 // Initialisation
 // -----------------------------------------------------------------------------
 function initApp() {
+    initTooltips();
     document.querySelectorAll('.num-format').forEach(el => {
         el.addEventListener('blur', function () {
             const n = readNum(this.id);
