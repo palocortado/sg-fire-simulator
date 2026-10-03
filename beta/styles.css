@@ -103,6 +103,7 @@ input[type="text"], input[type="number"] { width: 100%; padding: 0.5rem; border:
 .cpf-toggle-box label { color: #166534; }
 
 /* Status Colors (Driven by V5 JS) */
+.hero-card { background: #64748b; } /* V6: neutral default moved here from an inline style that blocked the status colours */
 .hero-card.success { background: linear-gradient(135deg, #059669, #10b981); }
 .hero-card.warning { background: linear-gradient(135deg, #d97706, #fbbf24); }
 .hero-card.danger { background: linear-gradient(135deg, #b91c1c, #ef4444); }
@@ -280,7 +281,7 @@ label, .checkbox-row label, .cpf-toggle-box label { font-size: 0.9rem !important
 @keyframes highlight-fade {
     0% { background-color: #dbeafe; box-shadow: 0 0 0 2px #2563eb; }
     60% { background-color: #dbeafe; box-shadow: 0 0 0 2px #3b82f6; } /* Holds the blue glow 60% through */
-    100% { background-color: #ffffff; box-shadow: none; }
+    100% { box-shadow: none; } /* V6: no forced background, so tinted assumption fields keep their tint */
 }
 .highlight-pulse { animation: highlight-fade 3s linear forwards !important; }
 
@@ -298,3 +299,61 @@ label, .checkbox-row label, .cpf-toggle-box label { font-size: 0.9rem !important
 
 body, html { overflow-x: hidden; } 
 .header-left { max-width: 60%; }
+
+/* =============================================================================
+   V6 Batch 2
+   ============================================================================= */
+
+/* Labels with inline tags */
+.lbl { display: flex !important; align-items: center; flex-wrap: wrap; gap: 0.25rem; }
+
+/* Placeholders: clearly examples, not values */
+input::placeholder { color: #94a3b8; font-style: italic; font-weight: 400; opacity: 1; }
+
+/* Required tag (hidden once the essential is filled) */
+.req-tag { display: inline-block; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; color: #64748b; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 999px; padding: 1px 7px; margin-left: 0.15rem; line-height: 1.4; }
+.req-tag.filled { display: none; }
+
+/* Assumptions: purple pill + tinted field + source note */
+.assume-pill { display: inline-block; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; color: #6d28d9; background: #ede9fe; border: 1px solid #c4b5fd; border-radius: 999px; padding: 1px 7px; margin-left: 0.15rem; line-height: 1.4; }
+input.assumption-input { background: #faf5ff; border-color: #d8b4fe; color: #4c1d95; }
+.assume-note { font-size: 0.72rem; color: #7c3aed; margin-top: 4px; line-height: 1.3; }
+.assume-note::after { content: " Change if you know better."; color: #94a3b8; }
+
+/* Missing essentials after Calculate */
+input.field-missing { border: 2px solid #f59e0b !important; background: #fffbeb; }
+
+/* Legend under the mode selector */
+.legend-row { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; margin-top: 0.75rem; font-size: 0.75rem; color: #64748b; }
+.req-tag-demo { margin-left: 0; }
+.funds-note { margin: -0.25rem 0 1rem; }
+
+/* Finish Line toggle (Advanced) */
+.finish-line-row { margin-top: 0.75rem; }
+.checkbox-inline { display: flex !important; align-items: center; gap: 0.4rem; cursor: pointer; }
+
+/* Chart header + view toggle */
+.chart-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+.chart-view-row { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: var(--text-secondary); }
+
+/* Status card: Simple-mode assumptions disclosure */
+.status-assumptions { margin-top: 0.6rem; font-size: 0.8rem; opacity: 0.9; border-top: 1px solid rgba(255,255,255,0.3); padding-top: 0.5rem; }
+
+/* Welcome actions + example link */
+.welcome-actions { display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap; }
+.example-link { font-size: 0.9rem; color: #475569; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.example-link:hover { color: #1d4ed8; }
+
+/* Example-plan banner */
+.example-banner { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; display: flex; justify-content: center; align-items: center; gap: 1rem; flex-wrap: wrap; padding: 0.7rem 1rem; background: #fef3c7; border-bottom: 2px solid #f59e0b; color: #78350f; font-size: 0.9rem; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+.btn-banner { background: #b45309; color: #fff; border: none; border-radius: 6px; padding: 0.45rem 0.9rem; font-weight: 700; font-size: 0.85rem; cursor: pointer; }
+.btn-banner:hover { background: #92400e; }
+body.example-mode { padding-top: 56px; }
+body.example-mode .hero-card { outline: 3px dashed #f59e0b; outline-offset: 3px; }
+
+/* Example picker section */
+#persona-section .sub-heading { display: block; color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem; }
+
+@media (max-width: 640px) {
+    body.example-mode { padding-top: 96px; }
+}

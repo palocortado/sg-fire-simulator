@@ -9,6 +9,13 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.2.1/chartjs-plugin-annotation.min.js"></script>
 </head>
 <body class="simple-mode">
+
+    <!-- Example-plan banner (shown only while an example is loaded) -->
+    <div id="example-banner" class="example-banner" style="display:none;">
+        <span>👀 You're viewing an <strong>example plan</strong> (<span id="example-name"></span>), not your own. These numbers aren't about you.</span>
+        <button type="button" class="btn-banner" onclick="startOwnPlan()">Start my own plan</button>
+    </div>
+
     <header class="app-header">
         <div class="header-left">
             <h1>Financial Independence Simulator for Singapore</h1>
@@ -44,32 +51,36 @@
                     <p>Tweak your savings rate, retirement age, and investments to pull that date closer.</p>
                 </div>
             </div>
-            <button type="button" class="btn-primary" onclick="unlockPersonas()" style="padding: 0.85rem 2.5rem; font-size: 1rem;">Let's go</button>
+            <div class="welcome-actions">
+                <button type="button" class="btn-primary" onclick="startPlan()" style="padding: 0.85rem 2.5rem; font-size: 1rem;">Let's go</button>
+                <a href="javascript:void(0)" class="example-link" onclick="toggleExamplePicker()">or see an example plan first</a>
+            </div>
         </div>
 
-        <section class="persona-section wizard-lock" id="persona-section" style="margin-top: 2rem;">
+        <!-- Optional example plans (hidden until requested) -->
+        <section class="persona-section" id="persona-section" style="display:none;">
             <div class="section-heading">
-                <h2>Start with a profile that feels like you</h2>
-                <span class="sub-heading" style="font-style: italic;">You can tweak the numbers later to fit your exact situation.</span>
+                <h2>Example plans</h2>
+                <span class="sub-heading">These are illustrative Singapore households, not recommendations. Load one to see how a plan works, then start your own.</span>
             </div>
             <div class="persona-grid">
-                <button type="button" class="persona-card" onclick="selectPersona('young_starter')">
+                <button type="button" class="persona-card" onclick="loadExample('young_starter')">
                     <div class="persona-name" style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.35rem; color: var(--text-main);">🌱 Young Starter</div>
                     <div style="font-size: 0.825rem; color: var(--text-secondary); line-height: 1.4;">Age 28, renting or living at home, building a growth-oriented global portfolio.</div>
                 </button>
-                <button type="button" class="persona-card" onclick="selectPersona('hdb_couple')">
+                <button type="button" class="persona-card" onclick="loadExample('hdb_couple')">
                     <div class="persona-name" style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.35rem; color: var(--text-main);">🏢 Newly married, new home-owner</div>
                     <div style="font-size: 0.825rem; color: var(--text-secondary); line-height: 1.4;">Age 30, balancing a new HDB mortgage with combined household savings.</div>
                 </button>
-                <button type="button" class="persona-card" onclick="selectPersona('growing_family')">
+                <button type="button" class="persona-card" onclick="loadExample('growing_family')">
                     <div class="persona-name" style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.35rem; color: var(--text-main);">🏠 High-income, growing family</div>
                     <div style="font-size: 0.825rem; color: var(--text-secondary); line-height: 1.4;">Age 35, higher expenses and private bank mortgage commitments.</div>
                 </button>
-                <button type="button" class="persona-card" onclick="selectPersona('pragmatic_saver')">
+                <button type="button" class="persona-card" onclick="loadExample('pragmatic_saver')">
                     <div class="persona-name" style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.35rem; color: var(--text-main);">🛡️ Pragmatic Saver</div>
                     <div style="font-size: 0.825rem; color: var(--text-secondary); line-height: 1.4;">Age 42, stock-averse, leaning heavily on guaranteed CPF SA 4% returns.</div>
                 </button>
-                <button type="button" class="persona-card" onclick="selectPersona('self_employed')">
+                <button type="button" class="persona-card" onclick="loadExample('self_employed')">
                     <div class="persona-name" style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.35rem; color: var(--text-main);">💼 Solo and Self-Employed</div>
                     <div style="font-size: 0.825rem; color: var(--text-secondary); line-height: 1.4;">Age 36, handling variable freelance income and cash flow buffers.</div>
                 </button>
@@ -89,6 +100,20 @@
                         <label class="disabled"><input type="radio" name="mode" id="mode-expert" value="expert" disabled> Expert 🔒</label>
                     </div>
                     <div id="mode-notice" class="mode-notice" style="display:none;"></div>
+
+                    <!-- Advanced: Finish Line toggle (roadmap item 3) -->
+                    <div class="advanced-only finish-line-row">
+                        <label class="checkbox-inline">
+                            <input type="checkbox" id="inp-showFireCurve" onchange="runSim()">
+                            Financial Freedom Target (The Finish Line)
+                            <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Adds a red dashed line to the chart showing roughly how much wealth you'd need at each age to stop working and still last to 100. It rises over time because your living expenses grow with inflation. It drops as your mortgage is paid down, because there's less debt left to cover. When your wealth line is above it, you could stop working at that age.</div></div>
+                        </label>
+                    </div>
+
+                    <div class="legend-row">
+                        <span><span class="req-tag req-tag-demo">Required</span> fill in your own numbers</span>
+                        <span><span class="assume-pill">Assumption</span> pre-filled estimate you can change</span>
+                    </div>
                 </div>
 
                 <!-- Step 1: Timeline & Lifestyle -->
@@ -96,23 +121,25 @@
                     <div class="wizard-header"><span class="step-num">1</span><h3>Your Timeline & Lifestyle</h3></div>
                     <div class="form-grid-2">
                         <div>
-                            <label for="inp-currentAge">Current Age</label>
-                            <input type="number" id="inp-currentAge" value="32" oninput="runSim()">
+                            <label for="inp-currentAge" class="lbl">Current Age <span class="req-tag" data-req="currentAge">Required</span></label>
+                            <input type="number" id="inp-currentAge" placeholder="e.g. 32" oninput="runSim()">
                         </div>
                         <div>
-                            <label style="display:flex; align-items:center;">
+                            <label class="lbl">
                                 Target Financial Freedom Age
                                 <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">The age you no longer need a paycheck. You can keep working, take a lower-paying passion job, or start a side-hustle—but your investments now generate enough to cover your household living expenses with the lifestyle you want. The tool assumes that your CPF contributions, monthly savings and monthly investments drop to zero at this age.</div></div>
+                                <span class="req-tag" data-req="retireAge">Required</span>
                             </label>
-                            <input type="number" id="inp-retireAge" value="55" oninput="runSim()">
+                            <input type="number" id="inp-retireAge" placeholder="e.g. 55" oninput="runSim()">
                         </div>
                     </div>
-                    <div style="margin-bottom: 1rem;">
-                        <label for="inp-expenses" style="display:flex; align-items:center; margin-bottom: 0.5rem;">
-                            Monthly Retirement Household Expenses (SGD)
-                            <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">The monthly amount needed to fund a fulfilling lifestyle during your retirement phase. Nudge this higher to account for hidden or future costs you may not be paying today, such as comprehensive health insurance, travel, or new hobbies.</div></div>
+                    <div style="margin: 0.75rem 0 1rem;">
+                        <label for="inp-expenses" class="lbl">
+                            Target Monthly Retirement Household Expenses (Today's SGD)
+                            <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">The monthly amount, in today's prices, needed to fund a fulfilling lifestyle in retirement. The engine grows it with inflation every year. Nudge it higher for costs you may not be paying today, such as comprehensive health insurance, travel, or new hobbies. Exclude mortgage payments—those are entered in Step 3.</div></div>
+                            <span class="req-tag" data-req="expenses">Required</span>
                         </label>
-                        <input type="text" id="inp-expenses" class="num-format" value="4,000">
+                        <input type="text" id="inp-expenses" class="num-format" placeholder="e.g. 4,000">
                     </div>
                     <div class="form-row checkbox-row">
                         <label><input type="checkbox" id="toggle-expense-partner" onchange="syncPanels(); runSim();"> Share expenses with a partner</label>
@@ -129,18 +156,22 @@
                         <div class="adv-tag">Advanced</div>
                         <div class="form-grid-2">
                             <div>
-                                <label style="display:flex; align-items:center;">
+                                <label class="lbl">
                                     Inflation Rate (%)
                                     <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Your retirement expenses and monthly contributions grow by this rate every year. Singapore's headline inflation averaged about 1.7% over the last 10 and 30 years and 2.1% over the last 20 years. The 2.5% default builds in a margin of safety.</div></div>
+                                    <span class="assume-pill">Assumption</span>
                                 </label>
-                                <input type="number" id="inp-inflation" value="2.5" step="0.1" oninput="runSim()">
+                                <input type="number" id="inp-inflation" class="assumption-input" value="2.5" step="0.1" oninput="runSim()">
+                                <div class="assume-note">Singapore averaged ~1.7–2.1% over 10–30 years; 2.5% adds a margin of safety.</div>
                             </div>
                             <div>
-                                <label style="display:flex; align-items:center;">
+                                <label class="lbl">
                                     Real Contribution Growth (% / yr)
                                     <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">How much faster or slower your monthly savings grow compared with prices.<br><br><strong>0% (default):</strong> your savings keep pace with inflation. Your pay rises roughly with prices, and your lifestyle stays the same in real terms.<br><br><strong>Positive (e.g. +2%):</strong> you save more in real terms every year. This fits someone expecting promotions or career progression who banks most of each raise instead of spending it.<br><br><strong>Negative (e.g. −2%):</strong> your savings shrink in real terms. Common causes are lifestyle creep (pay rises go on a bigger car, holidays or dining out), children's costs, caring for parents, or flat pay in a stagnant career.<br><br>Most people's savings rise in their 30s and 40s and level off in their 50s. If unsure, leave this at 0%.</div></div>
+                                    <span class="assume-pill">Assumption</span>
                                 </label>
-                                <input type="number" id="inp-realContribGrowth" value="0" step="0.5" oninput="runSim()">
+                                <input type="number" id="inp-realContribGrowth" class="assumption-input" value="0" step="0.5" oninput="runSim()">
+                                <div class="assume-note">0% = your savings keep pace with prices.</div>
                             </div>
                         </div>
                     </div>
@@ -149,35 +180,39 @@
                 <!-- Step 2: Savings, Investments & CPF -->
                 <div class="card wizard-card">
                     <div class="wizard-header"><span class="step-num">2</span><h3>Your Fuel (Savings & Investments)</h3></div>
+                    <div class="field-note funds-note">Enter at least one of your investments or your cash. Enter 0 if you have none.</div>
 
                     <!-- Simple: single portfolio -->
                     <div class="simple-only" style="margin-bottom: 1.5rem;">
                         <h4 class="section-h4">Investments</h4>
                         <div class="form-grid-2">
                             <div>
-                                <label style="display:flex; align-items:center;">
-                                    Total Invested Portfolio (SGD)
-                                    <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">The current total value of your stocks, ETFs, Unit Trusts, or Investment-Linked Policies. Do not include your home value.</div></div>
+                                <label class="lbl">
+                                    Total Invested Portfolio (Today's SGD)
+                                    <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">The current total value of your stocks, ETFs, unit trusts, robo-advisor accounts or investment-linked policies. Do not include your home value.</div></div>
+                                    <span class="req-tag" data-req="funds">Required</span>
                                 </label>
-                                <input type="text" id="inp-invStart" class="num-format" value="40,000">
+                                <input type="text" id="inp-invStart" class="num-format" placeholder="e.g. 40,000">
                             </div>
                             <div>
-                                <label style="display:flex; align-items:center;">
-                                    Monthly Investments (SGD)
-                                    <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Keep this in today's dollars. The engine assumes your future salary bumps will exactly offset inflation and upward creep in your lifestyle. <i>This assumption can be loosened in Advanced mode.</i></div></div>
+                                <label class="lbl">
+                                    Monthly Investments (Today's SGD)
+                                    <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Enter what you invest each month today. The engine raises this with inflation every year so your savings keep their purchasing power. You can change this assumption in Advanced mode.</div></div>
                                 </label>
-                                <input type="text" id="inp-invContrib" class="num-format" value="1,000">
+                                <input type="text" id="inp-invContrib" class="num-format" placeholder="e.g. 1,000">
                                 <div class="field-note">
                                     Exclude all mortgage payments. This is strictly for stocks, bonds, and other liquid assets.
                                     <div class="tooltip-container" style="margin-left: 2px;"><span class="info-icon" style="font-size: 0.65rem; padding: 0 0.3rem;">ℹ️</span><div class="tooltip-text">Liquid assets can be easily converted to cash. Housing is not considered an investment in this version of the tool.</div></div>
                                 </div>
                             </div>
                             <div>
-                                <label style="display:flex; align-items:center;">
-                                    Expected Portfolio Return (%)
-                                    <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Realistic local estimates: 2-3% for Fixed Deposits, 3-5% for typical bank funds/ILPs after fees, 6-8% for global index ETFs.</div></div>
+                                <label class="lbl">
+                                    Expected Portfolio Return (Nominal %)
+                                    <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Enter the headline return before inflation ("nominal"), which is how funds and platforms usually quote it. You don't need to subtract inflation yourself: the engine automatically calculates your real (after-inflation) return by growing your expenses with inflation.<br><br>Realistic local estimates: 2–3% for fixed deposits, 3–5% for typical bank funds and ILPs after fees, 6–8% for global index ETFs.</div></div>
+                                    <span class="assume-pill">Assumption</span>
                                 </label>
-                                <input type="number" id="inp-invRet" value="5.0" step="0.1" oninput="runSim()">
+                                <input type="number" id="inp-invRet" class="assumption-input" value="5.0" step="0.1" oninput="runSim()">
+                                <div class="assume-note">A balanced estimate. Global index ETFs ~6–8%, bank funds/ILPs ~3–5% after fees.</div>
                             </div>
                         </div>
                     </div>
@@ -195,55 +230,63 @@
                         </div>
                         <div class="form-grid-2">
                             <div>
-                                <label for="inp-globalStart">Portfolio Value (<span class="ccy-label">SGD</span>)</label>
-                                <input type="text" id="inp-globalStart" class="num-format" value="">
+                                <label for="inp-globalStart" class="lbl"><span>Portfolio Value (Today's <span class="ccy-label">SGD</span>)</span> <span class="req-tag" data-req="funds">Required</span></label>
+                                <input type="text" id="inp-globalStart" class="num-format" placeholder="e.g. 20,000">
                             </div>
                             <div>
-                                <label style="display:flex; align-items:center;">
-                                    <span>Monthly Contributions (<span class="ccy-label">SGD</span>)</span>
+                                <label class="lbl">
+                                    <span>Monthly Contributions (Today's <span class="ccy-label">SGD</span>)</span>
                                     <div class="tooltip-container usd-tip"><span class="info-icon">ℹ️</span><div class="tooltip-text">In USD mode, your USD contributions grow each year with inflation plus any real contribution growth. Their SGD cost then moves with the exchange rate. This is a simplification, because most people earn in SGD.</div></div>
                                 </label>
-                                <input type="text" id="inp-globalContrib" class="num-format" value="">
+                                <input type="text" id="inp-globalContrib" class="num-format" placeholder="e.g. 500">
                             </div>
                             <div>
-                                <label style="display:flex; align-items:center;">
-                                    <span>Expected Return (%, <span class="ccy-label">SGD</span> terms)</span>
-                                    <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">MSCI World returned about 6.2% a year in SGD terms since 2001 (7.5% in USD terms). Developed-market equities returned about 8.5% a year in USD from 1900 to 2025. Defaults: 6.5% in SGD, 7.0% in USD.</div></div>
+                                <label class="lbl">
+                                    <span>Expected Return (Nominal %, <span class="ccy-label">SGD</span> terms)</span>
+                                    <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Enter the headline return before inflation; the engine calculates your real return automatically. MSCI World returned about 6.2% a year in SGD terms since 2001 (7.5% in USD terms). Developed-market equities returned about 8.5% a year in USD from 1900 to 2025. Defaults: 6.5% in SGD, 7.0% in USD.</div></div>
+                                    <span class="assume-pill">Assumption</span>
                                 </label>
-                                <input type="number" id="inp-globalRet" value="6.5" step="0.1" oninput="runSim()">
+                                <input type="number" id="inp-globalRet" class="assumption-input" value="6.5" step="0.1" oninput="runSim()">
+                                <div class="assume-note">MSCI World ~6.2%/yr in SGD since 2001.</div>
                             </div>
                             <div class="usd-only">
-                                <label style="display:flex; align-items:center;">
+                                <label class="lbl">
                                     USD/SGD Exchange Rate
                                     <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">SGD per 1 USD today, used to convert your USD balance and contributions into SGD. Default 1.28 is the approximate spot rate on 2 Oct 2026.</div></div>
+                                    <span class="assume-pill">Assumption</span>
                                 </label>
-                                <input type="number" id="inp-fxRate" value="1.28" step="0.01" oninput="runSim()">
+                                <input type="number" id="inp-fxRate" class="assumption-input" value="1.28" step="0.01" oninput="runSim()">
+                                <div class="assume-note">Approx. rate on 2 Oct 2026.</div>
                             </div>
                             <div class="usd-only">
-                                <label style="display:flex; align-items:center;">
+                                <label class="lbl">
                                     Expected FX Drift (% / yr)
                                     <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Expected yearly change in the USD/SGD rate. Negative means the SGD strengthens, which reduces the SGD value of your USD holdings. The SGD has strengthened against the USD over the long run; −0.5% a year is a moderate assumption.</div></div>
+                                    <span class="assume-pill">Assumption</span>
                                 </label>
-                                <input type="number" id="inp-fxDrift" value="-0.5" step="0.1" oninput="runSim()">
+                                <input type="number" id="inp-fxDrift" class="assumption-input" value="-0.5" step="0.1" oninput="runSim()">
+                                <div class="assume-note">The SGD has generally strengthened against the USD.</div>
                             </div>
                         </div>
 
                         <h4 class="section-h4" style="margin-top: 1.25rem;">Singapore Investments</h4>
                         <div class="form-grid-2">
                             <div>
-                                <label for="inp-sgStart">Portfolio Value (SGD)</label>
-                                <input type="text" id="inp-sgStart" class="num-format" value="">
+                                <label for="inp-sgStart" class="lbl">Portfolio Value (Today's SGD) <span class="req-tag" data-req="funds">Required</span></label>
+                                <input type="text" id="inp-sgStart" class="num-format" placeholder="e.g. 20,000">
                             </div>
                             <div>
-                                <label for="inp-sgContrib">Monthly Contributions (SGD)</label>
-                                <input type="text" id="inp-sgContrib" class="num-format" value="">
+                                <label for="inp-sgContrib" class="lbl">Monthly Contributions (Today's SGD)</label>
+                                <input type="text" id="inp-sgContrib" class="num-format" placeholder="e.g. 500">
                             </div>
                             <div>
-                                <label style="display:flex; align-items:center;">
-                                    Expected Return (%)
-                                    <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Singapore-listed shares, REITs and STI ETFs. The STI ETF returned about 8.2% a year from 2002 to mid-2026 after fees, and about 6.4% a year from 2010 to 2025.</div></div>
+                                <label class="lbl">
+                                    Expected Return (Nominal %)
+                                    <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Singapore-listed shares, REITs and STI ETFs. Enter the headline return before inflation; the engine calculates your real return automatically. The STI ETF returned about 8.2% a year from 2002 to mid-2026 after fees, and about 6.4% a year from 2010 to 2025.</div></div>
+                                    <span class="assume-pill">Assumption</span>
                                 </label>
-                                <input type="number" id="inp-sgRet" value="6.0" step="0.1" oninput="runSim()">
+                                <input type="number" id="inp-sgRet" class="assumption-input" value="6.0" step="0.1" oninput="runSim()">
+                                <div class="assume-note">STI ETF ~6.4%/yr 2010–2025.</div>
                             </div>
                         </div>
                     </div>
@@ -253,22 +296,35 @@
                         <h4 class="section-h4">Cash Savings</h4>
                         <div class="form-grid-2">
                             <div>
-                                <label style="display:flex; align-items:center;">
-                                    Liquid Cash (SGD)
-                                    <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Your emergency fund and savings accounts. The engine assumes this yields 1.5% annually (adjustable in Advanced mode). Note: 1.5% requires a high-yield savings account — if you haven't switched to one yet, do so right away! Be mindful of their respective balance caps.</div></div>
+                                <label class="lbl">
+                                    Liquid Cash (Today's SGD)
+                                    <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Your emergency fund and savings accounts. Aim to keep <strong>3 to 6 months</strong> of living expenses, including your share of the mortgage, in cash. Self-employed or single-income households may want closer to 6–12 months. Beyond about 12 months, extra cash usually loses ground to inflation.<br><br>The engine assumes this earns 1.5% a year (adjustable in Advanced mode), which needs a high-yield savings account. Watch their balance caps.</div></div>
+                                    <span class="req-tag" data-req="funds">Required</span>
                                 </label>
-                                <input type="text" id="inp-cashStart" class="num-format" value="40,000">
+                                <input type="text" id="inp-cashStart" class="num-format" placeholder="e.g. 30,000">
                             </div>
                             <div>
-                                <label style="display:flex; align-items:center;">
-                                    Monthly Cash Savings (SGD)
+                                <label class="lbl">
+                                    Monthly Cash Savings (Today's SGD)
                                     <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">The regular monthly amount you save into cash accounts AFTER paying all your bills and cash mortgage obligations.</div></div>
                                 </label>
-                                <input type="text" id="inp-cashContrib" class="num-format" value="500">
+                                <input type="text" id="inp-cashContrib" class="num-format" placeholder="e.g. 500">
                             </div>
                             <div class="advanced-only">
-                                <label for="inp-cashYield">Cash Yield (%)</label>
-                                <input type="number" id="inp-cashYield" value="1.5" step="0.1" oninput="runSim()">
+                                <label class="lbl">
+                                    Cash Yield (Nominal %)
+                                    <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">The interest rate on your cash before inflation; the engine calculates your real return automatically. Basic savings accounts pay about 0.05%. High-yield accounts pay more, but bonus interest is usually capped (often around the first S$100,000) and needs salary credit, card spend or other conditions.</div></div>
+                                    <span class="assume-pill">Assumption</span>
+                                </label>
+                                <input type="number" id="inp-cashYield" class="assumption-input" value="1.5" step="0.1" oninput="runSim()">
+                                <div class="assume-note">A realistic blend across high-yield account caps.</div>
+                            </div>
+                            <div class="advanced-only">
+                                <label class="lbl">
+                                    Current Monthly Household Expenses (Today's SGD)
+                                    <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Optional. What your household spends each month today, excluding the mortgage. Used only to check whether your cash buffer is the right size. If left blank, the check uses your target retirement expenses instead. Your share of spending (Step 1) is applied.</div></div>
+                                </label>
+                                <input type="text" id="inp-currentExpenses" class="num-format" placeholder="Optional – e.g. 3,500">
                             </div>
                         </div>
                     </div>
@@ -277,20 +333,20 @@
                     <div>
                         <h4 class="section-h4" style="display:flex; align-items:center;">
                             CPF (locked until 55)
-                            <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">CPF can't fund an early retirement before 55, so the chart shows it as a separate dashed line until then, and adds it to your available wealth at 55. Your OA can still pay your mortgage at any age.<br><br><strong>Simplification:</strong> at 55 the engine releases your full OA and SA balances. In reality, an amount up to your retirement sum stays in your Retirement Account and pays out monthly through CPF LIFE from 65. A more realistic model is planned.</div></div>
+                            <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">CPF can't fund an early retirement before 55, so the chart shows it as a separate dashed line until then, and adds it to your available wealth at 55. Your OA can still pay your mortgage at any age.<br><br>The engine uses the statutory floor interest rates (OA 2.5%, SA 4%) and doesn't include extra interest.<br><br><strong>Simplification:</strong> at 55 the engine releases your full OA and SA balances. In reality, an amount up to your retirement sum stays in your Retirement Account and pays out monthly through CPF LIFE from 65. A more realistic model is planned.</div></div>
                         </h4>
                         <div class="cpf-toggle-box">
                             <div class="form-grid-2">
                                 <div>
-                                    <label for="inp-oaStart">Current OA Balance</label>
-                                    <input type="text" id="inp-oaStart" class="num-format" value="20,000">
+                                    <label for="inp-oaStart">Current OA Balance (Today's SGD)</label>
+                                    <input type="text" id="inp-oaStart" class="num-format" placeholder="e.g. 20,000 – check the CPF app">
                                 </div>
                                 <div>
                                     <div style="display:flex; justify-content:space-between; align-items: center; margin-bottom: 2px;">
-                                        <label for="inp-oaContrib" style="margin:0;">Monthly OA Inflow</label>
+                                        <label for="inp-oaContrib" style="margin:0;">Monthly OA Inflow (Today's SGD)</label>
                                         <a href="javascript:void(0)" onclick="toggleOACalc()" class="btn-micro" style="background:#dcfce7; border-color:#86efac; color:#166534;">Estimate</a>
                                     </div>
-                                    <input type="text" id="inp-oaContrib" class="num-format" value="1,400">
+                                    <input type="text" id="inp-oaContrib" class="num-format" placeholder="e.g. 1,400 – or use Estimate">
                                 </div>
                                 <!-- Hidden CPF OA Estimator -->
                                 <div id="oa-calc-panel" class="helper-panel" style="display:none; grid-column: 1 / -1; border-color: #bbf7d0; background: #dcfce7;">
@@ -302,19 +358,19 @@
                                     <div id="oa-est-result" style="font-size:0.75rem; margin-top:0.3rem; color:#15803d;"></div>
                                 </div>
                             </div>
-                            <div class="advanced-only" style="margin-top: 0.75rem;">
+                            <div style="margin-top: 0.75rem;">
                                 <div class="form-row checkbox-row">
-                                    <label><input type="checkbox" id="toggle-sa" onchange="syncPanels(); runSim();"> Model CPF Special Account (4.0% Floor)</label>
+                                    <label><input type="checkbox" id="toggle-sa" onchange="syncPanels(); runSim();"> Include my CPF Special Account (SA)</label>
                                 </div>
                                 <div id="sa-panel" style="display:none;" class="sub-panel">
                                     <div class="form-grid-2">
                                         <div>
-                                            <label for="inp-saStart">Current SA Balance</label>
-                                            <input type="text" id="inp-saStart" class="num-format" value="0">
+                                            <label for="inp-saStart">Current SA Balance (Today's SGD)</label>
+                                            <input type="text" id="inp-saStart" class="num-format" placeholder="e.g. 40,000">
                                         </div>
                                         <div>
-                                            <label for="inp-saContrib">Monthly SA Addition</label>
-                                            <input type="text" id="inp-saContrib" class="num-format" value="0">
+                                            <label for="inp-saContrib">Monthly SA Inflow (Today's SGD)</label>
+                                            <input type="text" id="inp-saContrib" class="num-format" placeholder="e.g. 400">
                                         </div>
                                     </div>
                                 </div>
@@ -327,21 +383,21 @@
                 <div class="card wizard-card">
                     <div class="wizard-header"><span class="step-num">3</span><h3>Housing & Mortgage</h3></div>
                     <div class="form-row checkbox-row">
-                        <label><input type="checkbox" id="toggle-mortgage" checked onchange="syncPanels(); runSim();"> I have an active home loan</label>
+                        <label><input type="checkbox" id="toggle-mortgage" onchange="syncPanels(); runSim();"> I have an active home loan</label>
                     </div>
-                    <div id="mortgage-panel" class="sub-panel">
+                    <div id="mortgage-panel" class="sub-panel" style="display:none;">
                         <div class="form-grid-2">
                             <div>
                                 <div style="display:flex; justify-content:space-between; align-items: center; margin-bottom: 2px;">
-                                    <label for="inp-mortgagePrincipal" style="margin:0;">Outstanding Principal</label>
+                                    <label for="inp-mortgagePrincipal" class="lbl" style="margin:0;">Outstanding Principal (Today's SGD) <span class="req-tag" data-req="principal">Required</span></label>
                                     <a href="javascript:void(0)" onclick="toggleMortgageCalc()" class="btn-micro">Estimate</a>
                                 </div>
-                                <input type="text" id="inp-mortgagePrincipal" class="num-format" value="380,000">
+                                <input type="text" id="inp-mortgagePrincipal" class="num-format" placeholder="e.g. 380,000">
                                 <div class="field-note">Monthly Installment: <strong id="disp-monthlyMortgage" style="color:#0f172a;">$0</strong></div>
                             </div>
                             <div>
-                                <label for="inp-loanYrs">Years Remaining</label>
-                                <input type="number" id="inp-loanYrs" value="22" oninput="runSim()">
+                                <label for="inp-loanYrs" class="lbl">Years Remaining <span class="req-tag" data-req="loanYrs">Required</span></label>
+                                <input type="number" id="inp-loanYrs" placeholder="e.g. 22" oninput="runSim()">
                             </div>
 
                             <!-- Hidden Mortgage Estimator -->
@@ -367,11 +423,13 @@
                             </div>
 
                             <div>
-                                <label style="display:flex; align-items:center;">
+                                <label class="lbl">
                                     Interest Rate (%)
                                     <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">HDB concessionary loans are fixed at 2.6% (the CPF OA rate + 0.1%), which is the default. Bank loans are usually pegged to SORA; in 2026 most packages are around 1.4%–1.9%, but they rose to around 4% in 2023. Enter the rate on your own loan.</div></div>
+                                    <span class="assume-pill">Assumption</span>
                                 </label>
-                                <input type="number" id="inp-mortgageRate" value="2.6" step="0.1" oninput="runSim()">
+                                <input type="number" id="inp-mortgageRate" class="assumption-input" value="2.6" step="0.1" oninput="runSim()">
+                                <div class="assume-note">HDB concessionary rate. Bank loans are usually lower in 2026; enter your own rate.</div>
                             </div>
 
                             <div style="grid-column: 1 / -1; border-top: 1px solid #e2e8f0; padding-top: 0.5rem; margin-top: 0.5rem;">
@@ -411,16 +469,22 @@
             <!-- Lock 2: Chart Column -->
             <div class="chart-column wizard-lock" id="chart-section">
                 <div class="sticky-chart-panel">
-                    <div id="card-status" class="hero-card" style="margin-bottom: 1rem; padding: 1.5rem; border-radius: 12px; color: white; background: #64748b;">
+                    <div id="card-status" class="hero-card" style="margin-bottom: 1rem; padding: 1.5rem; border-radius: 12px; color: white;">
                         <h2 id="status-main" style="font-size: 1.5rem; margin-bottom: 0.25rem;">⏳ Awaiting Inputs</h2>
-                        <p id="status-sub" style="font-size: 1rem; opacity: 0.9;">Select a profile and calculate your path to see results.</p>
+                        <p id="status-sub" style="font-size: 1rem; opacity: 0.9;">Fill in the essentials on the left to see your results.</p>
+                        <p id="status-assumptions" class="status-assumptions" style="display:none;"></p>
                     </div>
                     <div class="card chart-card">
-                        <div class="chart-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <div class="chart-header">
                             <h4 style="font-size: 1rem; font-weight: 600;">Net Worth Trajectory</h4>
-                            <label style="font-size: 0.8rem; display: flex; align-items: center; gap: 4px; cursor: pointer;">
-                                <input type="checkbox" id="inp-showFireCurve" onchange="runSim()"> Show target curve
-                            </label>
+                            <div class="chart-view-row">
+                                <span>View as:</span>
+                                <div class="segmented-control segmented-mini">
+                                    <label><input type="radio" name="chartView" value="future" onchange="runSim()"> Future Dollars</label>
+                                    <label><input type="radio" name="chartView" value="today" checked onchange="runSim()"> Today's Dollars</label>
+                                </div>
+                                <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text"><strong>Today's Dollars</strong> shows what future amounts would buy at today's prices, using your inflation assumption. This is the best way to judge your real purchasing power.<br><br><strong>Future Dollars</strong> shows the actual dollar amounts you'd expect to see in your accounts in that year.</div></div>
+                            </div>
                         </div>
                         <div style="position: relative; height: 350px; width: 100%;">
                             <canvas id="fireChart"></canvas>

@@ -1,7 +1,16 @@
 /* =============================================================================
    Financial Independence Simulator for Singapore — engine.js
-   Version: V6 staging, Batch 1
+   Version: V6 staging, Batch 2
    -----------------------------------------------------------------------------
+   Batch 2 scope (on top of Batch 1):
+     - Personal inputs start blank with placeholder examples; assumptions are
+       pre-filled and marked; "Required" tags; essentials gate before results
+     - Personas demoted to optional, clearly labelled example plans
+     - Future / Today's Dollars chart toggle (roadmap item 2)
+     - Finish Line toggle moved to Advanced and renamed (roadmap item 3)
+     - Label suffixes "(Today's SGD)" / "(Nominal %)" (roadmap item 1)
+     - Cash buffer guardrail warnings (roadmap item 5)
+     - CPF SA available in both modes; home loan toggle off by default
    Batch 1 scope:
      - Single DEFAULTS object; blank-vs-zero input handling
      - Simple mode: one SGD portfolio. Advanced mode: Global + Singapore buckets
@@ -20,7 +29,7 @@ let incomeStreamCount = 0;
 let milestoneCount = 0;
 let isLoading = true;
 
-const APP_VERSION = "6.0-batch1";
+const APP_VERSION = "6.0-batch2";
 const STORAGE_KEY = 'fireSimState_v6';
 const LEGACY_STORAGE_KEYS = ['fireSimState', 'fireSimState_v5'];
 
@@ -28,16 +37,12 @@ const LEGACY_STORAGE_KEYS = ['fireSimState', 'fireSimState_v5'];
 // DEFAULTS — single source of truth for all default values
 // (HTML value="" attributes mirror these; FIELD_DEFAULTS is applied on first load)
 // -----------------------------------------------------------------------------
+// Personal inputs (ages, balances, contributions, expenses, mortgage) have NO
+// defaults: they start blank with placeholder examples in the HTML.
 const DEFAULTS = Object.freeze({
-    // Timeline & lifestyle
-    currentAge: 32,
-    retireAge: 55,
-    expenses: 4000,           // monthly, today's SGD
     expenseShare: 50,         // % (only used when partner toggle is on)
 
     // Simple-mode single portfolio (SGD)
-    invStart: 40000,
-    invContrib: 1000,
     invRet: 5.0,              // nominal %
 
     // Advanced: Global Investments
@@ -51,8 +56,6 @@ const DEFAULTS = Object.freeze({
     sgRet: 6.0,               // nominal %
 
     // Cash
-    cashStart: 40000,
-    cashContrib: 500,
     cashYield: 1.5,           // nominal %
 
     // Macro (Advanced)
@@ -60,31 +63,25 @@ const DEFAULTS = Object.freeze({
     realContribGrowth: 0,     // % per year above inflation
 
     // Housing
-    mortgagePrincipal: 380000,
-    loanYrs: 22,
     mortgageRate: 2.6,        // % (HDB concessionary = CPF OA rate + 0.1%)
     mortgageShare: 50,        // % (only used when partner toggle is on)
 
     // CPF
-    oaStart: 20000,
-    oaContrib: 1400,
-    saStart: 0,
-    saContrib: 0,
     oaRate: 2.5,              // statutory floor, %
     saRate: 4.0,              // statutory floor, %
     cpfUnlockAge: 55
 });
 
-// Field ID -> default value. '' means "start blank" (Advanced buckets are derived from Simple on first entry).
+// Field ID -> starting value. '' = blank (personal input, shows a placeholder example).
 const FIELD_DEFAULTS = {
-    'inp-currentAge': DEFAULTS.currentAge,
-    'inp-retireAge': DEFAULTS.retireAge,
-    'inp-expenses': DEFAULTS.expenses,
+    'inp-currentAge': '',
+    'inp-retireAge': '',
+    'inp-expenses': '',
     'inp-expenseShare': DEFAULTS.expenseShare,
     'inp-inflation': DEFAULTS.inflation,
     'inp-realContribGrowth': DEFAULTS.realContribGrowth,
-    'inp-invStart': DEFAULTS.invStart,
-    'inp-invContrib': DEFAULTS.invContrib,
+    'inp-invStart': '',
+    'inp-invContrib': '',
     'inp-invRet': DEFAULTS.invRet,
     'inp-globalStart': '',
     'inp-globalContrib': '',
@@ -94,21 +91,22 @@ const FIELD_DEFAULTS = {
     'inp-sgStart': '',
     'inp-sgContrib': '',
     'inp-sgRet': DEFAULTS.sgRet,
-    'inp-cashStart': DEFAULTS.cashStart,
-    'inp-cashContrib': DEFAULTS.cashContrib,
+    'inp-cashStart': '',
+    'inp-cashContrib': '',
     'inp-cashYield': DEFAULTS.cashYield,
-    'inp-oaStart': DEFAULTS.oaStart,
-    'inp-oaContrib': DEFAULTS.oaContrib,
-    'inp-saStart': DEFAULTS.saStart,
-    'inp-saContrib': DEFAULTS.saContrib,
-    'inp-mortgagePrincipal': DEFAULTS.mortgagePrincipal,
-    'inp-loanYrs': DEFAULTS.loanYrs,
+    'inp-currentExpenses': '',
+    'inp-oaStart': '',
+    'inp-oaContrib': '',
+    'inp-saStart': '',
+    'inp-saContrib': '',
+    'inp-mortgagePrincipal': '',
+    'inp-loanYrs': '',
     'inp-mortgageRate': DEFAULTS.mortgageRate,
     'inp-mortgageShare': DEFAULTS.mortgageShare
 };
 
 // Fields reset to their default by "Clear" (assumptions). All other fields are blanked.
-const ASSUMPTION_FIELDS = ['inp-currentAge', 'inp-retireAge', 'inp-expenseShare', 'inp-inflation', 'inp-realContribGrowth',
+const ASSUMPTION_FIELDS = ['inp-expenseShare', 'inp-inflation', 'inp-realContribGrowth',
     'inp-invRet', 'inp-globalRet', 'inp-fxRate', 'inp-fxDrift', 'inp-sgRet', 'inp-cashYield', 'inp-mortgageRate', 'inp-mortgageShare'];
 
 const PERSISTED_TOGGLES = ['toggle-expense-partner', 'toggle-mortgage', 'toggle-mortgage-partner', 'inp-maxOA', 'toggle-sa', 'inp-showFireCurve'];
@@ -119,6 +117,8 @@ let modeState = {
     simpleAtSwitch: null     // Simple values written when last leaving Advanced: {start, contrib, ret}
 };
 let globalCcyState = DEFAULTS.globalCcy;
+let exampleState = null;      // persona key while an example plan is loaded, else null
+let showMissing = false;      // set after the user first clicks Calculate: outline missing essentials
 
 // -----------------------------------------------------------------------------
 // Formatting & input utilities
@@ -255,10 +255,12 @@ function onEnterAdvanced() {
     // First time (or after persona / clear): split 50/50, same return in both, Global in SGD
     if (!modeState.advInitialized) {
         setGlobalCcyState('SGD');
-        setVal('inp-globalStart', cur.start / 2, false);
-        setVal('inp-sgStart', cur.start / 2, false);
-        setVal('inp-globalContrib', cur.contrib / 2, false);
-        setVal('inp-sgContrib', cur.contrib / 2, false);
+        const startBlank = readNum('inp-invStart') === null;
+        const contribBlank = readNum('inp-invContrib') === null;
+        setVal('inp-globalStart', startBlank ? '' : cur.start / 2, false);
+        setVal('inp-sgStart', startBlank ? '' : cur.start / 2, false);
+        setVal('inp-globalContrib', contribBlank ? '' : cur.contrib / 2, false);
+        setVal('inp-sgContrib', contribBlank ? '' : cur.contrib / 2, false);
         setVal('inp-globalRet', cur.ret, false);
         setVal('inp-sgRet', cur.ret, false);
         modeState.advInitialized = true;
@@ -310,8 +312,10 @@ function onEnterSimple() {
     else if (contrib > 0) ret = (a.gContrib * a.gRet + a.sContrib * a.sRet) / contrib;
     else ret = (a.gRet + a.sRet) / 2;
 
-    setVal('inp-invStart', start, false);
-    setVal('inp-invContrib', contrib, false);
+    const startsBlank = readNum('inp-globalStart') === null && readNum('inp-sgStart') === null;
+    const contribsBlank = readNum('inp-globalContrib') === null && readNum('inp-sgContrib') === null;
+    setVal('inp-invStart', startsBlank ? '' : start, false);
+    setVal('inp-invContrib', contribsBlank ? '' : contrib, false);
     setVal('inp-invRet', round2(ret * 100), false);
 
     // Store exactly what Simple now displays, so edits can be detected on return
@@ -390,6 +394,8 @@ function getState() {
         last_saved: new Date().toISOString(),
         mode: getMode(),
         globalCcy: globalCcyState,
+        chartView: getChartView(),
+        exampleState: exampleState,
         modeState: modeState,
         fields, toggles, incomeStreams, milestones
     };
@@ -407,6 +413,8 @@ function loadState(state) {
             Object.entries(state.toggles || {}).forEach(([id, v]) => setChecked(id, v));
             setGlobalCcyState(state.globalCcy === 'USD' ? 'USD' : 'SGD');
             modeState = Object.assign({ advInitialized: false, simpleAtSwitch: null }, state.modeState || {});
+            setChartView(state.chartView === 'future' ? 'future' : 'today');
+            setExampleState(state.exampleState && PERSONAS[state.exampleState] ? state.exampleState : null);
             applyModeClass(state.mode === 'advanced' ? 'advanced' : 'simple');
             const sc = document.getElementById('income-streams-container');
             if (sc) { sc.innerHTML = ''; (state.incomeStreams || []).forEach(st => addIncomeStream(st.name, st.amt, st.start, st.end, st.fixed)); }
@@ -464,14 +472,22 @@ function importPlan(event) {
     event.target.value = '';
 }
 
+function setFieldDefault(id) {
+    const v = FIELD_DEFAULTS[id];
+    const el = document.getElementById(id);
+    // Show decimal assumptions as "5.0", not "5"
+    if (el && typeof v === 'number' && Number.isInteger(v) && el.step && el.step.indexOf('.') !== -1 && v !== 0) {
+        setVal(id, v.toFixed(1), false);
+    } else setVal(id, v, false);
+}
 function applyFieldDefaults() {
-    Object.entries(FIELD_DEFAULTS).forEach(([id, v]) => setVal(id, v, false));
+    Object.keys(FIELD_DEFAULTS).forEach(setFieldDefault);
 }
 
 function clearAllInputs() {
     try {
         Object.keys(FIELD_DEFAULTS).forEach(id => {
-            if (ASSUMPTION_FIELDS.includes(id)) setVal(id, FIELD_DEFAULTS[id], false);
+            if (ASSUMPTION_FIELDS.includes(id)) setFieldDefault(id);
             else setVal(id, '', false);
         });
         ['toggle-expense-partner', 'toggle-mortgage', 'toggle-mortgage-partner', 'toggle-sa', 'inp-showFireCurve'].forEach(id => setChecked(id, false));
@@ -479,6 +495,9 @@ function clearAllInputs() {
         setGlobalCcyState('SGD');
         modeState = { advInitialized: false, simpleAtSwitch: null };
         if (getMode() === 'advanced') onEnterAdvanced();
+        setExampleState(null);
+        showMissing = false;
+        document.querySelectorAll('.persona-card').forEach(c => c.classList.remove('active'));
         const sc = document.getElementById('income-streams-container'); if (sc) sc.innerHTML = '';
         const mc = document.getElementById('milestones-container'); if (mc) mc.innerHTML = '';
         syncPanels();
@@ -624,6 +643,26 @@ const PERSONAS = {
 PERSONAS.median = PERSONAS.hdb_couple;
 PERSONAS.conservative = PERSONAS.pragmatic_saver;
 
+const PERSONA_NAMES = {
+    young_starter: '🌱 Young Starter',
+    hdb_couple: '🏢 Newly married, new home-owner',
+    growing_family: '🏠 High-income, growing family',
+    pragmatic_saver: '🛡️ Pragmatic Saver',
+    self_employed: '💼 Solo and Self-Employed',
+    median: '🏢 Newly married, new home-owner',
+    conservative: '🛡️ Pragmatic Saver'
+};
+
+// Example-plan mode: banner on, coaching off, status labelled "Example"
+function setExampleState(type) {
+    exampleState = type;
+    const banner = document.getElementById('example-banner');
+    if (banner) banner.style.display = type ? 'flex' : 'none';
+    updateDOM('example-name', type ? (PERSONA_NAMES[type] || type) : '');
+    document.body.classList.toggle('example-mode', !!type);
+    if (!type) document.querySelectorAll('.persona-card').forEach(c => c.classList.remove('active'));
+}
+
 window.loadProfile = function (type) {
     const persona = PERSONAS[type];
     if (!persona) return;
@@ -638,7 +677,7 @@ window.loadProfile = function (type) {
     applyFieldDefaults();
     setChecked('inp-maxOA', true);
     setGlobalCcyState('SGD');
-    Object.entries(persona.fields).forEach(([id, v]) => setVal(id, v));
+    Object.entries(persona.fields).forEach(([id, v]) => setVal(id, v, false));
     Object.entries(persona.toggles).forEach(([id, v]) => setChecked(id, v));
     syncPanels();
 
@@ -700,7 +739,7 @@ function collectInputs() {
         cpf: {
             oaStart: amt('inp-oaStart'),
             oaContrib: amt('inp-oaContrib'),
-            hasSA: adv && isChecked('toggle-sa'),
+            hasSA: isChecked('toggle-sa'),
             saStart: amt('inp-saStart'),
             saContrib: amt('inp-saContrib'),
             oaRate: DEFAULTS.oaRate / 100,
@@ -720,7 +759,9 @@ function collectInputs() {
 
         incomeStreams: adv ? readIncomeStreams() : [],
         milestones: adv ? readMilestones() : [],
-        showFireCurve: isChecked('inp-showFireCurve')
+        currentExpenses: adv ? readNum('inp-currentExpenses') : null,
+        showFireCurve: adv && isChecked('inp-showFireCurve'),
+        chartView: getChartView()
     };
 }
 
@@ -902,7 +943,7 @@ const WARN_TEXT = {
     retireEarly: 'Note: Extreme early financial freedom requires massive savings rates and exposes your capital to 50+ years of sequence-of-returns risk.'
 };
 
-function checkInputWarnings() {
+function checkInputWarnings(inp) {
     const setWarn = (id, rules) => {
         const inputEl = document.getElementById(id);
         if (!inputEl) return;
@@ -930,6 +971,74 @@ function checkInputWarnings() {
     setWarn('inp-cashYield', [[gt('inp-cashYield', 2.0), WARN_TEXT.cashHigh], [lt('inp-cashYield', 0.5) && v('inp-cashYield') > 0, WARN_TEXT.cashLow]]);
     setWarn('inp-mortgageRate', [[gt('inp-mortgageRate', 4.5), WARN_TEXT.mortHigh], [lt('inp-mortgageRate', 1.3) && v('inp-mortgageRate') > 0, WARN_TEXT.mortLow]]);
     setWarn('inp-retireAge', [[lt('inp-retireAge', 40) && v('inp-retireAge') > 0, WARN_TEXT.retireEarly]]);
+
+    // Cash buffer guardrails (roadmap item 5): only while still working, only once cash is entered
+    const buf = cashBufferMonths(inp);
+    setWarn('inp-cashStart', buf ? [
+        [buf.months < 3, `Liquidity risk: your cash covers about ${buf.months.toFixed(1)} months of ${buf.basisText}. Aim for 3–6 months so a job loss or emergency doesn't force you to sell investments at a bad time.`],
+        [buf.months > 12, `Inflation drag: your cash covers about ${Math.round(buf.months)} months of ${buf.basisText}. Beyond about 12 months, extra cash usually loses ground to inflation. Consider investing some of it, unless you're self-employed or saving for a near-term purchase such as a home.`]
+    ] : []);
+}
+
+// Months of expenses (+ personal mortgage installment) covered by current cash.
+// Uses "Current Monthly Household Expenses" (Advanced) if entered, else target retirement expenses.
+function cashBufferMonths(inp) {
+    const cash = readNum('inp-cashStart');
+    if (cash === null) return null;
+    if (inp.currentAge !== null && inp.retireAge !== null && inp.currentAge >= inp.retireAge) return null;
+    const useCurrent = inp.currentExpenses !== null && inp.currentExpenses !== undefined;
+    const living = useCurrent ? inp.currentExpenses : inp.expenses;
+    if (living === null || living === undefined) return null;
+    const m = inp.mortgage;
+    const pmt = (m.has && m.principal > 0 && m.years > 0) ? calcPmt(m.principal, m.rate, m.years) * m.share : 0;
+    const basis = living * (inp.expenseShare / 100) + pmt;
+    if (basis <= 0) return null;
+    const what = useCurrent ? 'your current expenses' : 'your target retirement expenses';
+    const basisText = `${money(basis)}/mo (${what}${pmt > 0 ? ' plus your mortgage installment' : ''})`;
+    return { months: cash / basis, basisText };
+}
+
+// -----------------------------------------------------------------------------
+// Essentials gate & Required tags
+// -----------------------------------------------------------------------------
+function fundsEntered(mode) {
+    const inv = mode === 'simple'
+        ? readNum('inp-invStart') !== null
+        : (readNum('inp-globalStart') !== null || readNum('inp-sgStart') !== null);
+    return inv || readNum('inp-cashStart') !== null;
+}
+
+// Returns the list of essentials with their status
+function getEssentials(inp) {
+    const list = [
+        { key: 'currentAge', label: 'your current age', ok: inp.currentAge !== null && inp.currentAge >= 16 && inp.currentAge < 100, fields: ['inp-currentAge'] },
+        { key: 'retireAge', label: 'your target financial freedom age', ok: inp.retireAge !== null && inp.retireAge > 0 && inp.retireAge <= 100, fields: ['inp-retireAge'] },
+        { key: 'expenses', label: 'your target monthly retirement expenses', ok: inp.expenses !== null, fields: ['inp-expenses'] },
+        { key: 'funds', label: 'your investments or cash (0 is fine)', ok: fundsEntered(inp.mode),
+          fields: inp.mode === 'simple' ? ['inp-invStart', 'inp-cashStart'] : ['inp-globalStart', 'inp-sgStart', 'inp-cashStart'] }
+    ];
+    if (inp.mortgage.has) {
+        list.push({ key: 'principal', label: 'your outstanding loan principal', ok: readNum('inp-mortgagePrincipal') !== null, fields: ['inp-mortgagePrincipal'] });
+        list.push({ key: 'loanYrs', label: 'your loan years remaining', ok: readNum('inp-loanYrs') !== null && readNum('inp-loanYrs') > 0, fields: ['inp-loanYrs'] });
+    }
+    return list;
+}
+
+function updateRequiredUI(essentials) {
+    const okByKey = {};
+    essentials.forEach(e => { okByKey[e.key] = e.ok; });
+    document.querySelectorAll('.req-tag[data-req]').forEach(tag => {
+        const k = tag.getAttribute('data-req');
+        tag.classList.toggle('filled', okByKey[k] === true);
+    });
+    // Amber outline on missing essentials (only after the user has tried to calculate)
+    document.querySelectorAll('.field-missing').forEach(el => el.classList.remove('field-missing'));
+    if (showMissing) {
+        essentials.filter(e => !e.ok).forEach(e => e.fields.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.classList.add('field-missing');
+        }));
+    }
 }
 
 // -----------------------------------------------------------------------------
@@ -938,23 +1047,38 @@ function checkInputWarnings() {
 function setStatus(cls, main, sub) {
     const card = document.getElementById('card-status');
     if (card) card.className = 'hero-card' + (cls ? ' ' + cls : '');
-    updateDOM('status-main', main);
+    const prefix = exampleState ? 'Example plan · ' : '';
+    updateDOM('status-main', main ? prefix + main : main);
     updateDOM('status-sub', sub);
+}
+
+function getChartView() {
+    const r = document.querySelector('input[name="chartView"]:checked');
+    return r ? r.value : 'today';
+}
+function setChartView(v) {
+    document.querySelectorAll('input[name="chartView"]').forEach(r => { r.checked = (r.value === v); });
 }
 
 function runSim() {
     if (isLoading) return;
-    checkInputWarnings();
 
     const inp = collectInputs();
+    checkInputWarnings(inp);
     updateMortgageReadout(inp);
 
-    // Required inputs
-    const ageOk = inp.currentAge !== null && inp.currentAge >= 16 && inp.currentAge < 100;
-    const retOk = inp.retireAge !== null && inp.retireAge > 0 && inp.retireAge <= 100;
-    if (!ageOk || !retOk || inp.expenses === null) {
-        const missing = !ageOk ? 'your current age' : (!retOk ? 'your target financial freedom age' : 'your target monthly retirement household expenses');
-        setStatus('', '⏳ Awaiting Inputs', `Enter ${missing} to see results.`);
+    const essentials = getEssentials(inp);
+    updateRequiredUI(essentials);
+    const assumptionsLine = document.getElementById('status-assumptions');
+
+    const missing = essentials.filter(e => !e.ok);
+    if (missing.length) {
+        const done = essentials.length - missing.length;
+        const card = document.getElementById('card-status');
+        if (card) card.className = 'hero-card';
+        updateDOM('status-main', `⏳ ${done} of ${essentials.length} essentials entered`);
+        updateDOM('status-sub', 'Still needed: ' + missing.map(e => e.label).join('; ') + '.');
+        if (assumptionsLine) assumptionsLine.style.display = 'none';
         const panel = document.getElementById('coaching-panel'); if (panel) panel.style.display = 'none';
         renderChart([], [], null);
         saveState();
@@ -965,17 +1089,23 @@ function runSim() {
     const fl = buildFinishLine(inp);
     const labels = res.path.map(p => p.age);
 
+    // Today's Dollars: divide each point by cumulative inflation since today (roadmap item 2)
+    const today = inp.chartView === 'today';
+    const defl = i => today ? Math.pow(1 + inp.inflation, i) : 1;
+    const adj = (val, i) => (val === null || val === undefined) ? null : val / defl(i);
+
     // Phase-segmented liquid wealth lines
     const p1 = [], p2 = [], p3 = [];
     res.path.forEach((pt, i) => {
-        p1.push(pt.phase === 1 ? pt.liquid : null);
-        p2.push(pt.phase === 2 ? pt.liquid : null);
-        p3.push(pt.phase === 3 ? pt.liquid : null);
+        const val = adj(pt.liquid, i);
+        p1.push(pt.phase === 1 ? val : null);
+        p2.push(pt.phase === 2 ? val : null);
+        p3.push(pt.phase === 3 ? val : null);
         if (i > 0) {
             const prev = res.path[i - 1].phase;
-            if (pt.phase === 2 && prev === 1) p1[i] = pt.liquid;
-            if (pt.phase === 3 && prev === 2) p2[i] = pt.liquid;
-            if (pt.phase === 3 && prev === 1) p1[i] = pt.liquid;
+            if (pt.phase === 2 && prev === 1) p1[i] = val;
+            if (pt.phase === 3 && prev === 2) p2[i] = val;
+            if (pt.phase === 3 && prev === 1) p1[i] = val;
         }
     });
 
@@ -986,13 +1116,13 @@ function runSim() {
     ];
 
     // Locked CPF (separate dashed line until unlock)
-    const lockedData = res.path.map(p => (p.locked > 0 ? p.locked : null));
+    const lockedData = res.path.map((p, i) => (p.locked > 0 ? adj(p.locked, i) : null));
     const hasLocked = lockedData.some(v => v !== null);
     if (hasLocked) {
         datasets.push({ label: 'CPF (locked until 55)', data: lockedData, borderColor: '#64748b', borderDash: [6, 4], fill: false, tension: 0.2, pointRadius: 0, borderWidth: 2, pointStyle: 'line' });
     }
     if (inp.showFireCurve) {
-        datasets.push({ label: 'FIRE Requirement (Finish Line)', data: fl.curve, borderColor: '#ef4444', borderDash: [2, 4], fill: false, tension: 0.2, pointRadius: 0, borderWidth: 1.5, pointStyle: 'line' });
+        datasets.push({ label: 'Financial Freedom Target (The Finish Line)', data: fl.curve.map(adj), borderColor: '#ef4444', borderDash: [2, 4], fill: false, tension: 0.2, pointRadius: 0, borderWidth: 1.5, pointStyle: 'line' });
     }
 
     // Status card
@@ -1011,7 +1141,22 @@ function runSim() {
         setStatus('danger', '⚠️ Adjustments Needed', `Funds deplete at age ${res.depletionAge}. Try investing a bit more or delaying financial freedom.`);
     }
 
-    generateCoaching(inp, res.solvent);
+    // Simple mode: disclose hidden assumptions under the result
+    if (assumptionsLine) {
+        if (inp.mode === 'simple') {
+            assumptionsLine.innerText = `Assumes ${DEFAULTS.inflation}% inflation, ${DEFAULTS.cashYield}% cash yield and CPF floor rates (OA ${DEFAULTS.oaRate}%, SA ${DEFAULTS.saRate}%). Change these in Advanced.`;
+            assumptionsLine.style.display = 'block';
+        } else {
+            assumptionsLine.style.display = 'none';
+        }
+    }
+
+    // Coaching is switched off while an example plan is showing
+    if (exampleState) {
+        const panel = document.getElementById('coaching-panel'); if (panel) panel.style.display = 'none';
+    } else {
+        generateCoaching(inp, res.solvent);
+    }
     renderChart(labels, datasets, inp, hasLocked);
     saveState();
 }
@@ -1070,7 +1215,7 @@ function renderChart(labels, datasets, inp, hasLocked = false) {
             responsive: true, maintainAspectRatio: false,
             interaction: { mode: 'index', intersect: false },
             scales: {
-                y: { title: { display: true, text: 'Portfolio Value (SGD)' }, ticks: { callback: v => '$' + (v / 1000000).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + 'M' } }
+                y: { title: { display: true, text: (inp && inp.chartView === 'future') ? "Wealth (Future SGD)" : "Wealth (Today's SGD)" }, ticks: { callback: v => '$' + (v / 1000000).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + 'M' } }
             },
             plugins: {
                 legend: { labels: { usePointStyle: true, boxWidth: 15 } },
@@ -1120,7 +1265,11 @@ function toggleOACalc() {
 
 function runOAEstimate() {
     const salary = amt('est-salary');
-    const age = rateOr('inp-currentAge', DEFAULTS.currentAge);
+    const age = readNum('inp-currentAge');
+    if (age === null) {
+        updateDOM('oa-est-result', salary > 0 ? 'Enter your current age in Step 1 first; CPF allocation rates depend on age.' : '');
+        return 0;
+    }
     const cappedSalary = Math.min(salary, 8000); // 2026 CPF Ordinary Wage Ceiling
     let oaRate = 0.23;
     if (age > 35 && age <= 45) oaRate = 0.21;
@@ -1145,32 +1294,64 @@ function applyOAEstimate() {
 // -----------------------------------------------------------------------------
 // Progressive wizard controller
 // -----------------------------------------------------------------------------
-window.unlockPersonas = function () {
-    const sec = document.getElementById('persona-section');
-    if (sec) {
-        sec.classList.remove('wizard-lock');
-        sec.classList.add('wizard-unlock');
-        setTimeout(() => { try { sec.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {} }, 50);
-    }
+function unlockSection(id) {
+    const sec = document.getElementById(id);
+    if (sec) { sec.classList.remove('wizard-lock'); sec.classList.add('wizard-unlock'); }
+    return sec;
+}
+function scrollToEl(el) {
+    if (el) setTimeout(() => { try { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {} }, 50);
+}
+
+// "Let's go": straight to the inputs
+window.startPlan = function () {
+    const sec = unlockSection('inputs-section');
+    scrollToEl(sec);
 };
 
-window.selectPersona = function (type) {
-    window.loadProfile(type);
-    const inputsSec = document.getElementById('inputs-section');
-    if (inputsSec) {
-        inputsSec.classList.remove('wizard-lock');
-        inputsSec.classList.add('wizard-unlock');
-        setTimeout(() => { try { inputsSec.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {} }, 50);
-    }
-    runSim();
+// "See an example plan": reveal the optional example picker
+window.toggleExamplePicker = function () {
+    const sec = document.getElementById('persona-section');
+    if (!sec) return;
+    const show = sec.style.display === 'none';
+    sec.style.display = show ? 'block' : 'none';
+    if (show) scrollToEl(sec);
 };
+
+window.loadExample = function (type) {
+    if (!PERSONAS[type]) return;
+    window.loadProfile(type);
+    setExampleState(type);
+    showMissing = false;
+    unlockSection('inputs-section');
+    unlockSection('chart-section');
+    runSim();
+    scrollToEl(document.getElementById('planner-split'));
+};
+
+// Exit example: wipe the example's numbers and start from blank
+window.startOwnPlan = function () {
+    clearAllInputs();
+    const picker = document.getElementById('persona-section');
+    if (picker) picker.style.display = 'none';
+    const sec = unlockSection('inputs-section');
+    scrollToEl(sec);
+    const age = document.getElementById('inp-currentAge');
+    if (age) setTimeout(() => { try { age.focus({ preventScroll: true }); } catch (e) {} }, 400);
+};
+
+// Backward compatibility
+window.unlockPersonas = window.toggleExamplePicker;
+window.selectPersona = window.loadExample;
 
 window.executeSimulation = function () {
+    showMissing = true;
     runSim();
-    const chartSec = document.getElementById('chart-section');
-    if (chartSec) {
-        chartSec.classList.remove('wizard-lock');
-        chartSec.classList.add('wizard-unlock');
+    unlockSection('chart-section');
+    // If essentials are missing, take the user to the first one
+    const first = document.querySelector('.field-missing');
+    if (first) {
+        try { first.scrollIntoView({ behavior: 'smooth', block: 'center' }); first.focus({ preventScroll: true }); } catch (e) {}
     }
 };
 
