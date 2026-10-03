@@ -107,9 +107,36 @@ input[type="text"], input[type="number"] { width: 100%; padding: 0.5rem; border:
 .hero-card.warning { background: linear-gradient(135deg, #d97706, #fbbf24); }
 .hero-card.danger { background: linear-gradient(135deg, #b91c1c, #ef4444); }
 
-/* Engine Room Toggle */
-body.simple-mode .advanced-only { display: none !important; }
-body.advanced-mode .advanced-only { display: block !important; }
+/* V6: Progressive disclosure (Simple / Advanced).
+   Hidden elements keep their natural display type when shown, so grid/flex children are not broken. */
+body:not(.advanced-mode) .advanced-only { display: none !important; }
+body.advanced-mode .simple-only { display: none !important; }
+body.advanced-mode .advanced-only { animation: v6-fade-in 0.35s ease-out; }
+@keyframes v6-fade-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
+/* V6: USD-only fields in Global Investments */
+body:not(.global-usd) .usd-only,
+body:not(.global-usd) .usd-tip { display: none !important; }
+body.global-usd .usd-only { animation: v6-fade-in 0.35s ease-out; }
+
+/* V6: Advanced block inside a step card */
+.adv-block { margin-top: 1rem; padding: 0.85rem 0.85rem 0.25rem; border-left: 3px solid #7c3aed; background: #faf5ff; border-radius: 0 8px 8px 0; }
+.adv-tag { display: inline-block; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; color: #6d28d9; margin-bottom: 0.5rem; }
+
+/* V6: Section headings, notes, notices */
+.section-h4 { margin-bottom: 0.75rem; color: var(--text-main); font-size: 0.95rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.25rem; }
+.field-note { font-size: 0.75rem; color: #64748b; margin-top: 4px; line-height: 1.3; }
+.mode-notice { margin-top: 0.75rem; padding: 0.7rem 0.9rem; background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a8a; border-radius: 8px; font-size: 0.82rem; line-height: 1.4; max-width: 450px; }
+.mortgage-split { padding: 0.85rem; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 8px; color: #9f1239; font-size: 0.85rem; margin-top: 1rem; line-height: 1.4; }
+
+/* V6: Currency toggle */
+.ccy-toggle-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.85rem; font-size: 0.85rem; color: var(--text-secondary); flex-wrap: wrap; }
+.segmented-control.segmented-mini { width: auto; max-width: none; padding: 3px; }
+.segmented-control.segmented-mini label { padding: 4px 14px; font-size: 0.8rem; }
+
+/* V6: Primary button (was missing in V5) */
+.btn-primary { background: #2563eb; color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(37,99,235,0.2); transition: background 0.2s ease; }
+.btn-primary:hover { background: #1d4ed8; }
 
 /* Enhanced Active Persona Visibility */
 .persona-card.active { border: 2px solid #3b82f6; background-color: #eff6ff; box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2); transform: translateY(-2px); }
@@ -271,24 +298,3 @@ label, .checkbox-row label, .cpf-toggle-box label { font-size: 0.9rem !important
 
 body, html { overflow-x: hidden; } 
 .header-left { max-width: 60%; }
-
-/* Inline Advanced Fields Fade-In Logic */
-body.simple-mode .advanced-only { 
-    display: none !important; 
-    opacity: 0;
-}
-body.advanced-mode .advanced-only { 
-    display: block !important; 
-    animation: fadeIn 0.4s ease forwards;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-5px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* PV / FV Chart Toggle Styling */
-.segmented-control { display: inline-flex; background: #e2e8f0; padding: 4px; border-radius: 10px; border: 1px solid #cbd5e1; }
-.segmented-control label { flex: 1; text-align: center; cursor: pointer; border-radius: 8px; font-weight: 600; font-size: 0.85rem; color: #475569; transition: all 0.2s ease; margin: 0 !important; }
-.segmented-control input { display: none; }
-.segmented-control label:has(input:checked) { background: #ffffff; color: #0f172a; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
