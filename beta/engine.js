@@ -149,7 +149,7 @@ const round2 = n => Math.round(n * 100) / 100;
 function escapeHtml(s) {
     const map = { '\u0026': '&' + 'amp;', '\u003c': '&' + 'lt;', '\u003e': '&' + 'gt;', '\u0022': '&' + 'quot;', '\u0027': '&' + '#39;' };
     return String(s).replace(/[\u0026\u003c\u003e\u0022\u0027]/g, ch => map[ch]);
-}
+} 
 
 // Returns null for blank / invalid; otherwise the number (0 is a valid input).
 function readNum(id) {
