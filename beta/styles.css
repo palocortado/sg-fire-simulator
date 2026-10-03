@@ -384,3 +384,40 @@ body:not(.global-usd) .ccy-text-usd { display: none; }
 #tt-float .tt-close { display: none; float: right; margin: -0.25rem -0.25rem 0.25rem 0.5rem; background: transparent; border: none; color: #fff; font-size: 1.2rem; line-height: 1; cursor: pointer; }
 #tt-float.sheet { left: 8px !important; right: 8px; bottom: 8px; top: auto !important; width: auto; max-width: none; max-height: 50vh; font-size: 0.88rem; border-radius: 12px; }
 #tt-float.sheet .tt-close { display: block; }
+
+
+/* =============================================================================
+   V6 Batch 4
+   ============================================================================= */
+
+/* R10/R24: CPF questions and layout */
+.cpf-question { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; font-size: 0.88rem; font-weight: 600; color: #166534; margin-bottom: 0.6rem; }
+.cpf-sub { font-size: 0.8rem; font-weight: 700; color: #166534; margin: 0.25rem 0 0.4rem; }
+.cpf-sub-hint { font-weight: 400; color: #4d7c0f; }
+.cpf-inflow-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-top: 0.9rem; }
+.cpf-note { background: #ffffff; border: 1px solid #bbf7d0; border-radius: 6px; padding: 0.6rem 0.75rem; margin: 0.25rem 0 0.5rem; }
+body.no-cpf .cpf-only { display: none !important; }
+body:not(.no-cpf) .no-cpf-only { display: none !important; }
+body.no-cpf-contrib .cpf-contrib-only { display: none !important; }
+body:not(.no-cpf-contrib) .cpf-nocontrib-only { display: none !important; }
+
+/* R9: loan type and two-stage bank rate (Advanced only) */
+.loan-type-row { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 0.85rem; font-size: 0.85rem; color: var(--text-secondary); }
+body:not(.bank-loan-active) .bank-only { display: none !important; }
+body.bank-loan-active .not-bank { display: none !important; }
+
+/* R7: custom cash flow rows */
+.cf-row, .cf-head { display: grid; gap: 0.4rem; align-items: center; margin-bottom: 0.4rem; }
+.cf-row-income { grid-template-columns: 1.6fr 1.3fr 0.9fr 0.9fr auto auto; }
+.cf-row-milestone { grid-template-columns: 1.5fr 1.4fr 1.3fr 0.8fr auto; }
+.cf-head span { font-size: 0.7rem; font-weight: 600; color: #64748b; }
+.cf-row input[type="text"], .cf-row input[type="number"], .cf-row select { padding: 0.4rem; font-size: 0.82rem; }
+.cf-row select { width: 100%; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; font-weight: 600; }
+.cf-fixed { display: flex !important; align-items: center; gap: 0.25rem; font-size: 0.75rem !important; white-space: nowrap; cursor: pointer; margin: 0 !important; }
+.btn-add { margin-top: 0.5rem; background: #fff; border: 1px dashed #94a3b8; color: #334155; padding: 0.45rem 0.85rem; border-radius: 6px; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+.btn-add:hover { background: #f1f5f9; }
+.btn-remove { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; border-radius: 6px; cursor: pointer; font-size: 0.8rem; padding: 0.35rem 0.5rem; }
+@media (max-width: 640px) {
+    .cf-head { display: none; }
+    .cf-row-income, .cf-row-milestone { grid-template-columns: 1fr 1fr; padding-bottom: 0.5rem; border-bottom: 1px dashed #e2e8f0; }
+}

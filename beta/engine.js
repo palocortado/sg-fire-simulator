@@ -1,6 +1,16 @@
 /* =============================================================================
    Financial Independence Simulator for Singapore — engine.js
    Version: V6 staging, Batch 3 
+   -----------------------------------------------------------------------------
+
+   -----------------------------------------------------------------------------
+   
+// Batch 4 (roadmap R7, R9, R10, R23, R24):
+//   R7  Custom cash flows UI; income and windfalls saved the way you already save
+//   R9  Mortgage: HDB/Bank selector (Advanced), rate history to Q2 2026, two-stage bank rate, 5% warning
+//   R10 CPF questions: "Do you have CPF savings?" / "Are you contributing monthly?"
+//   R23 Loads in Simple unless Advanced was clearly in use
+//   R24 CPF layout: balances first, one estimator for OA + SA inflows, SA checkbox removed
    
    Batch 3 scope (roadmap R1–R6): 
    - R1 Finish Line checkbox moved to the chart header 
@@ -8,9 +18,7 @@
    - R3 Tooltips kept inside the window; bottom sheet on small screens 
    - R4 CPF estimator fills OA and SA (2026 allocation rates); fixes above 60 
    - R5 Calculate and coaching buttons scroll to the result card - R6 CPF tooltip mentions the S$8,000 Ordinary Wage ceiling 
-   -----------------------------------------------------------------------------
-
-   -----------------------------------------------------------------------------
+   
    Batch 2 scope (on top of Batch 1):
      - Personal inputs start blank with placeholder examples; assumptions are
        pre-filled and marked; "Required" tags; essentials gate before results
@@ -38,7 +46,7 @@ let incomeStreamCount = 0;
 let milestoneCount = 0;
 let isLoading = true;
 
-const APP_VERSION = "6.0-batch3";
+const APP_VERSION = "6.0-batch4";
 const STORAGE_KEY = 'fireSimState_v6';
 const LEGACY_STORAGE_KEYS = ['fireSimState', 'fireSimState_v5'];
 
@@ -73,6 +81,9 @@ const DEFAULTS = Object.freeze({
 
     // Housing
     mortgageRate: 2.6,        // % (HDB concessionary = CPF OA rate + 0.1%)
+    mortgageRateBank: 2.5,    // % starting value when switching to a bank loan
+    mortgageRateLong: 2.5,    // % long-run bank rate after lock-in (10-yr avg to Q2 2026 ~2.5%)
+    lockYrs: 2,               // years left on the current bank package
     mortgageShare: 50,        // % (only used when partner toggle is on)
 
     // CPF
@@ -111,14 +122,20 @@ const FIELD_DEFAULTS = {
     'inp-mortgagePrincipal': '',
     'inp-loanYrs': '',
     'inp-mortgageRate': DEFAULTS.mortgageRate,
+    'inp-mortgageRateLong': DEFAULTS.mortgageRateLong,
+    'inp-lockYrs': DEFAULTS.lockYrs,
     'inp-mortgageShare': DEFAULTS.mortgageShare
 };
 
 // Fields reset to their default by "Clear" (assumptions). All other fields are blanked.
 const ASSUMPTION_FIELDS = ['inp-expenseShare', 'inp-inflation', 'inp-realContribGrowth',
-    'inp-invRet', 'inp-globalRet', 'inp-fxRate', 'inp-fxDrift', 'inp-sgRet', 'inp-cashYield', 'inp-mortgageRate', 'inp-mortgageShare'];
+    'inp-invRet', 'inp-globalRet', 'inp-fxRate', 'inp-fxDrift', 'inp-sgRet', 'inp-cashYield', 'inp-mortgageRate', 'inp-mortgageShare',
+    'inp-mortgageRateLong', 'inp-lockYrs'];
 
-const PERSISTED_TOGGLES = ['toggle-expense-partner', 'toggle-mortgage', 'toggle-mortgage-partner', 'inp-maxOA', 'toggle-sa', 'inp-showFireCurve'];
+const PERSISTED_TOGGLES = ['toggle-expense-partner', 'toggle-mortgage', 'toggle-mortgage-partner', 'inp-maxOA', 'inp-showFireCurve'];
+
+// Yes/No and HDB/Bank choices (radio groups) and their defaults
+const CHOICE_DEFAULTS = { cpfHas: 'yes', cpfContrib: 'yes', loanType: 'hdb' };
 
 // Mode-switch memory (enables reversible Simple <-> Advanced)
 let modeState = {
@@ -198,16 +215,68 @@ function showNotice(msg) {
 // -----------------------------------------------------------------------------
 // Panel visibility
 // -----------------------------------------------------------------------------
+function getRadio(name, fallback) {
+    const r = document.querySelector(`input[name="${name}"]:checked`);
+    return r ? r.value : fallback;
+}
+function setRadio(name, value) {
+    document.querySelectorAll(`input[name="${name}"]`).forEach(r => { r.checked = (r.value === value); });
+}
+function getChoices() {
+    return {
+        cpfHas: getRadio('cpfHas', CHOICE_DEFAULTS.cpfHas),
+        cpfContrib: getRadio('cpfContrib', CHOICE_DEFAULTS.cpfContrib),
+        loanType: getRadio('loanType', CHOICE_DEFAULTS.loanType)
+    };
+}
+function setChoices(c) {
+    const v = Object.assign({}, CHOICE_DEFAULTS, c || {});
+    setRadio('cpfHas', v.cpfHas);
+    setRadio('cpfContrib', v.cpfContrib);
+    setRadio('loanType', v.loanType);
+}
+
 function syncPanels() {
     const show = (panelId, on) => { const p = document.getElementById(panelId); if (p) p.style.display = on ? 'block' : 'none'; };
     show('expense-partner-panel', isChecked('toggle-expense-partner'));
     show('mortgage-panel', isChecked('toggle-mortgage'));
     show('mortgage-partner-panel', isChecked('toggle-mortgage-partner'));
-    show('sa-panel', isChecked('toggle-sa'));
+
+    // R10: CPF questions drive what is shown
+    const ch = getChoices();
+    const hasCpf = ch.cpfHas === 'yes';
+    document.body.classList.toggle('no-cpf', !hasCpf);
+    document.body.classList.toggle('no-cpf-contrib', hasCpf && ch.cpfContrib === 'no');
+
+    // R9: HDB loans need CPF (citizens only); without CPF the loan is a bank loan
+    const hdbLabel = document.getElementById('lbl-loan-hdb');
+    const hdbRadio = document.querySelector('input[name="loanType"][value="hdb"]');
+    if (hdbRadio) hdbRadio.disabled = !hasCpf;
+    if (hdbLabel) hdbLabel.classList.toggle('disabled', !hasCpf);
+    if (!hasCpf && ch.loanType === 'hdb') { setRadio('loanType', 'bank'); swapLoanRateDefault('bank'); }
+    document.body.classList.toggle('bank-loan-active', getMode() !== 'simple' && getRadio('loanType', 'hdb') === 'bank');
 }
 
 function toggleMortgagePartner() { syncPanels(); }
 function toggleExpensePartner() { syncPanels(); }
+
+function onCpfChoice() {
+    syncPanels();
+    runSim();
+}
+
+// If the rate is still at the other loan type's starting value, move it to this type's starting value
+function swapLoanRateDefault(type) {
+    const r = readNum('inp-mortgageRate');
+    if (type === 'bank' && (r === null || r === DEFAULTS.mortgageRate)) setVal('inp-mortgageRate', DEFAULTS.mortgageRateBank.toFixed(1), false);
+    if (type === 'hdb' && (r === null || r === DEFAULTS.mortgageRateBank)) setVal('inp-mortgageRate', DEFAULTS.mortgageRate.toFixed(1), false);
+}
+
+function onLoanTypeChange(type) {
+    swapLoanRateDefault(type);
+    syncPanels();
+    runSim();
+}
 
 // -----------------------------------------------------------------------------
 // Mode handling (Simple / Advanced) — reversible
@@ -223,7 +292,25 @@ function applyModeClass(mode) {
     document.body.classList.add(mode + '-mode');
     const r = document.getElementById('mode-' + mode);
     if (r) r.checked = true;
+    document.body.classList.toggle('bank-loan-active', mode !== 'simple' && getRadio('loanType', 'hdb') === 'bank');
 }
+
+// R23: has the user changed anything that only exists in Advanced mode?
+function advancedInUse() {
+    const differs = (id, def) => { const v = readNum(id); return v !== null && Math.abs(v - def) > 1e-9; };
+    if (differs('inp-inflation', DEFAULTS.inflation)) return true;
+    if (differs('inp-realContribGrowth', DEFAULTS.realContribGrowth)) return true;
+    if (differs('inp-cashYield', DEFAULTS.cashYield)) return true;
+    if (globalCcyState === 'USD') return true;
+    const gR = rateOr('inp-globalRet', DEFAULTS.globalRetSGD), sR = rateOr('inp-sgRet', DEFAULTS.sgRet);
+    if (Math.abs(gR - sR) > 0.005) return true;
+    if (readNum('inp-currentExpenses') !== null) return true;
+    if (isChecked('toggle-mortgage') && getRadio('loanType', 'hdb') === 'bank') return true;
+    if (isChecked('inp-showFireCurve')) return true;
+    if (readIncomeStreams().length || readMilestones().length) return true;
+    return false;
+}
+
 
 function setMode(mode) {
     const prev = getMode();
@@ -312,7 +399,7 @@ function onEnterAdvanced() {
 }
 
 // Advanced -> Simple
-function onEnterSimple() {
+function onEnterSimple(quiet) {
     const a = advancedPortfolioInSGD();
     const start = a.gStart + a.sStart;
     const contrib = a.gContrib + a.sContrib;
@@ -329,7 +416,7 @@ function onEnterSimple() {
 
     // Store exactly what Simple now displays, so edits can be detected on return
     modeState.simpleAtSwitch = readSimplePortfolio();
-    showNotice(`Combined into a single portfolio at a <strong>${round2(ret * 100)}%</strong> blended return${globalCcyState === 'USD' ? ' (USD holdings converted to SGD)' : ''}. Your separate Advanced inputs are saved and will return when you switch back.`);
+    if (!quiet) showNotice(`Combined into a single portfolio at a <strong>${round2(ret * 100)}%</strong> blended return${globalCcyState === 'USD' ? ' (USD holdings converted to SGD)' : ''}. Your separate Advanced inputs are saved and will return when you switch back.`);
 }
 
 // -----------------------------------------------------------------------------
@@ -394,6 +481,7 @@ function getState() {
     document.querySelectorAll('.milestone-stream').forEach(row => {
         milestones.push({
             name: row.querySelector('.ms-name').value,
+            type: row.querySelector('.ms-type') ? row.querySelector('.ms-type').value : 'windfall',
             amt: row.querySelector('.ms-amt').value,
             age: row.querySelector('.ms-age').value
         });
@@ -406,6 +494,7 @@ function getState() {
         chartView: getChartView(),
         exampleState: exampleState,
         modeState: modeState,
+        choices: getChoices(),
         fields, toggles, incomeStreams, milestones
     };
 }
@@ -420,6 +509,12 @@ function loadState(state) {
                 if (el) el.value = v;
             });
             Object.entries(state.toggles || {}).forEach(([id, v]) => setChecked(id, v));
+            // Batch 1–3 saves: SA was only counted when its checkbox was ticked
+            if (state.toggles && state.toggles['toggle-sa'] === false) {
+                setVal('inp-saStart', '', false);
+                setVal('inp-saContrib', '', false);
+            }
+            setChoices(state.choices);
             setGlobalCcyState(state.globalCcy === 'USD' ? 'USD' : 'SGD');
             modeState = Object.assign({ advInitialized: false, simpleAtSwitch: null }, state.modeState || {});
             setChartView(state.chartView === 'future' ? 'future' : 'today');
@@ -428,7 +523,7 @@ function loadState(state) {
             const sc = document.getElementById('income-streams-container');
             if (sc) { sc.innerHTML = ''; (state.incomeStreams || []).forEach(st => addIncomeStream(st.name, st.amt, st.start, st.end, st.fixed)); }
             const mc = document.getElementById('milestones-container');
-            if (mc) { mc.innerHTML = ''; (state.milestones || []).forEach(m => addMilestone(m.name, m.amt, m.age)); }
+            if (mc) { mc.innerHTML = ''; (state.milestones || []).forEach(m => addMilestone(m.name, m.amt, m.age, m.type)); }
         } else if (state.inputs) {
             // --- Legacy V5 format: migrate user-editable fields only ---
             const p = state.inputs;
@@ -440,6 +535,7 @@ function loadState(state) {
             Object.entries(map).forEach(([k, id]) => { if (p[k] !== undefined && p[k] !== null) setVal(id, p[k], false); });
             const tmap = { hasMortgage: 'toggle-mortgage', hasMortgagePartner: 'toggle-mortgage-partner', hasExpensePartner: 'toggle-expense-partner', isMaxOA: 'inp-maxOA', showFireCurve: 'inp-showFireCurve' };
             Object.entries(tmap).forEach(([k, id]) => { if (p[k] !== undefined) setChecked(id, p[k]); });
+            setChoices(null);
             applyModeClass('simple');
         }
         syncPanels();
@@ -499,8 +595,9 @@ function clearAllInputs() {
             if (ASSUMPTION_FIELDS.includes(id)) setFieldDefault(id);
             else setVal(id, '', false);
         });
-        ['toggle-expense-partner', 'toggle-mortgage', 'toggle-mortgage-partner', 'toggle-sa', 'inp-showFireCurve'].forEach(id => setChecked(id, false));
+        ['toggle-expense-partner', 'toggle-mortgage', 'toggle-mortgage-partner', 'inp-showFireCurve'].forEach(id => setChecked(id, false));
         setChecked('inp-maxOA', true);
+        setChoices(null);
         setGlobalCcyState('SGD');
         modeState = { advInitialized: false, simpleAtSwitch: null };
         if (getMode() === 'advanced') onEnterAdvanced();
@@ -527,7 +624,7 @@ function calcPmt(principal, ratePerYear, yearsRemaining) {
     return principal * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
 }
 
-// Replaces V5 calcLiveMortgage(): display only, no input gatekeeping
+// Display only: today's installment and how it's paid
 function updateMortgageReadout(inp) {
     const m = inp.mortgage;
     const pmt = m.has ? calcPmt(m.principal, m.rate, m.years) : 0;
@@ -537,69 +634,102 @@ function updateMortgageReadout(inp) {
 
     const splitDisp = document.getElementById('disp-mortgage-split');
     if (!splitDisp) return;
-    if (m.has && personal > 0) {
-        const allowedOA = m.payWithOA ? personal : Math.min(m.customOACap, personal);
-        const oaCovers = Math.min(inp.cpf.oaContrib, allowedOA);
-        const cashTopup = Math.max(0, personal - oaCovers);
-        splitDisp.style.display = 'block';
-        splitDisp.innerHTML = `Your CPF OA covers <strong>${money(oaCovers)}</strong> of your monthly installment. You are topping up <strong>${money(cashTopup)}</strong> in cash each month (make sure this ${money(cashTopup)} is excluded from your monthly investments and cash savings).`;
+    if (!(m.has && personal > 0)) { splitDisp.style.display = 'none'; return; }
+    const excl = '(make sure this is excluded from your monthly investments and cash savings)';
+    let html;
+    if (!inp.cpf.has) {
+        html = `You pay your <strong>${money(personal)}</strong> monthly installment in cash ${excl}.`;
+    } else if (!m.payWithOA) {
+        html = `You've chosen to pay your <strong>${money(personal)}</strong> monthly installment in cash ${excl}.`;
+    } else if (!inp.cpf.contributing) {
+        const months = Math.floor(inp.cpf.oaStart / personal);
+        html = months >= 1
+            ? `Your OA balance covers about <strong>${months} month${months === 1 ? '' : 's'}</strong> of your ${money(personal)} installment. After that you pay it in cash ${excl}.`
+            : `Your OA balance won't cover your ${money(personal)} installment, so you pay it in cash ${excl}.`;
     } else {
-        splitDisp.style.display = 'none';
+        const oaCovers = Math.min(inp.cpf.oaContrib, personal);
+        const cashTopup = Math.max(0, personal - oaCovers);
+        html = `Your CPF OA covers <strong>${money(oaCovers)}</strong> of your monthly installment. You are topping up <strong>${money(cashTopup)}</strong> in cash each month (make sure this ${money(cashTopup)} is excluded from your monthly investments and cash savings).`;
     }
+    if (m.twoStage) html += ` From year ${Math.round(m.lockYrs) + 1}, the engine reprices your loan at your long-run rate.`;
+    splitDisp.style.display = 'block';
+    splitDisp.innerHTML = html;
 }
 
 // -----------------------------------------------------------------------------
-// Custom cash flows (UI activated in a later batch — item 6)
+// Custom cash flows (R7, Advanced mode)
 // -----------------------------------------------------------------------------
-function addIncomeStream(name = '', amount = '', start = 60, end = 100, fixed = false) {
+function removeCfRow(id) {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+    runSim();
+}
+
+function addIncomeStream(name = '', amount = '', start = '', end = '', fixed = false) {
     const c = document.getElementById('income-streams-container');
     if (!c) return;
     const id = incomeStreamCount++;
+    const n = parseFloat(String(amount).replace(/,/g, ''));
+    const shown = Number.isFinite(n) ? fmt(n) : '';
     c.insertAdjacentHTML('beforeend', `
-        <div class="list-stream income-stream" id="stream-${id}">
-            <input type="text" class="is-name" placeholder="Name" value="${escapeHtml(name)}">
-            <input type="text" class="num-format is-amt" id="inp-str-${id}" placeholder="0" value="${escapeHtml(amount)}" onblur="runSim()">
-            <input type="number" class="is-start" value="${escapeHtml(start)}" onchange="runSim()">
-            <input type="number" class="is-end" value="${escapeHtml(end)}" onchange="runSim()">
-            <label class="is-fixed-label"><input type="checkbox" class="is-fixed" ${fixed ? 'checked' : ''} onchange="runSim()"> Fixed amount</label>
-            <button class="btn-remove" onclick="document.getElementById('stream-${id}').remove(); runSim();">X</button>
+        <div class="cf-row cf-row-income income-stream" id="stream-${id}">
+            <input type="text" class="is-name" placeholder="e.g. Rental income" value="${escapeHtml(name)}" onchange="runSim()" aria-label="Name">
+            <input type="text" class="num-format is-amt" placeholder="e.g. 1,500" value="${escapeHtml(shown)}" aria-label="Monthly amount (Today's SGD)">
+            <input type="number" class="is-start" placeholder="Now" value="${escapeHtml(start)}" oninput="runSim()" aria-label="From age">
+            <input type="number" class="is-end" placeholder="100" value="${escapeHtml(end)}" oninput="runSim()" aria-label="To age">
+            <label class="cf-fixed" title="Tick if the amount won't rise with inflation"><input type="checkbox" class="is-fixed" ${fixed ? 'checked' : ''} onchange="runSim()"> Fixed</label>
+            <button type="button" class="btn-remove" onclick="removeCfRow('stream-${id}')" aria-label="Remove">✕</button>
         </div>`);
 }
 
-function addMilestone(name = '', amount = '', age = 60) {
+// type: 'windfall' or 'expense'. Older saves stored expenses as negative amounts.
+function addMilestone(name = '', amount = '', age = '', type = '') {
     const c = document.getElementById('milestones-container');
     if (!c) return;
     const id = milestoneCount++;
+    const n = parseFloat(String(amount).replace(/,/g, ''));
+    if (!type) type = (Number.isFinite(n) && n < 0) ? 'expense' : 'windfall';
+    const shown = Number.isFinite(n) ? fmt(Math.abs(n)) : '';
     c.insertAdjacentHTML('beforeend', `
-        <div class="milestone-stream" id="milestone-${id}">
-            <input type="text" class="ms-name" placeholder="Description" value="${escapeHtml(name)}">
-            <input type="text" class="num-format ms-amt" id="inp-ms-${id}" placeholder="0" value="${escapeHtml(amount)}" onblur="runSim()">
-            <input type="number" class="ms-age" value="${escapeHtml(age)}" onchange="runSim()">
-            <button class="btn-remove" onclick="document.getElementById('milestone-${id}').remove(); runSim();">X</button>
+        <div class="cf-row cf-row-milestone milestone-stream" id="milestone-${id}">
+            <input type="text" class="ms-name" placeholder="e.g. Inheritance" value="${escapeHtml(name)}" onchange="runSim()" aria-label="Description">
+            <select class="ms-type" onchange="runSim()" aria-label="Type">
+                <option value="windfall" ${type === 'windfall' ? 'selected' : ''}>Windfall</option>
+                <option value="expense" ${type === 'expense' ? 'selected' : ''}>Expense</option>
+            </select>
+            <input type="text" class="num-format ms-amt" placeholder="e.g. 50,000" value="${escapeHtml(shown)}" aria-label="Amount (Today's SGD)">
+            <input type="number" class="ms-age" placeholder="Age" value="${escapeHtml(age)}" oninput="runSim()" aria-label="Age">
+            <button type="button" class="btn-remove" onclick="removeCfRow('milestone-${id}')" aria-label="Remove">✕</button>
         </div>`);
 }
 
+// Blank "from" = from now; blank "to" = age 100. Rows without an amount are ignored.
 function readIncomeStreams() {
     const out = [];
     document.querySelectorAll('.income-stream').forEach(row => {
         const a = parseFloat(String(row.querySelector('.is-amt').value).replace(/,/g, ''));
-        if (!Number.isFinite(a)) return;
+        if (!Number.isFinite(a) || a === 0) return;
+        const s = parseFloat(row.querySelector('.is-start').value);
+        const e = parseFloat(row.querySelector('.is-end').value);
         out.push({
             amt: a,
-            start: parseFloat(row.querySelector('.is-start').value) || 0,
-            end: parseFloat(row.querySelector('.is-end').value) || 0,
+            start: Number.isFinite(s) ? s : 0,
+            end: Number.isFinite(e) ? e : 100,
             fixed: row.querySelector('.is-fixed') ? row.querySelector('.is-fixed').checked : false
         });
     });
     return out;
 }
 
+// Returns signed amounts: windfalls positive, expenses negative. Rows without amount or age are ignored.
 function readMilestones() {
     const out = [];
     document.querySelectorAll('.milestone-stream').forEach(row => {
         const a = parseFloat(String(row.querySelector('.ms-amt').value).replace(/,/g, ''));
-        if (!Number.isFinite(a)) return;
-        out.push({ amt: a, age: parseFloat(row.querySelector('.ms-age').value) || 0 });
+        const age = parseFloat(row.querySelector('.ms-age').value);
+        if (!Number.isFinite(a) || a === 0 || !Number.isFinite(age)) return;
+        const type = row.querySelector('.ms-type') ? row.querySelector('.ms-type').value : (a < 0 ? 'expense' : 'windfall');
+        out.push({ amt: type === 'expense' ? -Math.abs(a) : Math.abs(a), age: age });
     });
     return out;
 }
@@ -613,7 +743,8 @@ const PERSONAS = {
             'inp-invStart': 10000, 'inp-invContrib': 500, 'inp-invRet': 5.0,
             'inp-cashStart': 20000, 'inp-cashContrib': 1000,
             'inp-oaStart': 25000, 'inp-oaContrib': 1100 },
-        toggles: { 'toggle-expense-partner': false, 'toggle-mortgage': false, 'toggle-mortgage-partner': false, 'toggle-sa': false }
+        toggles: { 'toggle-expense-partner': false, 'toggle-mortgage': false, 'toggle-mortgage-partner': false },
+        choices: { cpfHas: 'yes', cpfContrib: 'yes' }
     },
     hdb_couple: {
         fields: { 'inp-currentAge': 30, 'inp-retireAge': 55, 'inp-expenses': 5000, 'inp-expenseShare': 50,
@@ -621,7 +752,8 @@ const PERSONAS = {
             'inp-cashStart': 40000, 'inp-cashContrib': 1000,
             'inp-mortgagePrincipal': 420000, 'inp-loanYrs': 23, 'inp-mortgageRate': 2.6, 'inp-mortgageShare': 50,
             'inp-oaStart': 20000, 'inp-oaContrib': 1400 },
-        toggles: { 'toggle-expense-partner': true, 'toggle-mortgage': true, 'toggle-mortgage-partner': true, 'inp-maxOA': true, 'toggle-sa': false }
+        toggles: { 'toggle-expense-partner': true, 'toggle-mortgage': true, 'toggle-mortgage-partner': true, 'inp-maxOA': true },
+        choices: { cpfHas: 'yes', cpfContrib: 'yes', loanType: 'hdb' }
     },
     growing_family: {
         fields: { 'inp-currentAge': 35, 'inp-retireAge': 60, 'inp-expenses': 8500, 'inp-expenseShare': 50,
@@ -629,7 +761,8 @@ const PERSONAS = {
             'inp-cashStart': 80000, 'inp-cashContrib': 700,
             'inp-mortgagePrincipal': 1100000, 'inp-loanYrs': 24, 'inp-mortgageRate': 2.8, 'inp-mortgageShare': 50,
             'inp-oaStart': 35000, 'inp-oaContrib': 1500 },
-        toggles: { 'toggle-expense-partner': true, 'toggle-mortgage': true, 'toggle-mortgage-partner': true, 'inp-maxOA': true, 'toggle-sa': false }
+        toggles: { 'toggle-expense-partner': true, 'toggle-mortgage': true, 'toggle-mortgage-partner': true, 'inp-maxOA': true },
+        choices: { cpfHas: 'yes', cpfContrib: 'yes', loanType: 'bank' }
     },
     pragmatic_saver: {
         fields: { 'inp-currentAge': 42, 'inp-retireAge': 60, 'inp-expenses': 2800,
@@ -638,15 +771,17 @@ const PERSONAS = {
             'inp-mortgagePrincipal': 120000, 'inp-loanYrs': 10, 'inp-mortgageRate': 2.6, 'inp-mortgageShare': 100,
             'inp-oaStart': 30000, 'inp-oaContrib': 1200,
             'inp-saStart': 140000, 'inp-saContrib': 500 },
-        toggles: { 'toggle-expense-partner': false, 'toggle-mortgage': true, 'toggle-mortgage-partner': false, 'inp-maxOA': true, 'toggle-sa': true }
+        toggles: { 'toggle-expense-partner': false, 'toggle-mortgage': true, 'toggle-mortgage-partner': false, 'inp-maxOA': true },
+        choices: { cpfHas: 'yes', cpfContrib: 'yes', loanType: 'hdb' }
     },
     self_employed: {
         fields: { 'inp-currentAge': 36, 'inp-retireAge': 58, 'inp-expenses': 3200,
             'inp-invStart': 70000, 'inp-invContrib': 1000, 'inp-invRet': 5.0,
             'inp-cashStart': 75000, 'inp-cashContrib': 8000,
             'inp-mortgagePrincipal': 320000, 'inp-loanYrs': 23, 'inp-mortgageRate': 2.6, 'inp-mortgageShare': 50,
-            'inp-oaStart': 30000, 'inp-oaContrib': 0 },
-        toggles: { 'toggle-expense-partner': false, 'toggle-mortgage': true, 'toggle-mortgage-partner': false, 'inp-maxOA': true, 'toggle-sa': false }
+            'inp-oaStart': 30000 },
+        toggles: { 'toggle-expense-partner': false, 'toggle-mortgage': true, 'toggle-mortgage-partner': false, 'inp-maxOA': true },
+        choices: { cpfHas: 'yes', cpfContrib: 'no', loanType: 'hdb' }
     }
 };
 PERSONAS.median = PERSONAS.hdb_couple;
@@ -688,6 +823,7 @@ window.loadProfile = function (type) {
     setGlobalCcyState('SGD');
     Object.entries(persona.fields).forEach(([id, v]) => setVal(id, v, false));
     Object.entries(persona.toggles).forEach(([id, v]) => setChecked(id, v));
+    setChoices(persona.choices);
     syncPanels();
 
     // Advanced split is re-derived from the new persona
@@ -745,26 +881,41 @@ function collectInputs() {
             yield: (adv ? rateOr('inp-cashYield', DEFAULTS.cashYield) : DEFAULTS.cashYield) / 100
         },
 
-        cpf: {
-            oaStart: amt('inp-oaStart'),
-            oaContrib: amt('inp-oaContrib'),
-            hasSA: isChecked('toggle-sa'),
-            saStart: amt('inp-saStart'),
-            saContrib: amt('inp-saContrib'),
-            oaRate: DEFAULTS.oaRate / 100,
-            saRate: DEFAULTS.saRate / 100,
-            unlockAge: DEFAULTS.cpfUnlockAge
-        },
+                cpf: (() => {
+            const ch = getChoices();
+            const has = ch.cpfHas === 'yes';
+            const contributing = has && ch.cpfContrib === 'yes';
+            return {
+                has, contributing,
+                oaStart: has ? amt('inp-oaStart') : 0,
+                oaContrib: contributing ? amt('inp-oaContrib') : 0,
+                hasSA: has,
+                saStart: has ? amt('inp-saStart') : 0,
+                saContrib: contributing ? amt('inp-saContrib') : 0,
+                oaRate: DEFAULTS.oaRate / 100,
+                saRate: DEFAULTS.saRate / 100,
+                unlockAge: DEFAULTS.cpfUnlockAge
+            };
+        })(),
 
-        mortgage: {
-            has: isChecked('toggle-mortgage'),
-            principal: amt('inp-mortgagePrincipal'),
-            rate: rateOr('inp-mortgageRate', DEFAULTS.mortgageRate) / 100,
-            years: amt('inp-loanYrs'),
-            share: (mortgagePartner ? rateOr('inp-mortgageShare', DEFAULTS.mortgageShare) : 100) / 100,
-            payWithOA: isChecked('inp-maxOA', true),
-            customOACap: amt('inp-customOACap')
-        },
+        mortgage: (() => {
+            const ch = getChoices();
+            const loanType = (ch.cpfHas === 'no') ? 'bank' : ch.loanType;
+            const twoStage = adv && loanType === 'bank';
+            return {
+                has: isChecked('toggle-mortgage'),
+                principal: amt('inp-mortgagePrincipal'),
+                rate: rateOr('inp-mortgageRate', DEFAULTS.mortgageRate) / 100,
+                years: amt('inp-loanYrs'),
+                share: (mortgagePartner ? rateOr('inp-mortgageShare', DEFAULTS.mortgageShare) : 100) / 100,
+                payWithOA: ch.cpfHas === 'yes' && isChecked('inp-maxOA', true),
+                customOACap: 0,
+                loanType,
+                twoStage,
+                rateLong: twoStage ? rateOr('inp-mortgageRateLong', DEFAULTS.mortgageRateLong) / 100 : null,
+                lockYrs: twoStage ? Math.max(0, rateOr('inp-lockYrs', DEFAULTS.lockYrs)) : Infinity
+            };
+        })(),
 
         incomeStreams: adv ? readIncomeStreams() : [],
         milestones: adv ? readMilestones() : [],
@@ -834,18 +985,32 @@ function simulatePath(inp) {
         if (liquidNow > peakLiquid) peakLiquid = liquidNow;
         if (age === 100) break;
 
-        // Milestones (today's SGD, inflation-indexed) at the start of the year
+                // R7: money coming in (income streams, windfalls) is saved the way you already save:
+        // split across Global / Singapore / cash in proportion to your monthly contributions.
+        // If all contributions are zero, it goes to cash.
+        const depositSplit = amountSGD => {
+            const wG = g.contrib * fx, wS = s.contrib, wC = c.contrib;
+            const tot = wG + wS + wC;
+            if (tot <= 0) { cash += amountSGD; return; }
+            glob += (amountSGD * wG / tot) / fx;
+            sg += amountSGD * wS / tot;
+            cash += amountSGD * wC / tot;
+        };
+
+        // Windfalls and one-off expenses (today's SGD, inflation-indexed) at the start of the year
         inp.milestones.forEach(ms => {
             if (ms.age !== age) return;
             const v = ms.amt * priceIdx;
-            if (v > 0) cash += v;
+            if (v > 0) depositSplit(v);
             else if (v < 0) {
                 const unpaid = withdraw(-v);
                 if (unpaid > 0.5) { flagDepletion(age); totalShortfall += unpaid; }
             }
         });
 
-        const monthlyPmt = mortgageActive ? calcPmt(remPrincipal, m.rate, mortgageEndAge - age) : 0;
+        // R9: bank loans in Advanced mode reprice to the long-run rate after the lock-in period
+        const yearRate = (m.twoStage && (age - currentAge) >= m.lockYrs) ? m.rateLong : m.rate;
+        const monthlyPmt = mortgageActive ? calcPmt(remPrincipal, yearRate, mortgageEndAge - age) : 0;
         const personalPmt = monthlyPmt * m.share;
         const monthlySpend = isWorking ? 0 : inp.expenses * priceIdx * (inp.expenseShare / 100);
         let monthlyIncome = 0;
@@ -870,7 +1035,7 @@ function simulatePath(inp) {
 
             let need = monthlySpend;
             if (monthlyPmt > 0 && remPrincipal > 0) {
-                const interest = remPrincipal * m.rate / 12;
+                const interest = remPrincipal * yearRate / 12;
                 remPrincipal = Math.max(0, remPrincipal - (monthlyPmt - interest));
                 const oaTarget = (isWorking && !m.payWithOA) ? Math.min(m.customOACap, personalPmt) : personalPmt;
                 const fromOA = Math.min(Math.max(0, oa), oaTarget);
@@ -881,7 +1046,7 @@ function simulatePath(inp) {
             }
 
             const net = need - monthlyIncome;
-            if (net < 0) cash += -net;
+            if (net < 0) depositSplit(-net);
             else if (net > 0) {
                 const unpaid = withdraw(net);
                 if (unpaid > 0.5) { flagDepletion(age); totalShortfall += unpaid; }
@@ -947,8 +1112,9 @@ const WARN_TEXT = {
     inflationLow: "Note: Highly optimistic. Singapore's average headline inflation was 1.72% over the last 10 years, 2.14% over the last 20 years, and 1.68% over the past 30 years.",
     cashHigh: 'Note: Most bank savings accounts that offer high yields cap the maximum balance that earns this interest rate.',
     cashLow: 'Note: You should consider switching from a basic savings account to a high-yield savings account to protect your cash from inflation.',
-    mortHigh: 'Note: This is unusually high for Singapore. HDB concessionary loans are fixed at 2.6%. Bank loans are pegged to SORA, which peaked above 3.7% in 2023; packages in 2026 are around 1.4%–1.9%.',
-    mortLow: 'Note: This is highly optimistic. Bank rates in Singapore rarely drop below about 1.35%, and the HDB rate sits at 2.6%.',
+    mortHigh: 'Note: This is high for Singapore. Average mortgage rates peaked at about 4.7% in late 2023, and averaged 2.0%–3.2% over the 5 to 20 years to Q2 2026. HDB concessionary loans are 2.6%.',
+    mortLow: "Note: This is optimistic. Average mortgage rates in Singapore haven't been below about 1.0% in the 20 years to Q2 2026 (the low point, about 1.04%, was around 2012–2014).",
+    longLow: 'Note: Optimistic for a long-run rate. Average mortgage rates were about 2.0% over the 15 and 20 years to Q2 2026, and about 2.5% over the last 10.',
     retireEarly: 'Note: Extreme early financial freedom requires massive savings rates and exposes your capital to 50+ years of sequence-of-returns risk.'
 };
 
@@ -978,7 +1144,8 @@ function checkInputWarnings(inp) {
     setWarn('inp-sgRet', [[gt('inp-sgRet', 8.0), WARN_TEXT.sg]]);
     setWarn('inp-inflation', [[lt('inp-inflation', 1.5), WARN_TEXT.inflationLow]]);
     setWarn('inp-cashYield', [[gt('inp-cashYield', 2.0), WARN_TEXT.cashHigh], [lt('inp-cashYield', 0.5) && v('inp-cashYield') > 0, WARN_TEXT.cashLow]]);
-    setWarn('inp-mortgageRate', [[gt('inp-mortgageRate', 4.5), WARN_TEXT.mortHigh], [lt('inp-mortgageRate', 1.3) && v('inp-mortgageRate') > 0, WARN_TEXT.mortLow]]);
+    setWarn('inp-mortgageRate', [[gt('inp-mortgageRate', 5.0), WARN_TEXT.mortHigh], [lt('inp-mortgageRate', 1.0) && v('inp-mortgageRate') > 0, WARN_TEXT.mortLow]]);
+    setWarn('inp-mortgageRateLong', [[gt('inp-mortgageRateLong', 5.0), WARN_TEXT.mortHigh], [lt('inp-mortgageRateLong', 1.5), WARN_TEXT.longLow]]);
     setWarn('inp-retireAge', [[lt('inp-retireAge', 40) && v('inp-retireAge') > 0, WARN_TEXT.retireEarly]]);
 
     // Cash buffer guardrails (roadmap item 5): only while still working, only once cash is entered
@@ -1153,7 +1320,7 @@ function runSim() {
     // Simple mode: disclose hidden assumptions under the result
     if (assumptionsLine) {
         if (inp.mode === 'simple') {
-            assumptionsLine.innerText = `Assumes ${DEFAULTS.inflation}% inflation, ${DEFAULTS.cashYield}% cash yield and CPF floor rates (OA ${DEFAULTS.oaRate}%, SA ${DEFAULTS.saRate}%). Change these in Advanced.`;
+            assumptionsLine.innerText = `Assumes ${DEFAULTS.inflation}% inflation, ${DEFAULTS.cashYield}% cash yield${inp.cpf.has ? ` and CPF floor rates (OA ${DEFAULTS.oaRate}%, SA ${DEFAULTS.saRate}%)` : ''}. Change these in Advanced.`;
             assumptionsLine.style.display = 'block';
         } else {
             assumptionsLine.style.display = 'none';
@@ -1211,7 +1378,7 @@ function renderChart(labels, datasets, inp, hasLocked = false) {
                 ann['milestone_' + i] = {
                     type: 'line', xMin: idx(ms.age), xMax: idx(ms.age),
                     borderColor: 'rgba(100, 116, 139, 0.3)', borderWidth: 1, borderDash: [2, 2],
-                    label: { display: true, content: ms.amt < 0 ? '✈️' : '💰', position: 'end', backgroundColor: 'transparent', font: { size: 14 }, yAdjust: 40 + i * 15 }
+                    label: { display: true, content: ms.amt < 0 ? '💸' : '💰', position: 'end', backgroundColor: 'transparent', font: { size: 14 }, yAdjust: 40 + i * 15 }
                 };
             }
         });
@@ -1310,16 +1477,21 @@ function runOAEstimate() {
     return { oa, sa };
 }
 
-function applyOAEstimate() {
+// Fills OA and SA inflows. If you've already entered an OA inflow that differs from the
+// estimate by more than 10%, your figure is kept unless you choose to replace it.
+function applyOAEstimate(replaceOA) {
     const est = runOAEstimate();
     if (!est) return;
-    setVal('inp-oaContrib', est.oa);
-    if (est.sa > 0) {
-        setChecked('toggle-sa', true);
-        syncPanels();
-        setVal('inp-saContrib', est.sa);
+    const cur = readNum('inp-oaContrib');
+    const differs = cur !== null && est.oa > 0 && Math.abs(cur - est.oa) / est.oa > 0.10;
+    setVal('inp-saContrib', est.sa);
+    if (!differs || replaceOA) {
+        setVal('inp-oaContrib', est.oa);
+        const pnl = document.getElementById('oa-calc-panel');
+        if (pnl) pnl.style.display = 'none';
+    } else {
+        updateDOM('oa-est-result', `SA inflow set to <strong>${money(est.sa)}/mo</strong>. We kept your OA inflow of <strong>${money(cur)}/mo</strong> (estimate: ${money(est.oa)}/mo). :void(0)" onclick="applyOAEstimate(true)">Use the estimate for OA too</a>`, true);
     }
-    toggleOACalc();
     runSim();
 }
 
@@ -1352,6 +1524,7 @@ window.toggleExamplePicker = function () {
 
 window.loadExample = function (type) {
     if (!PERSONAS[type]) return;
+    applyModeClass('simple');
     window.loadProfile(type);
     setExampleState(type);
     showMissing = false;
@@ -1565,19 +1738,33 @@ function initTooltips() {
 // -----------------------------------------------------------------------------
 function initApp() {
     initTooltips();
-    document.querySelectorAll('.num-format').forEach(el => {
-        el.addEventListener('blur', function () {
-            const n = readNum(this.id);
-            if (n !== null) setVal(this.id, n, false);
-            runSim();
-        });
-        el.addEventListener('focus', function () { this.value = this.value.replace(/,/g, ''); });
+        // Thousands separators on all money fields, including rows added later (R7)
+    document.addEventListener('focusin', e => {
+        const t = e.target;
+        if (t && t.classList && t.classList.contains('num-format')) t.value = t.value.replace(/,/g, '');
+    });
+    document.addEventListener('focusout', e => {
+        const t = e.target;
+        if (!(t && t.classList && t.classList.contains('num-format'))) return;
+        const s = String(t.value).replace(/,/g, '').trim();
+        const n = parseFloat(s);
+        if (s !== '' && Number.isFinite(n)) t.value = fmt(Math.round(n));
+        runSim();
     });
 
     let loaded = false;
     try {
         const v6 = localStorage.getItem(STORAGE_KEY);
-        if (v6) { loadState(JSON.parse(v6)); loaded = true; }
+        if (v6) {
+            loadState(JSON.parse(v6));
+            loaded = true;
+            // R23: reopen in Advanced only if it was last used AND something Advanced-only was changed
+            if (getMode() === 'advanced' && !advancedInUse()) {
+                onEnterSimple(true);
+                applyModeClass('simple');
+                syncPanels();
+            }
+        }
         else {
             for (const k of LEGACY_STORAGE_KEYS) {
                 const legacy = localStorage.getItem(k);

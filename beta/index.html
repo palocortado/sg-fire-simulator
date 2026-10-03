@@ -320,44 +320,69 @@
                         </div>
                     </div>
 
-                    <!-- CPF -->
+                    <!-- CPF (R10 + R24) -->
                     <div>
                         <h4 class="section-h4" style="display:flex; align-items:center;">
                             CPF (locked until 55)
-                            <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">CPF can't fund an early retirement before 55, so the chart shows it as a separate dashed line until then, and adds it to your available wealth at 55. Your OA can still pay your mortgage at any age.<br><br>The engine uses the statutory floor interest rates (OA 2.5%, SA 4%) and doesn't include extra interest.<br><br><strong>Simplification:</strong> at 55 the engine releases your full OA and SA balances. In reality, an amount up to your retirement sum stays in your Retirement Account and pays out monthly through CPF LIFE from 65. A more realistic model is planned.</div></div>
+                            <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">CPF can't fund an early retirement before 55, so the chart shows it as a separate dashed line until then, and adds it to your available wealth at 55. Your OA can still pay your mortgage at any age.<br><br>The engine uses the statutory floor interest rates (OA 2.5%, SA 4%) and doesn't include extra interest.<br><br>CPF contributions only apply to the first S$8,000 of your monthly salary (the 2026 Ordinary Wage ceiling). The ceiling rises in steps every few years, not with inflation, so for high earners the engine's inflation-linked CPF inflows may slightly overstate future contributions.<br><br><strong>Simplification:</strong> at 55 the engine releases your full OA and SA balances. In reality, an amount up to your retirement sum stays in your Retirement Account and pays out monthly through CPF LIFE from 65. A more realistic model is planned.</div></div>
                         </h4>
                         <div class="cpf-toggle-box">
-                            <div class="form-grid-2">
-                                <div>
-                                    <label for="inp-oaStart">Current OA Balance (Today's SGD)</label>
-                                    <input type="text" id="inp-oaStart" class="num-format" placeholder="e.g. 20,000 – check the CPF app">
-                                </div>
-                                <div>
-                                    <div style="display:flex; justify-content:space-between; align-items: center; margin-bottom: 2px;">
-                                        <label for="inp-oaContrib" style="margin:0;">Monthly OA Inflow (Today's SGD)</label>
-                                                                                <a href="javascript:void(0)" onclick="toggleOACalc()" class="btn-micro" style="background:#dcfce7; border-color:#86efac; color:#166534;" title="Estimate your OA and SA inflows from your salary">Estimate</a>
-                                    </div>
-                                    <input type="text" id="inp-oaContrib" class="num-format" placeholder="e.g. 1,400 – or use Estimate">
-                                </div>
-                                <!-- Hidden CPF OA + SA Estimator -->
-                                <div id="oa-calc-panel" class="helper-panel" style="display:none; grid-column: 1 / -1; border-color: #bbf7d0; background: #dcfce7;">
-                                    <label style="color: #166534;">Gross Monthly Salary (SGD) — fills in your OA and SA inflows</label>
-                                    <div style="display:flex; gap:0.5rem; align-items:center;">
-                                        <input type="text" id="est-salary" class="num-format" placeholder="e.g. 6,000" oninput="runOAEstimate()" style="flex-grow:1;">
-                                        <button type="button" class="btn-secondary" onclick="applyOAEstimate()">Apply</button>
-                                    </div>
-                                    <div id="oa-est-result" style="font-size:0.75rem; margin-top:0.3rem; color:#15803d;"></div>
+                            <div class="cpf-question">
+                                <span>Do you have CPF savings (OA or SA)?</span>
+                                <div class="segmented-control segmented-mini">
+                                    <label><input type="radio" name="cpfHas" value="yes" checked onchange="onCpfChoice()"> Yes</label>
+                                    <label><input type="radio" name="cpfHas" value="no" onchange="onCpfChoice()"> No</label>
                                 </div>
                             </div>
-                            <div style="margin-top: 0.75rem;">
-                                <div class="form-row checkbox-row">
-                                    <label><input type="checkbox" id="toggle-sa" onchange="syncPanels(); runSim();"> Include my CPF Special Account (SA)</label>
+
+                            <!-- No CPF -->
+                            <div class="no-cpf-only field-note cpf-note">
+                                No problem — the tool will leave CPF out. If you have retirement savings from another country (for example a US 401(k) or IRA, a UK pension or Australian super), add them under your investments if you can access them before you stop working. In Advanced mode, you can add them as a future income stream instead if they only pay out later.
+                            </div>
+
+                            <!-- Has CPF -->
+                            <div class="cpf-only">
+                                <div class="cpf-sub">Current balances <span class="cpf-sub-hint">(check the CPF app)</span></div>
+                                <div class="form-grid-2">
+                                    <div>
+                                        <label for="inp-oaStart">OA Balance (Today's SGD)</label>
+                                        <input type="text" id="inp-oaStart" class="num-format" placeholder="e.g. 20,000">
+                                    </div>
+                                    <div>
+                                        <label for="inp-saStart">SA Balance (Today's SGD)</label>
+                                        <input type="text" id="inp-saStart" class="num-format" placeholder="e.g. 40,000">
+                                    </div>
                                 </div>
-                                <div id="sa-panel" style="display:none;" class="sub-panel">
+
+                                <div class="cpf-question" style="margin-top: 0.9rem;">
+                                    <span>Are you currently making monthly CPF contributions?</span>
+                                    <div class="segmented-control segmented-mini">
+                                        <label><input type="radio" name="cpfContrib" value="yes" checked onchange="onCpfChoice()"> Yes</label>
+                                        <label><input type="radio" name="cpfContrib" value="no" onchange="onCpfChoice()"> No</label>
+                                    </div>
+                                </div>
+                                <div class="cpf-nocontrib-only field-note cpf-note">
+                                    Common if you're self-employed (you mainly contribute to MediSave, which this tool doesn't model) or between jobs. Your balances above still earn interest, unlock at 55, and your OA can still pay your mortgage.
+                                </div>
+
+                                <div class="cpf-contrib-only">
+                                    <div class="cpf-sub cpf-inflow-head">
+                                        <span>Monthly inflows</span>
+                                        <a href="javascript:void(0)" onclick="toggleOACalc()" class="btn-micro" style="background:#dcfce7; border-color:#86efac; color:#166534;" title="Estimate your OA and SA inflows from your salary">Estimate from my salary</a>
+                                    </div>
+                                    <!-- Hidden CPF OA + SA Estimator -->
+                                    <div id="oa-calc-panel" class="helper-panel" style="display:none; margin-bottom: 0.75rem; border-color: #bbf7d0; background: #dcfce7;">
+                                        <label style="color: #166534;">Gross Monthly Salary (SGD) — estimates both your OA and SA inflows</label>
+                                        <div style="display:flex; gap:0.5rem; align-items:center;">
+                                            <input type="text" id="est-salary" class="num-format" placeholder="e.g. 6,000" oninput="runOAEstimate()" style="flex-grow:1;">
+                                            <button type="button" class="btn-secondary" onclick="applyOAEstimate()">Apply</button>
+                                        </div>
+                                        <div id="oa-est-result" style="font-size:0.75rem; margin-top:0.3rem; color:#15803d;"></div>
+                                    </div>
                                     <div class="form-grid-2">
                                         <div>
-                                            <label for="inp-saStart">Current SA Balance (Today's SGD)</label>
-                                            <input type="text" id="inp-saStart" class="num-format" placeholder="e.g. 40,000">
+                                            <label for="inp-oaContrib">Monthly OA Inflow (Today's SGD)</label>
+                                            <input type="text" id="inp-oaContrib" class="num-format" placeholder="e.g. 1,400">
                                         </div>
                                         <div>
                                             <label for="inp-saContrib">Monthly SA Inflow (Today's SGD)</label>
@@ -377,6 +402,15 @@
                         <label><input type="checkbox" id="toggle-mortgage" onchange="syncPanels(); runSim();"> I have an active home loan</label>
                     </div>
                     <div id="mortgage-panel" class="sub-panel" style="display:none;">
+                        <!-- Advanced: loan type (R9) -->
+                        <div class="advanced-only loan-type-row">
+                            <span>Loan type:</span>
+                            <div class="segmented-control segmented-mini">
+                                <label id="lbl-loan-hdb"><input type="radio" name="loanType" value="hdb" checked onchange="onLoanTypeChange('hdb')"> HDB loan</label>
+                                <label><input type="radio" name="loanType" value="bank" onchange="onLoanTypeChange('bank')"> Bank loan</label>
+                            </div>
+                            <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text"><strong>HDB loan:</strong> a single concessionary rate (2.6%) for the whole loan.<br><br><strong>Bank loan:</strong> you're usually on a package rate fixed for 2–3 years, then reprice or refinance at whatever rates are at the time. The engine models this as your current package rate for the years you enter, then a long-run rate for the rest of the loan.<br><br>HDB loans are only available to Singapore citizens, so this is set to Bank loan if you don't have CPF.</div></div>
+                        </div>
                         <div class="form-grid-2">
                             <div>
                                 <div style="display:flex; justify-content:space-between; align-items: center; margin-bottom: 2px;">
@@ -415,12 +449,34 @@
 
                             <div>
                                 <label class="lbl">
-                                    Interest Rate (%)
-                                    <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">HDB concessionary loans are fixed at 2.6% (the CPF OA rate + 0.1%), which is the default. Bank loans are usually pegged to SORA; in 2026 most packages are around 1.4%–1.9%, but they rose to around 4% in 2023. Enter the rate on your own loan.</div></div>
+                                    <span class="not-bank">Interest Rate (%)</span><span class="bank-only">Current Package Rate (%)</span>
+                                    <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Average quarterly mortgage rates in Singapore over the periods to Q2 2026:<br>• 5 years: 3.2% (range 1.1%–4.7%)<br>• 10 years: 2.5% (range 1.1%–4.7%)<br>• 15 years: 2.0% (range 1.0%–4.7%)<br>• 20 years: 2.0% (range 1.0%–4.7%)<br><br>Rates peaked at about 4.7% in late 2023 and were near 1.0% in 2012–2014. HDB concessionary loans are fixed at 2.6% (the CPF OA rate + 0.1%).<br><br>Source: Global Property Guide, quarterly averages based on Monetary Authority of Singapore data.<br><br>Enter a rate you're comfortable modelling. For a bank loan in Simple mode, this one rate is used for the whole loan, so a long-run average is safer than today's promotional rate.</div></div>
                                     <span class="assume-pill">Assumption</span>
                                 </label>
                                 <input type="number" id="inp-mortgageRate" class="assumption-input" value="2.6" step="0.1" oninput="runSim()">
-                                <div class="assume-note">HDB concessionary rate. Bank loans are usually lower in 2026; enter your own rate.</div>
+                                <div class="assume-note simple-only">HDB loans: 2.6%. Bank loans averaged 2.0%–3.2% over the 5 to 20 years to Q2 2026.</div>
+                                <div class="assume-note advanced-only not-bank">HDB concessionary rate (CPF OA rate + 0.1%).</div>
+                                <div class="assume-note bank-only">The rate on your current package, usually fixed for 2–3 years.</div>
+                            </div>
+
+                            <!-- Advanced + bank loan: two-stage rate (R9) -->
+                            <div class="bank-only">
+                                <label class="lbl">
+                                    Years Left at This Rate
+                                    <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">How many more years your current package rate is fixed for (the lock-in period). After that, the engine switches to your long-run rate for the rest of the loan.</div></div>
+                                    <span class="assume-pill">Assumption</span>
+                                </label>
+                                <input type="number" id="inp-lockYrs" class="assumption-input" value="2" step="1" oninput="runSim()">
+                                <div class="assume-note">Bank packages are typically fixed for 2–3 years.</div>
+                            </div>
+                            <div class="bank-only">
+                                <label class="lbl">
+                                    Long-run Rate After That (%)
+                                    <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Average quarterly mortgage rates in Singapore over the periods to Q2 2026:<br>• 5 years: 3.2% (range 1.1%–4.7%)<br>• 10 years: 2.5% (range 1.1%–4.7%)<br>• 15 years: 2.0% (range 1.0%–4.7%)<br>• 20 years: 2.0% (range 1.0%–4.7%)<br><br>Rates peaked at about 4.7% in late 2023 and were near 1.0% in 2012–2014. HDB concessionary loans are fixed at 2.6% (the CPF OA rate + 0.1%).<br><br>Source: Global Property Guide, quarterly averages based on Monetary Authority of Singapore data.<br><br>The default of 2.5% is close to the 10-year average and above the 15- and 20-year averages.</div></div>
+                                    <span class="assume-pill">Assumption</span>
+                                </label>
+                                <input type="number" id="inp-mortgageRateLong" class="assumption-input" value="2.5" step="0.1" oninput="runSim()">
+                                <div class="assume-note">Averages to Q2 2026: 5 yrs 3.2% · 10 yrs 2.5% · 15 yrs 2.0% · 20 yrs 2.0%.</div>
                             </div>
 
                             <div style="grid-column: 1 / -1; border-top: 1px solid #e2e8f0; padding-top: 0.5rem; margin-top: 0.5rem;">
@@ -437,7 +493,7 @@
                             </div>
                         </div>
 
-                        <div class="cpf-toggle-box" style="margin-top: 1.5rem;">
+                        <div class="cpf-toggle-box cpf-only" style="margin-top: 1.5rem;">
                             <label style="display:flex; align-items:center;">
                                 <input type="checkbox" id="inp-maxOA" checked onchange="runSim()" style="margin-right:0.5rem;">
                                 Prioritize paying mortgage with CPF OA
@@ -447,6 +503,36 @@
 
                         <div id="disp-mortgage-split" class="mortgage-split" style="display:none;"></div>
                     </div>
+                </div>
+
+                <!-- Step 4: Custom Cash Flows (Advanced, R7) -->
+                <div class="card wizard-card advanced-only">
+                    <div class="wizard-header"><span class="step-num">4</span><h3>Custom Cash Flows</h3></div>
+
+                    <h4 class="section-h4">Income Streams (monthly)</h4>
+                    <div class="field-note" style="margin-bottom:0.75rem;">
+                        Regular income at any age: rental income, part-time or consulting work, an annuity, or a pension from working overseas. While you're working, it's saved the same way you already save (split across your investments and cash in the same proportions as your monthly contributions). In retirement, it covers part of your spending first.<br><br>
+                        <strong>Rental property:</strong> enter the <em>net</em> monthly rent after property tax, maintenance, agent fees, vacancy and any mortgage on that property. Amounts grow with inflation unless you tick <strong>Fixed</strong> (e.g. a fixed-rent lease or a level annuity).<br><br>
+                        Don't add CPF LIFE payouts here. The engine already counts your CPF balances from 55.
+                    </div>
+                    <div class="cf-head cf-row-income">
+                        <span>Name</span><span>Amount/mo (Today's SGD)</span><span>From age</span><span>To age</span><span></span><span></span>
+                    </div>
+                    <div id="income-streams-container" class="cf-container"></div>
+                    <button type="button" class="btn-add" onclick="addIncomeStream(); runSim();">+ Add income stream</button>
+
+                    <h4 class="section-h4" style="margin-top:1.5rem;">One-off Windfalls & Expenses</h4>
+                    <div class="field-note" style="margin-bottom:0.75rem;">
+                        One-off amounts in today's dollars, adjusted for inflation to the year they happen.<br><br>
+                        <strong>Windfalls</strong> (e.g. an inheritance, a large bonus, selling a car) are saved the same way you already save, as a one-off top-up to your investments and cash.<br><br>
+                        <strong>Expenses</strong> (e.g. a child's university fees, a wedding, a home renovation) are paid from your cash and investments.<br><br>
+                        <strong>Property downgrade:</strong> enter as a windfall the net cash you expect to release (sale price minus the outstanding loan, the new home's cost and transaction costs). Part of the proceeds may have to be refunded to your CPF OA (the CPF you used for the property plus accrued interest). That portion stays locked until 55, so enter only the cash portion here.
+                    </div>
+                    <div class="cf-head cf-row-milestone">
+                        <span>Description</span><span>Type</span><span>Amount (Today's SGD)</span><span>Age</span><span></span>
+                    </div>
+                    <div id="milestones-container" class="cf-container"></div>
+                    <button type="button" class="btn-add" onclick="addMilestone(); runSim();">+ Add windfall or expense</button>
                 </div>
 
                 <!-- Explicit Calculation Trigger -->
