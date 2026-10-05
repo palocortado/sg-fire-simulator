@@ -1579,12 +1579,12 @@ function computeSwr(inp, base) {
 const WARN_TEXT = {
     globalUSD: 'Aggressive. Developed-market equities returned about 8.5% a year in USD from 1900 to 2025, and MSCI World about 6.2% a year in SGD since 2001. The past 10 years (~13%) were exceptional. US stocks alone averaged about 10% since 1928. This input is nominal; the engine adjusts for inflation.',
     globalSGD: 'Aggressive. MSCI World returned about 6.2% a year in SGD since 2001, and developed-market equities about 8.5% a year in USD since 1900. The past 10 years (~13% in USD) were exceptional. This input is nominal; the engine adjusts for inflation.',
-    sg: 'Aggressive. The SPDR STI ETF returned about 8.6% a year from its April 2002 launch to July 2026, helped by strong recent years, and STI ETFs returned about 7% a year over the 10 years to 
-    inflationLow: "Note: Highly optimistic. Singapore's average headline inflation was 1.72% over the last 10 years, 2.14% over the last 20 years, and 1.68% over the past 30 years.",
+    sg: 'Aggressive. The SPDR STI ETF returned about 8.6% a year from its April 2002 launch to July 2026, helped by strong recent years, and STI ETFs returned about 7% a year over the 10 years to September 2026.',
+    inflationLow: 'Note: Highly optimistic. Average headline inflation in Singapore was 1.72% over the last 10 years, 2.14% over the last 20 years, and 1.68% over the past 30 years.',
     cashHigh: 'Note: Most bank savings accounts that offer high yields cap the maximum balance that earns this interest rate.',
     cashLow: 'Note: You should consider switching from a basic savings account to a high-yield savings account to protect your cash from inflation.',
     mortHigh: 'Note: This is high for Singapore. 3-month SORA, the benchmark bank loans are priced from, peaked at about 4.7% in late 2023 and averaged 2.0%–3.2% over the 5 to 20 years to Q2 2026. HDB concessionary loans are 2.6%.',
-    mortLow: "Note: This is optimistic. 3-month SORA hasn't been below about 1.0% in the 20 years to Q2 2026 (the low, about 1.04%, was around 2012–2014), and bank loans add a spread on top.",
+    mortLow: 'Note: This is optimistic. 3-month SORA has not been below about 1.0% in the 20 years to Q2 2026 (the low, about 1.04%, was around 2012–2014), and bank loans add a spread on top.',
     longLow: 'Note: Optimistic for a long-run rate. 3-month SORA averaged about 2.0% over the 15 and 20 years to Q2 2026 and 2.5% over the last 10, before any bank spread.',
     swrHigh: 'Above the widely cited ~4% guideline for a 30-year retirement. A run of poor market returns early in retirement could drain your savings faster than this projection shows.',
     swrLow: 'Very conservative. You may be planning to work years longer than you need to.',
