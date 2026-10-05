@@ -103,13 +103,41 @@ input[type="text"], input[type="number"] { width: 100%; padding: 0.5rem; border:
 .cpf-toggle-box label { color: #166534; }
 
 /* Status Colors (Driven by V5 JS) */
+.hero-card { background: #64748b; } /* V6: neutral default moved here from an inline style that blocked the status colours */
 .hero-card.success { background: linear-gradient(135deg, #059669, #10b981); }
 .hero-card.warning { background: linear-gradient(135deg, #d97706, #fbbf24); }
 .hero-card.danger { background: linear-gradient(135deg, #b91c1c, #ef4444); }
 
-/* Engine Room Toggle */
-body.simple-mode .advanced-only { display: none !important; }
-body.advanced-mode .advanced-only { display: block !important; }
+/* V6: Progressive disclosure (Simple / Advanced).
+   Hidden elements keep their natural display type when shown, so grid/flex children are not broken. */
+body:not(.advanced-mode) .advanced-only { display: none !important; }
+body.advanced-mode .simple-only { display: none !important; }
+body.advanced-mode .advanced-only { animation: v6-fade-in 0.35s ease-out; }
+@keyframes v6-fade-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
+/* V6: USD-only fields in Global Investments */
+body:not(.global-usd) .usd-only,
+body:not(.global-usd) .usd-tip { display: none !important; }
+body.global-usd .usd-only { animation: v6-fade-in 0.35s ease-out; }
+
+/* V6: Advanced block inside a step card */
+.adv-block { margin-top: 1rem; padding: 0.85rem 0.85rem 0.25rem; border-left: 3px solid #7c3aed; background: #faf5ff; border-radius: 0 8px 8px 0; }
+.adv-tag { display: inline-block; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; color: #6d28d9; margin-bottom: 0.5rem; }
+
+/* V6: Section headings, notes, notices */
+.section-h4 { margin-bottom: 0.75rem; color: var(--text-main); font-size: 0.95rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.25rem; }
+.field-note { font-size: 0.75rem; color: #64748b; margin-top: 4px; line-height: 1.3; }
+.mode-notice { margin-top: 0.75rem; padding: 0.7rem 0.9rem; background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a8a; border-radius: 8px; font-size: 0.82rem; line-height: 1.4; max-width: 450px; }
+.mortgage-split { padding: 0.85rem; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 8px; color: #9f1239; font-size: 0.85rem; margin-top: 1rem; line-height: 1.4; }
+
+/* V6: Currency toggle */
+.ccy-toggle-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.85rem; font-size: 0.85rem; color: var(--text-secondary); flex-wrap: wrap; }
+.segmented-control.segmented-mini { width: auto; max-width: none; padding: 3px; }
+.segmented-control.segmented-mini label { padding: 4px 14px; font-size: 0.8rem; }
+
+/* V6: Primary button (was missing in V5) */
+.btn-primary { background: #2563eb; color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(37,99,235,0.2); transition: background 0.2s ease; }
+.btn-primary:hover { background: #1d4ed8; }
 
 /* Enhanced Active Persona Visibility */
 .persona-card.active { border: 2px solid #3b82f6; background-color: #eff6ff; box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2); transform: translateY(-2px); }
@@ -253,7 +281,7 @@ label, .checkbox-row label, .cpf-toggle-box label { font-size: 0.9rem !important
 @keyframes highlight-fade {
     0% { background-color: #dbeafe; box-shadow: 0 0 0 2px #2563eb; }
     60% { background-color: #dbeafe; box-shadow: 0 0 0 2px #3b82f6; } /* Holds the blue glow 60% through */
-    100% { background-color: #ffffff; box-shadow: none; }
+    100% { box-shadow: none; } /* V6: no forced background, so tinted assumption fields keep their tint */
 }
 .highlight-pulse { animation: highlight-fade 3s linear forwards !important; }
 
@@ -271,3 +299,211 @@ label, .checkbox-row label, .cpf-toggle-box label { font-size: 0.9rem !important
 
 body, html { overflow-x: hidden; } 
 .header-left { max-width: 60%; }
+
+/* =============================================================================
+   V6 Batch 2
+   ============================================================================= */
+
+/* Labels with inline tags */
+.lbl { display: flex !important; align-items: center; flex-wrap: wrap; gap: 0.25rem; }
+
+/* Placeholders: clearly examples, not values */
+input::placeholder { color: #94a3b8; font-style: italic; font-weight: 400; opacity: 1; }
+
+/* Required tag (hidden once the essential is filled) */
+.req-tag { display: inline-block; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; color: #64748b; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 999px; padding: 1px 7px; margin-left: 0.15rem; line-height: 1.4; }
+.req-tag.filled { display: none; }
+
+/* Assumptions: purple pill + tinted field + source note */
+.assume-pill { display: inline-block; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; color: #6d28d9; background: #ede9fe; border: 1px solid #c4b5fd; border-radius: 999px; padding: 1px 7px; margin-left: 0.15rem; line-height: 1.4; }
+input.assumption-input { background: #faf5ff; border-color: #d8b4fe; color: #4c1d95; }
+.assume-note { font-size: 0.72rem; color: #7c3aed; margin-top: 4px; line-height: 1.3; }
+.assume-note::after { content: " Change if you know better."; color: #94a3b8; }
+
+/* Missing essentials after Calculate */
+input.field-missing { border: 2px solid #f59e0b !important; background: #fffbeb; }
+
+/* Legend under the mode selector */
+.legend-row { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; margin-top: 0.75rem; font-size: 0.75rem; color: #64748b; }
+.req-tag-demo { margin-left: 0; }
+.funds-note { margin: -0.25rem 0 1rem; }
+
+/* Finish Line toggle (Advanced) */
+.finish-line-row { margin-top: 0.75rem; }
+.checkbox-inline { display: flex !important; align-items: center; gap: 0.4rem; cursor: pointer; }
+
+/* Chart header + view toggle */
+.chart-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+.chart-view-row { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: var(--text-secondary); }
+
+/* Status card: Simple-mode assumptions disclosure */
+.status-assumptions { margin-top: 0.6rem; font-size: 0.8rem; opacity: 0.9; border-top: 1px solid rgba(255,255,255,0.3); padding-top: 0.5rem; }
+
+/* Welcome actions + example link */
+.welcome-actions { display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap; }
+.example-link { font-size: 0.9rem; color: #475569; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.example-link:hover { color: #1d4ed8; }
+
+/* Example-plan banner */
+.example-banner { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; display: flex; justify-content: center; align-items: center; gap: 1rem; flex-wrap: wrap; padding: 0.7rem 1rem; background: #fef3c7; border-bottom: 2px solid #f59e0b; color: #78350f; font-size: 0.9rem; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+.btn-banner { background: #b45309; color: #fff; border: none; border-radius: 6px; padding: 0.45rem 0.9rem; font-weight: 700; font-size: 0.85rem; cursor: pointer; }
+.btn-banner:hover { background: #92400e; }
+body.example-mode { padding-top: 56px; }
+body.example-mode .hero-card { outline: 3px dashed #f59e0b; outline-offset: 3px; }
+
+/* Example picker section */
+#persona-section .sub-heading { display: block; color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem; }
+
+@media (max-width: 640px) {
+    body.example-mode { padding-top: 96px; }
+}
+
+
+/* =============================================================================
+   V6 Batch 3
+   ============================================================================= */
+
+/* R1: Finish Line toggle under the chart header */
+.chart-options-row { margin: -0.4rem 0 0.9rem; font-size: 0.85rem; }
+.segmented-control.segmented-mini label { white-space: nowrap; }
+
+/* R2: text that follows the Global Investments currency toggle */
+body.global-usd .ccy-text-sgd { display: none; }
+body:not(.global-usd) .ccy-text-usd { display: none; }
+
+/* R3: keep the info icon on the same line as the last word of its label */
+.lbl { display: block !important; }
+.lbl .tooltip-container, .lbl .req-tag, .lbl .assume-pill { display: inline-block; vertical-align: middle; }
+.lbl .req-tag.filled { display: none; }
+
+/* R3: inline tooltip bubbles are now only a content source; one floating bubble is shown instead */
+.tooltip-text { display: none !important; }
+.info-icon { cursor: pointer; }
+#tt-float { position: fixed; z-index: 2000; display: none; width: 280px; max-width: calc(100vw - 16px); max-height: calc(100vh - 16px); overflow-y: auto; background: #334155; color: #fff; text-align: left; border-radius: 8px; padding: 0.75rem 0.85rem; font-size: 0.8rem; font-weight: 400; line-height: 1.45; box-shadow: 0 10px 25px rgba(0,0,0,0.25); }
+#tt-float.visible { display: block; }
+#tt-float .tt-close { display: none; float: right; margin: -0.25rem -0.25rem 0.25rem 0.5rem; background: transparent; border: none; color: #fff; font-size: 1.2rem; line-height: 1; cursor: pointer; }
+#tt-float.sheet { left: 8px !important; right: 8px; bottom: 8px; top: auto !important; width: auto; max-width: none; max-height: 50vh; font-size: 0.88rem; border-radius: 12px; }
+#tt-float.sheet .tt-close { display: block; }
+
+
+/* =============================================================================
+   V6 Batch 4
+   ============================================================================= */
+
+/* R10/R24: CPF questions and layout */
+.cpf-question { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; font-size: 0.88rem; font-weight: 600; color: #166534; margin-bottom: 0.6rem; }
+.cpf-sub { font-size: 0.8rem; font-weight: 700; color: #166534; margin: 0.25rem 0 0.4rem; }
+.cpf-sub-hint { font-weight: 400; color: #4d7c0f; }
+.cpf-inflow-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-top: 0.9rem; }
+.cpf-note { background: #ffffff; border: 1px solid #bbf7d0; border-radius: 6px; padding: 0.6rem 0.75rem; margin: 0.25rem 0 0.5rem; }
+body.no-cpf .cpf-only { display: none !important; }
+body:not(.no-cpf) .no-cpf-only { display: none !important; }
+body.no-cpf-contrib .cpf-contrib-only { display: none !important; }
+body:not(.no-cpf-contrib) .cpf-nocontrib-only { display: none !important; }
+
+/* R9: loan type and two-stage bank rate (Advanced only) */
+.loan-type-row { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 0.85rem; font-size: 0.85rem; color: var(--text-secondary); }
+body:not(.bank-loan-active) .bank-only { display: none !important; }
+body.bank-loan-active .not-bank { display: none !important; }
+
+/* R7: custom cash flow rows */
+.cf-row, .cf-head { display: grid; gap: 0.4rem; align-items: center; margin-bottom: 0.4rem; }
+.cf-row-income { grid-template-columns: 1.6fr 1.3fr 0.9fr 0.9fr auto auto; }
+.cf-row-milestone { grid-template-columns: 1.5fr 1.4fr 1.3fr 0.8fr auto; }
+.cf-head span { font-size: 0.7rem; font-weight: 600; color: #64748b; }
+.cf-row input[type="text"], .cf-row input[type="number"], .cf-row select { padding: 0.4rem; font-size: 0.82rem; }
+.cf-row select { width: 100%; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; font-weight: 600; }
+.cf-fixed { display: flex !important; align-items: center; gap: 0.25rem; font-size: 0.75rem !important; white-space: nowrap; cursor: pointer; margin: 0 !important; }
+.btn-add { margin-top: 0.5rem; background: #fff; border: 1px dashed #94a3b8; color: #334155; padding: 0.45rem 0.85rem; border-radius: 6px; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+.btn-add:hover { background: #f1f5f9; }
+.btn-remove { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; border-radius: 6px; cursor: pointer; font-size: 0.8rem; padding: 0.35rem 0.5rem; }
+@media (max-width: 640px) {
+    .cf-head { display: none; }
+    .cf-row-income, .cf-row-milestone { grid-template-columns: 1fr 1fr; padding-bottom: 0.5rem; border-bottom: 1px dashed #e2e8f0; }
+}
+
+
+/* =============================================================================
+   V6 Batch 5
+   ============================================================================= */
+
+/* R16: assumption presets */
+.preset-row { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin-top: 0.85rem; font-size: 0.85rem; color: var(--text-secondary); }
+.preset-custom { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; color: #6d28d9; background: #ede9fe; border: 1px solid #c4b5fd; border-radius: 999px; padding: 1px 8px; }
+
+/* R14: CPF LIFE block */
+.cpf-life-block { margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed #bbf7d0; }
+select.select-input { width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem; font-weight: 600; background: #fff; }
+body:not(.owns-home) .pledge-row { display: none !important; }
+
+/* R8: status lines and SWR card */
+.status-line { margin-top: 0.55rem; font-size: 0.95rem; font-weight: 600; background: rgba(255,255,255,0.18); padding: 0.45rem 0.7rem; border-radius: 8px; }
+.swr-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.85rem; }
+.swr-readout { font-size: 1.6rem; font-weight: 800; color: #0f172a; margin: 0.15rem 0; }
+input:disabled { background: #f1f5f9 !important; color: #94a3b8 !important; }
+
+/* R22: property downgrade sub-row */
+.ms-dg { display: none; grid-column: 1 / -1; grid-template-columns: repeat(3, 1fr); gap: 0.4rem; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 6px; padding: 0.5rem; }
+.milestone-stream.is-dg .ms-dg { display: grid; }
+.milestone-stream.is-dg .ms-amt { visibility: hidden; }
+.ms-dg label { font-size: 0.7rem !important; font-weight: 600 !important; color: #64748b !important; display: flex; flex-direction: column; gap: 0.2rem; }
+.ms-dg-note { grid-column: 1 / -1; font-size: 0.72rem; color: #64748b; line-height: 1.35; }
+@media (max-width: 640px) { .ms-dg { grid-template-columns: 1fr; } }
+
+/* R11: coaching Compare button */
+.coach-actions { display: flex; align-items: center; gap: 0.4rem; flex-shrink: 0; }
+.coach-compare { background: #fff; color: #7c3aed; border: 1px solid #c4b5fd; border-radius: 99px; padding: 5px 12px; font-size: 0.72rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.coach-compare:hover { background: #7c3aed; color: #fff; }
+
+/* R11: what-if comparison and builder */
+.scenario-panel, .scen-builder { margin-top: 1rem; padding-top: 0.85rem; border-top: 1px solid #e2e8f0; }
+.scen-head { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 0.5rem; font-size: 0.9rem; }
+.scen-table-wrap { overflow-x: auto; }
+.scen-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.scen-table th { text-align: left; font-size: 0.7rem; font-weight: 600; color: #64748b; padding: 0.35rem 0.4rem; border-bottom: 1px solid #e2e8f0; }
+.scen-table td { padding: 0.45rem 0.4rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+.scen-swatch { display: inline-block; width: 18px; height: 3px; margin-right: 6px; vertical-align: middle; border-radius: 2px; }
+.scen-actions { white-space: nowrap; text-align: right; }
+.btn-scen-apply { background: #2563eb; color: #fff; border: none; border-radius: 6px; padding: 4px 10px; font-size: 0.75rem; font-weight: 700; cursor: pointer; margin-right: 4px; }
+.btn-scen-remove { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; border-radius: 6px; padding: 3px 7px; font-size: 0.75rem; cursor: pointer; }
+.scen-quick { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.4rem 0; }
+.scen-row { display: grid; grid-template-columns: 1.6fr 1fr auto; gap: 0.4rem; margin-bottom: 0.4rem; }
+.scen-row select { padding: 0.4rem; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.82rem; background: #fff; }
+.btn-small { padding: 0.45rem 0.9rem; font-size: 0.82rem; }
+body.example-mode .scen-builder { display: none !important; }
+
+/* =============================================================================
+   V6 Batch 6
+   ============================================================================= */
+
+/* R15: Expert-only sections (Expert also shows everything in Advanced) */
+body:not(.expert-mode) .expert-only { display: none !important; }
+body.expert-mode .expert-only { animation: v6-fade-in 0.35s ease-out; }
+
+/* =============================================================================
+   V6 Batch 7
+   ============================================================================= */
+
+/* R26: "Your inputs" bar at the top of the inputs column */
+.plan-bar { background: #ffffff; border: 1px solid var(--border-color); border-radius: 12px; padding: 0.85rem 1rem; margin-bottom: 1.25rem; }
+.plan-bar-buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.4rem; }
+.plan-bar .file-label { margin: 0; display: inline-flex; align-items: center; }
+.plan-notice { margin-top: 0.6rem; padding: 0.6rem 0.8rem; background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; border-radius: 8px; font-size: 0.82rem; line-height: 1.4; }
+.plan-notice.error { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
+
+/* R28: footer, disclaimer and "How this works" */
+.app-footer { max-width: 900px; margin: 2.5rem auto 0; padding: 1.5rem 1.25rem 0; border-top: 1px solid var(--border-color); color: var(--text-secondary); font-size: 0.85rem; line-height: 1.5; }
+.app-footer .disclaimer { margin-bottom: 0.75rem; }
+.how-it-works summary { cursor: pointer; font-weight: 600; color: var(--primary); margin-bottom: 0.5rem; }
+.how-it-works p { margin: 0 0 0.6rem; }
+.footer-meta { margin-top: 0.75rem; font-size: 0.75rem; color: #94a3b8; }
+
+/* =============================================================================
+   Version 7.0 (Batch 8)
+   ============================================================================= */
+
+/* A5: Retirement Account field only for people 55 and over */
+body:not(.age55) .age55-only { display: none !important; }
+
+/* R31: Typical / Full range toggle under the chart header (Expert) */
+.chart-range-row { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; font-size: 0.8rem; color: var(--text-secondary); }
