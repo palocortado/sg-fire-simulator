@@ -2651,6 +2651,12 @@ function initApp() {
     updateDOM('app-version', APP_VERSION);
     updateDOM('figures-as-of', FIGURES_AS_OF);
 
+    // Favicon (set here rather than in index.html, so copy-paste can't break it)
+    const fav = document.createElement('link');
+    fav.rel = 'icon';
+    fav.href = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%8F%81%3C/text%3E%3C/svg%3E';
+    document.head.appendChild(fav);
+
     let loaded = false;
     try {
         let saved = localStorage.getItem(STORAGE_KEY);
