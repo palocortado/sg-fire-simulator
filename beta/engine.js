@@ -1344,11 +1344,12 @@ function simulatePath(inp, opts = {}) {
         }
         // R30: once the RA target is met (or payouts have started), locked OA becomes withdrawable
         if (st.at55 && st.oaLock > 0 && (st.lifeOn || st.ra >= T.target - 0.5)) { st.oa += st.oaLock; st.oaLock = 0; }
+
         const isWorking = age < retireAge;
         const mortgageActive = m.has && age < mortgageEndAge && st.rem > 0.5;
         const phase = isWorking ? 1 : (mortgageActive ? 2 : 3);
         const lifeNow = !st.lifeOn ? 0 : st.rss ? (age < CPF_RSS_END_AGE ? st.lifePay : 0)
-            : st.lifePay * (inp.cpf.lifePlan === 'escalating' ? Math.pow(1 + CPF_ESCALATING_GROWTH, age - st
+            : st.lifePay * (inp.cpf.lifePlan === 'escalating' ? Math.pow(1 + CPF_ESCALATING_GROWTH, age - st.lifeStart) : 1);
 
         // Day 1 anchor: record before anything happens this year
         const liquidNow = liquidOf();
