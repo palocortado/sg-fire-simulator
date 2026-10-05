@@ -1,7 +1,19 @@
 /* =============================================================================
    Financial Independence Simulator for Singapore — engine.js
-    Version: V6 staging, Batch 6
+    Version: V6 staging, Batch 7
     -----------------------------------------------------------------------------
+    Batch 7 (roadmap R19, R20, R21, R25, R26, R27, R28, R29):
+        - R25 Save format 2: format number, step-by-step conversion of older
+          saves, untouched assumptions follow new defaults, import messages,
+          separate browser memory for the beta page, dated export file names
+        - R26 Export inputs / Upload inputs / Start Over (with confirmation)
+          moved into the inputs column
+        - R29 Copy share link: the plan is packed into the link itself
+        - R27 Monte Carlo default 500 simulations
+        - R19 Verified figures; mortgage history relabelled as 3-month SORA
+        - R20 Register of dated figures; "Figures as of" in the footer
+        - R21 Example plans get SA balances and inflows consistent with OA
+        - R28 Footer disclaimer and "How this works"
     Batch 6 (roadmap R15):
         - Expert mode unlocked: everything in Advanced plus Monte Carlo (Step 6)
         - Random yearly returns (lognormal, your return = median), inflation,
@@ -32,8 +44,14 @@ let incomeStreamCount = 0;
 let milestoneCount = 0;
 let isLoading = true;
 
-const APP_VERSION = "6.0-batch6";
-const STORAGE_KEY = 'fireSimState_v6';
+const APP_VERSION = "6.0-batch7";
+const SAVE_FORMAT = 2;            // R25: bump when the save layout changes, and add a step to migrateState()
+const FIGURES_AS_OF = 'Oct 2026'; // R20: shown in the footer; update at the yearly refresh
+
+// R25: the beta page keeps its own browser memory so testing can't overwrite the live plan
+const IS_BETA = typeof location !== 'undefined' && /[/]beta([/]|$)/i.test(location.pathname);
+const MAIN_STORAGE_KEY = 'fireSimState_v6';
+const STORAGE_KEY = IS_BETA ? 'fireSimState_v6_beta' : MAIN_STORAGE_KEY;
 const LEGACY_STORAGE_KEYS = ['fireSimState', 'fireSimState_v5'];
 
 // -----------------------------------------------------------------------------
@@ -85,7 +103,7 @@ const DEFAULTS = Object.freeze({
     swrRate: 3.5,             // %
 
     // Monte Carlo (Expert, R15)
-    mcRuns: 1000,
+    mcRuns: 500,
     volGlobal: 15,            // % a year, global equity index
     volSg: 17,                // % a year, single-country index
     volInfl: 1.8,             // percentage points a year
@@ -93,6 +111,42 @@ const DEFAULTS = Object.freeze({
     volMort: 1.0              // percentage points a year, bank loans after lock-in
 });
 
+
+// -----------------------------------------------------------------------------
+// R20: DATED FIGURES REGISTER. Review every October and update FIGURES_AS_OF.
+// Format: figure, value, source, where it appears (E = engine.js, H = index.html).
+//   Singapore inflation averages, 1.72% / 2.14% / 1.68% (10/20/30 yrs to 2025),
+//     SingStat CPI, H inflation tooltip and note, E WARN_TEXT.inflationLow
+//   MSCI World return in USD, ~7.5%/yr Dec 2000 to Aug 2026 (7.53%), MSCI,
+//     H Global return tooltip and note, E WARN_TEXT.globalUSD / globalSGD
+//   MSCI World return in SGD, ~6.2%/yr since 2001, derived from the USD return
+//     and USD/SGD moving from ~1.73 to ~1.28 (check gives ~6.3%), same places,
+//     E DEFAULTS.globalRetSGD
+//   MSCI World 10-year return in USD, ~13%/yr (13.37% to Sep 2026), MSCI, E WARN_TEXT
+//   MSCI World volatility, ~14.9% over 10 yrs, MSCI, H volGlobal, E DEFAULTS.volGlobal
+//   SPDR STI ETF return, ~8.6%/yr Apr 2002 to Jul 2026, SSGA factsheet; ~7%/yr over
+//     10 yrs to Sep 2026, fund data, H Singapore return tooltip and note, E WARN_TEXT.sg
+//   STI volatility, 17%, ESTIMATE (not yet verified), H volSg, E DEFAULTS.volSg
+//   Inflation volatility, 1.8 pts, std dev of annual CPI 1986-2025 (IMF / World Bank),
+//     H volInfl, E DEFAULTS.volInfl
+//   USD/SGD spot, 1.28 on 2 Oct 2026, H fxRate tooltip and note, E DEFAULTS.fxRate
+//   USD/SGD volatility, 5%, ESTIMATE (not yet verified), H volFx, E DEFAULTS.volFx
+//   3-month SORA averages, 3.2% / 2.5% / 2.0% / 2.0% (5/10/15/20 yrs to Q2 2026),
+//     range 1.0%-4.7%, MAS via Global Property Guide, H both mortgage tooltips
+//     and notes, E WARN_TEXT.mortHigh / mortLow / longLow, E DEFAULTS.mortgageRateLong
+//   Bank spread over SORA, ~0.2-0.3 pts (Sep 2026 packages), PropertyNet.SG, H mortgage tooltips
+//   Mortgage rate volatility, 1.0 pt, ESTIMATE from the SORA history, H volMort, E DEFAULTS.volMort
+//   HDB concessionary rate, 2.6%, HDB, E DEFAULTS.mortgageRate, H mortgage tooltips
+//   CPF Full Retirement Sum, S$220,400 (2026) and S$228,200 (2027), CPF Board,
+//     E DEFAULTS.frs2026 / frsGrowth, H CPF tooltips
+//   CPF LIFE Standard Plan payouts, ~S$1,780/mo from 65 and ~S$2,380 from 70 for the
+//     2026 FRS, CPF Board, E CPF_LIFE_RATE_65 / CPF_LIFE_DEFER_PER_YR, H CPF tooltips
+//   CPF contribution and allocation rates (2026) and S$8,000 Ordinary Wage ceiling,
+//     CPF Board, E CPF_RATE_BANDS / CPF_OW_CEILING, H CPF tooltip
+//   CPF floor interest rates, OA 2.5% and SA/RA 4%, CPF Board, E DEFAULTS.oaRate / saRate
+//   US stocks ~10%/yr since 1928 (Damodaran, NYU Stern) and developed markets ~8.5%/yr
+//     since 1900 (UBS Global Investment Returns Yearbook, not re-checked), E WARN_TEXT
+// -----------------------------------------------------------------------------
 
 // Field ID -> starting value. '' = blank (personal input, shows a placeholder example).
 const FIELD_DEFAULTS = {
@@ -157,6 +211,7 @@ let modeState = {
     simpleAtSwitch: null     // Simple values written when last leaving Advanced: {start, contrib, ret}
 };
 let globalCcyState = DEFAULTS.globalCcy;
+let touchedAssumptions = new Set();   // R25: assumption fields the user has edited
 let exampleState = null;      // persona key while an example plan is loaded, else null
 let showMissing = false;      // set after the user first clicks Calculate: outline missing essentials
 
@@ -517,8 +572,10 @@ function getState() {
         });
     });
     return {
+        format: SAVE_FORMAT,
         version: APP_VERSION,
         last_saved: new Date().toISOString(),
+        touched: chosenAssumptions(),
         mode: getMode(),
         globalCcy: globalCcyState,
         chartView: getChartView(),
@@ -533,11 +590,21 @@ function loadState(state) {
     if (!state) return;
     try {
         if (state.fields) {
-            // --- V6 format ---
+            // --- V6 format (format 1 = Batches 1-6, format 2 = Batch 7 onwards) ---
+            migrateState(state);
+            const chosen = new Set(state.touched || []);
+            // Start from defaults, so settings missing from older saves get today's defaults
+            applyFieldDefaults();
+            ['toggle-expense-partner', 'toggle-mortgage', 'toggle-mortgage-partner', 'inp-showFireCurve', 'toggle-ownhome', 'inp-pledge', 'inp-swrOverride', 'inp-blackSwan'].forEach(id => setChecked(id, false));
+            setChecked('inp-maxOA', true);
             Object.entries(state.fields).forEach(([id, v]) => {
                 const el = document.getElementById(id);
-                if (el) el.value = v;
+                if (!el) return;
+                // R25: assumptions the user never changed follow the current defaults
+                if (ASSUMPTION_FIELDS.includes(id) && !chosen.has(id)) return;
+                el.value = v;
             });
+            touchedAssumptions = new Set(ASSUMPTION_FIELDS.filter(id => chosen.has(id)));
             Object.entries(state.toggles || {}).forEach(([id, v]) => setChecked(id, v));
             // Batch 1–3 saves: SA was only counted when its checkbox was ticked
             if (state.toggles && state.toggles['toggle-sa'] === false) {
@@ -576,15 +643,90 @@ function saveState() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(getState())); } catch (e) {}
 }
 
+// R25: is this assumption different from its default value?
+function differsFromDefault(id) {
+    const el = document.getElementById(id);
+    if (!el) return false;
+    const d = FIELD_DEFAULTS[id];
+    if (typeof d === 'number') { const v = readNum(id); return v !== null && Math.abs(v - d) > 1e-9; }
+    return String(el.value) !== String(d);
+}
+
+// R25: assumptions the user chose (edited, or different from the default). Saved with the plan.
+function chosenAssumptions() {
+    return ASSUMPTION_FIELDS.filter(id => touchedAssumptions.has(id) || differsFromDefault(id));
+}
+
+// R25: bring an older save up to the current format, one step at a time.
+// To change the save layout in future: raise SAVE_FORMAT and add a step here.
+function migrateState(state) {
+    let f = state.format || (state.fields ? 1 : 0);
+    if (f === 1) {
+        // Saved before Batch 7: there's no record of which assumptions were changed, so keep them all
+        state.touched = ASSUMPTION_FIELDS.slice();
+        f = 2;
+    }
+    state.format = Math.max(f, state.format || 0);
+    return state;
+}
+
+// R25: read a saved plan (from a file or a link). Returns null if it isn't one.
+function readPlanFile(text) {
+    let state;
+    try { state = JSON.parse(text); } catch (e) { return null; }
+    if (!state || typeof state !== 'object' || !(state.fields || state.inputs)) return null;
+    return state;
+}
+
+let planNoticeTimer = null;
+function showPlanNotice(msg, isError) {
+    const el = document.getElementById('plan-notice');
+    if (!el) { if (isError) window.alert(msg); return; }
+    el.textContent = msg;
+    el.classList.toggle('error', !!isError);
+    el.style.display = 'block';
+    clearTimeout(planNoticeTimer);
+    planNoticeTimer = setTimeout(() => { el.style.display = 'none'; }, 20000);
+}
+
+// R25: load a saved plan and say what happened
+function applyLoadedPlan(state, label, fromLink) {
+    const fileFormat = state.format || (state.fields ? 1 : 0);
+    const missing = (state.fields && !fromLink) ? Object.keys(FIELD_DEFAULTS).filter(id => !(id in state.fields)).length : 0;
+    scenarios = [];
+    isLoading = true;
+    loadState(state);
+    isLoading = false;
+    unlockSection('inputs-section');
+    unlockSection('chart-section');
+    const parts = [label + ' loaded' + (state.version ? ' (saved with version ' + state.version + ').' : '.')];
+    if (fileFormat > SAVE_FORMAT) {
+        parts.push('It was saved by a newer version of this tool, so some settings may not load. Refresh the page to get the latest version.');
+    } else if (fileFormat === 0) {
+        parts.push('It came from the original version of this tool, so only your main inputs were carried over. Please check the rest.');
+    } else {
+        if (fileFormat < SAVE_FORMAT) parts.push('Your assumptions were kept exactly as saved.');
+        if (missing > 0) parts.push(missing + (missing === 1 ? ' setting added since then starts' : ' settings added since then start') + ' at the default value.');
+    }
+    runSimNow();
+    showPlanNotice(parts.join(' '), false);
+    scrollToEl(document.getElementById('inputs-section'));
+}
+
+// R25: export file named with today's date
 function exportPlan() {
     const state = getState();
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
+    const d = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    const name = 'sg-fire-inputs-' + d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + '.json';
+    const dataStr = "data:application/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
     const anchor = document.createElement('a');
     anchor.setAttribute("href", dataStr);
-    anchor.setAttribute("download", "fire-plan-v" + APP_VERSION + ".json");
+    anchor.setAttribute("download", name);
     document.body.appendChild(anchor);
     anchor.click();
     anchor.remove();
+    showPlanNotice('Exported to ' + name + '. Keep it somewhere safe; use Upload inputs to load it again on any device.', false);
 }
 
 function importPlan(event) {
@@ -592,20 +734,54 @@ function importPlan(event) {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = function (e) {
-        try {
-            const state = JSON.parse(e.target.result);
-            isLoading = true;
-            loadState(state);
-            isLoading = false;
-            runSim();
-        } catch (err) {
-            isLoading = false;
-            alert("Invalid save file.");
-        }
+        const state = readPlanFile(e.target.result);
+        if (!state) window.alert("That file couldn't be read. Choose a .json file you exported from this tool.");
+        else applyLoadedPlan(state, 'Your inputs were', false);
     };
     reader.readAsText(file);
     event.target.value = '';
 }
+
+// R29: pack a plan into a link (no server involved; the part after # never leaves the browser)
+function encodePlan(state) {
+    const bytes = new TextEncoder().encode(JSON.stringify(state));
+    let bin = '';
+    bytes.forEach(b => { bin += String.fromCharCode(b); });
+    return btoa(bin).split('+').join('-').split('/').join('_').split('=').join('');
+}
+
+// Returns a plan, null (no plan in the link) or 'bad' (a plan link that couldn't be read)
+function readPlanFromLink() {
+    const h = (typeof location !== 'undefined' && location.hash) || '';
+    if (h.indexOf('#plan=') !== 0) return null;
+    try {
+        let s = h.slice(6).split('-').join('+').split('_').join('/');
+        while (s.length % 4) s += '=';
+        const bin = atob(s);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        return readPlanFile(new TextDecoder().decode(bytes)) || 'bad';
+    } catch (e) { return 'bad'; }
+}
+
+window.copyShareLink = function () {
+    if (exampleState) { showPlanNotice('This is an example plan. Start your own plan before sharing.', true); return; }
+    const st = getState();
+    delete st.last_saved;
+    Object.keys(st.fields).forEach(id => { if (st.fields[id] === '') delete st.fields[id]; });
+    const url = location.href.split('#')[0] + '#plan=' + encodePlan(st);
+    const done = () => showPlanNotice('Link copied. Anyone you send it to can open your plan and see your numbers.', false);
+    const manual = () => window.prompt('Copy this link:', url);
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done, manual);
+    else manual();
+};
+
+// R26: Start Over asks first (example plans clear without asking)
+window.confirmStartOver = function () {
+    if (!exampleState && !window.confirm("Start over? This clears all your inputs in this browser and can't be undone. Use Export inputs first if you want to keep them.")) return;
+    clearAllInputs();
+    showPlanNotice('All inputs cleared.', false);
+};
 
 function setFieldDefault(id) {
     const v = FIELD_DEFAULTS[id];
@@ -632,7 +808,9 @@ function clearAllInputs() {
         setChoices(null);
         setGlobalCcyState('SGD');
         modeState = { advInitialized: false, simpleAtSwitch: null };
+        touchedAssumptions = new Set();
         if (getMode() !== 'simple') onEnterAdvanced();
+
         setExampleState(null);
         showMissing = false;
         document.querySelectorAll('.persona-card').forEach(c => c.classList.remove('active'));
@@ -797,7 +975,8 @@ const PERSONAS = {
         fields: { 'inp-currentAge': 28, 'inp-retireAge': 55, 'inp-expenses': 3500,
             'inp-invStart': 10000, 'inp-invContrib': 500, 'inp-invRet': 5.0,
             'inp-cashStart': 20000, 'inp-cashContrib': 1000,
-            'inp-oaStart': 25000, 'inp-oaContrib': 1100 },
+            'inp-oaStart': 25000, 'inp-oaContrib': 1100,
+            'inp-saStart': 7000, 'inp-saContrib': 290 },
         toggles: { 'toggle-expense-partner': false, 'toggle-mortgage': false, 'toggle-mortgage-partner': false },
         choices: { cpfHas: 'yes', cpfContrib: 'yes' }
     },
@@ -806,7 +985,8 @@ const PERSONAS = {
             'inp-invStart': 30000, 'inp-invContrib': 1000, 'inp-invRet': 4.5,
             'inp-cashStart': 40000, 'inp-cashContrib': 1000,
             'inp-mortgagePrincipal': 420000, 'inp-loanYrs': 23, 'inp-mortgageRate': 2.6, 'inp-mortgageShare': 50,
-            'inp-oaStart': 20000, 'inp-oaContrib': 1400 },
+            'inp-oaStart': 20000, 'inp-oaContrib': 1400,
+            'inp-saStart': 25000, 'inp-saContrib': 365 },
         toggles: { 'toggle-expense-partner': true, 'toggle-mortgage': true, 'toggle-mortgage-partner': true, 'inp-maxOA': true },
         choices: { cpfHas: 'yes', cpfContrib: 'yes', loanType: 'hdb' }
     },
@@ -815,7 +995,8 @@ const PERSONAS = {
             'inp-invStart': 120000, 'inp-invContrib': 1500, 'inp-invRet': 4.5,
             'inp-cashStart': 80000, 'inp-cashContrib': 700,
             'inp-mortgagePrincipal': 1100000, 'inp-loanYrs': 24, 'inp-mortgageRate': 2.8, 'inp-mortgageShare': 50,
-            'inp-oaStart': 35000, 'inp-oaContrib': 1500 },
+            'inp-oaStart': 35000, 'inp-oaContrib': 1500,
+            'inp-saStart':
         toggles: { 'toggle-expense-partner': true, 'toggle-mortgage': true, 'toggle-mortgage-partner': true, 'inp-maxOA': true },
         choices: { cpfHas: 'yes', cpfContrib: 'yes', loanType: 'bank' }
     },
@@ -825,7 +1006,7 @@ const PERSONAS = {
             'inp-cashStart': 60000, 'inp-cashContrib': 2500,
             'inp-mortgagePrincipal': 120000, 'inp-loanYrs': 10, 'inp-mortgageRate': 2.6, 'inp-mortgageShare': 100,
             'inp-oaStart': 30000, 'inp-oaContrib': 1200,
-            'inp-saStart': 140000, 'inp-saContrib': 500 },
+            'inp-saStart': 140000, 'inp-saContrib': 400 },
         toggles: { 'toggle-expense-partner': false, 'toggle-mortgage': true, 'toggle-mortgage-partner': false, 'inp-maxOA': true },
         choices: { cpfHas: 'yes', cpfContrib: 'yes', loanType: 'hdb' }
     },
@@ -834,7 +1015,7 @@ const PERSONAS = {
             'inp-invStart': 70000, 'inp-invContrib': 1000, 'inp-invRet': 5.0,
             'inp-cashStart': 75000, 'inp-cashContrib': 8000,
             'inp-mortgagePrincipal': 320000, 'inp-loanYrs': 23, 'inp-mortgageRate': 2.6, 'inp-mortgageShare': 50,
-            'inp-oaStart': 30000 },
+            'inp-oaStart': 30000, 'inp-saStart': 35000 },
         toggles: { 'toggle-expense-partner': false, 'toggle-mortgage': true, 'toggle-mortgage-partner': false, 'inp-maxOA': true },
         choices: { cpfHas: 'yes', cpfContrib: 'no', loanType: 'hdb' }
     }
@@ -1398,13 +1579,13 @@ function computeSwr(inp, base) {
 const WARN_TEXT = {
     globalUSD: 'Aggressive. Developed-market equities returned about 8.5% a year in USD from 1900 to 2025, and MSCI World about 6.2% a year in SGD since 2001. The past 10 years (~13%) were exceptional. US stocks alone averaged about 10% since 1928. This input is nominal; the engine adjusts for inflation.',
     globalSGD: 'Aggressive. MSCI World returned about 6.2% a year in SGD since 2001, and developed-market equities about 8.5% a year in USD since 1900. The past 10 years (~13% in USD) were exceptional. This input is nominal; the engine adjusts for inflation.',
-    sg: 'Aggressive. The STI returned about 8.4% a year from 2002 to mid-2026, boosted by strong 2024–25 gains, and about 6.4% a year from 2010 to 2025.',
+    sg: 'Aggressive. The SPDR STI ETF returned about 8.6% a year from its April 2002 launch to July 2026, helped by strong recent years, and STI ETFs returned about 7% a year over the 10 years to 
     inflationLow: "Note: Highly optimistic. Singapore's average headline inflation was 1.72% over the last 10 years, 2.14% over the last 20 years, and 1.68% over the past 30 years.",
     cashHigh: 'Note: Most bank savings accounts that offer high yields cap the maximum balance that earns this interest rate.',
     cashLow: 'Note: You should consider switching from a basic savings account to a high-yield savings account to protect your cash from inflation.',
-    mortHigh: 'Note: This is high for Singapore. Average mortgage rates peaked at about 4.7% in late 2023, and averaged 2.0%–3.2% over the 5 to 20 years to Q2 2026. HDB concessionary loans are 2.6%.',
-    mortLow: "Note: This is optimistic. Average mortgage rates in Singapore haven't been below about 1.0% in the 20 years to Q2 2026 (the low point, about 1.04%, was around 2012–2014).",
-    longLow: 'Note: Optimistic for a long-run rate. Average mortgage rates were about 2.0% over the 15 and 20 years to Q2 2026, and about 2.5% over the last 10.',
+    mortHigh: 'Note: This is high for Singapore. 3-month SORA, the benchmark bank loans are priced from, peaked at about 4.7% in late 2023 and averaged 2.0%–3.2% over the 5 to 20 years to Q2 2026. HDB concessionary loans are 2.6%.',
+    mortLow: "Note: This is optimistic. 3-month SORA hasn't been below about 1.0% in the 20 years to Q2 2026 (the low, about 1.04%, was around 2012–2014), and bank loans add a spread on top.",
+    longLow: 'Note: Optimistic for a long-run rate. 3-month SORA averaged about 2.0% over the 15 and 20 years to Q2 2026 and 2.5% over the last 10, before any bank spread.',
     swrHigh: 'Above the widely cited ~4% guideline for a 30-year retirement. A run of poor market returns early in retirement could drain your savings faster than this projection shows.',
     swrLow: 'Very conservative. You may be planning to work years longer than you need to.',
     lifeAge: 'CPF LIFE payouts can start between 65 and 70. The engine uses the nearest allowed age.',
@@ -2374,11 +2555,22 @@ function initApp() {
         runSim();
     });
 
+    // R25: remember which assumptions the user edits (typing or choosing)
+    const markTouched = e => { if (e.isTrusted && e.target && ASSUMPTION_FIELDS.includes(e.target.id)) touchedAssumptions.add(e.target.id); };
+    document.addEventListener('input', markTouched, true);
+    document.addEventListener('change', markTouched, true);
+
+    // R28 / R20: footer details
+    updateDOM('app-version', APP_VERSION);
+    updateDOM('figures-as-of', FIGURES_AS_OF);
+
     let loaded = false;
     try {
-        const v6 = localStorage.getItem(STORAGE_KEY);
-        if (v6) {
-            loadState(JSON.parse(v6));
+        let saved = localStorage.getItem(STORAGE_KEY);
+        // R25: the first time the beta page opens, start from a copy of the live plan
+        if (!saved && IS_BETA) saved = localStorage.getItem(MAIN_STORAGE_KEY);
+        if (saved) {
+            loadState(JSON.parse(saved));
             loaded = true;
             // R23: reopen in Advanced only if it was last used AND something Advanced-only was changed
             if (getMode() === 'advanced' && !advancedInUse()) {
@@ -2404,6 +2596,14 @@ function initApp() {
     }
     isLoading = false;
     runSim();
+
+    // R29: open a plan from a share link, then tidy the address bar
+    const fromLink = readPlanFromLink();
+    if (fromLink) {
+        try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+        if (fromLink === 'bad') window.alert("This share link couldn't be read. It may have been cut off when it was copied.");
+        else if (window.confirm('Open the plan from this link? It will replace the inputs saved in this browser.')) applyLoadedPlan(fromLink, 'The shared plan was', true);
+    }
 }
 
 if (typeof document !== 'undefined') {

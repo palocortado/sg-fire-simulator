@@ -479,3 +479,21 @@ body.example-mode .scen-builder { display: none !important; }
 /* R15: Expert-only sections (Expert also shows everything in Advanced) */
 body:not(.expert-mode) .expert-only { display: none !important; }
 body.expert-mode .expert-only { animation: v6-fade-in 0.35s ease-out; }
+
+/* =============================================================================
+   V6 Batch 7
+   ============================================================================= */
+
+/* R26: "Your inputs" bar at the top of the inputs column */
+.plan-bar { background: #ffffff; border: 1px solid var(--border-color); border-radius: 12px; padding: 0.85rem 1rem; margin-bottom: 1.25rem; }
+.plan-bar-buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.4rem; }
+.plan-bar .file-label { margin: 0; display: inline-flex; align-items: center; }
+.plan-notice { margin-top: 0.6rem; padding: 0.6rem 0.8rem; background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; border-radius: 8px; font-size: 0.82rem; line-height: 1.4; }
+.plan-notice.error { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
+
+/* R28: footer, disclaimer and "How this works" */
+.app-footer { max-width: 900px; margin: 2.5rem auto 0; padding: 1.5rem 1.25rem 0; border-top: 1px solid var(--border-color); color: var(--text-secondary); font-size: 0.85rem; line-height: 1.5; }
+.app-footer .disclaimer { margin-bottom: 0.75rem; }
+.how-it-works summary { cursor: pointer; font-weight: 600; color: var(--primary); margin-bottom: 0.5rem; }
+.how-it-works p { margin: 0 0 0.6rem; }
+.footer-meta { margin-top: 0.75rem; font-size: 0.75rem; color: #94a3b8; }

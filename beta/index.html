@@ -21,11 +21,6 @@
             <h1>Financial Independence Simulator for Singapore</h1>
             <p class="subtitle">Chart your path to financial freedom: see how adjusting your lifestyle, savings, and investments today can unlock your ideal retirement or funemployment.</p>
         </div>
-        <div class="header-right" style="display:flex; gap:0.5rem; align-items:center;">
-            <button type="button" class="btn-secondary" onclick="exportPlan()">Export</button>
-            <label class="btn-secondary file-label" style="margin:0; display:inline-flex; align-items:center; cursor:pointer;">Import <input type="file" id="importFile" accept=".json" onchange="importPlan(event)" style="display:none;"></label>
-            <button type="button" class="btn-danger" onclick="clearAllInputs()">Clear</button>
-        </div>
     </header>
 
     <main class="app-layout">
@@ -54,6 +49,7 @@
             <div class="welcome-actions">
                 <button type="button" class="btn-primary" onclick="startPlan()" style="padding: 0.85rem 2.5rem; font-size: 1rem;">Let's go</button>
                 <a href="javascript:void(0)" class="example-link" onclick="toggleExamplePicker()">or see an example plan first</a>
+                <a href="javascript:void(0)" class="example-link" onclick="document.getElementById('importFile').click()">or upload inputs you saved before</a>
             </div>
         </div>
 
@@ -91,6 +87,18 @@
 
             <!-- Lock 1: Inputs Column -->
             <div class="inputs-column wizard-lock" id="inputs-section">
+
+                <!-- Your inputs: export, upload, share, start over (R26, R29) -->
+                <div class="plan-bar">
+                    <div class="plan-bar-buttons">
+                        <button type="button" class="btn-secondary" onclick="exportPlan()">Export inputs</button>
+                        <label class="btn-secondary file-label">Upload inputs <input type="file" id="importFile" accept=".json,application/json" onchange="importPlan(event)" style="display:none;"></label>
+                        <button type="button" class="btn-secondary" onclick="copyShareLink()">Copy share link</button>
+                        <button type="button" class="btn-danger" onclick="confirmStartOver()">Start Over</button>
+                    </div>
+                    <div class="field-note">Your inputs are saved automatically, but only in this browser on this device. Export them to keep a backup or move them to another device. Anyone you send a share link to can see your numbers.</div>
+                    <div id="plan-notice" class="plan-notice" style="display:none;"></div>
+                </div>
 
                 <!-- Mode Selector -->
                 <div style="margin-bottom: 1.5rem;">
@@ -285,11 +293,11 @@
                             <div>
                                 <label class="lbl">
                                     Expected Return (Nominal %)
-                                    <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Singapore-listed shares, REITs and STI ETFs. Enter the headline return before inflation; the engine calculates your real return automatically. The STI ETF returned about 8.2% a year from 2002 to mid-2026 after fees, and about 6.4% a year from 2010 to 2025.</div></div>
+                                    <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Singapore-listed shares, REITs and STI ETFs. Enter the headline return before inflation; the engine calculates your real return automatically. The SPDR STI ETF returned about 8.6% a year after fees from its April 2002 launch to July 2026, helped by strong 2024–26 gains. Over the 10 years to September 2026, STI ETFs returned about 7% a year.</div>
                                     <span class="assume-pill">Assumption</span>
                                 </label>
                                 <input type="number" id="inp-sgRet" class="assumption-input" value="6.0" step="0.1" oninput="runSim()">
-                                <div class="assume-note">STI ETF ~6.4%/yr 2010–2025.</div>
+                                <div class="assume-note">STI ETF ~8.6%/yr since 2002; ~7%/yr over the last 10 years.</div>
                             </div>
                         </div>
                     </div>
@@ -507,11 +515,11 @@
                             <div>
                                 <label class="lbl">
                                     <span class="not-bank">Interest Rate (%)</span><span class="bank-only">Current Package Rate (%)</span>
-                                    <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Average quarterly mortgage rates in Singapore over the periods to Q2 2026:<br>• 5 years: 3.2% (range 1.1%–4.7%)<br>• 10 years: 2.5% (range 1.1%–4.7%)<br>• 15 years: 2.0% (range 1.0%–4.7%)<br>• 20 years: 2.0% (range 1.0%–4.7%)<br><br>Rates peaked at about 4.7% in late 2023 and were near 1.0% in 2012–2014. HDB concessionary loans are fixed at 2.6% (the CPF OA rate + 0.1%).<br><br>Source: Global Property Guide, quarterly averages based on Monetary Authority of Singapore data.<br><br>Enter a rate you're comfortable modelling. For a bank loan in Simple mode, this one rate is used for the whole loan, so a long-run average is safer than today's promotional rate.</div></div>
+                                    <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Singapore bank loans are priced from 3-month SORA (the benchmark rate) plus a bank spread. Average 3-month SORA over the periods to Q2 2026:<br>• 5 years: 3.2% (range 1.1%–4.7%)<br>• 10 years: 2.5% (range 1.1%–4.7%)<br>• 15 years: 2.0% (range 1.0%–4.7%)<br>• 20 years: 2.0% (range 1.0%–4.7%)<br><br>SORA peaked at about 4.7% in late 2023 and was near 1.0% in 2012–2014. Bank packages add a spread on top (about 0.2–0.3 percentage points on September 2026 packages), so actual loan rates run a little higher. HDB concessionary loans are fixed at 2.6% (the CPF OA rate + 0.1%).<br><br>Sources: Monetary Authority of Singapore data via Global Property Guide; bank packages via PropertyNet.SG.<br><br>Enter a rate you're comfortable modelling. For a bank loan in Simple mode, this one rate is used for the whole loan, so a long-run average is safer than today's promotional rate.</div></div>
                                     <span class="assume-pill">Assumption</span>
                                 </label>
                                 <input type="number" id="inp-mortgageRate" class="assumption-input" value="2.6" step="0.1" oninput="runSim()">
-                                <div class="assume-note simple-only">HDB loans: 2.6%. Bank loans averaged 2.0%–3.2% over the 5 to 20 years to Q2 2026.</div>
+                                <div class="assume-note simple-only">HDB loans: 2.6%. Bank loans: 3-month SORA averaged 2.0%–3.2% over the 5 to 20 years to Q2 2026, plus a bank spread.</div>
                                 <div class="assume-note advanced-only not-bank">HDB concessionary rate (CPF OA rate + 0.1%).</div>
                                 <div class="assume-note bank-only">The rate on your current package, usually fixed for 2–3 years.</div>
                             </div>
@@ -529,11 +537,11 @@
                             <div class="bank-only">
                                 <label class="lbl">
                                     Long-run Rate After That (%)
-                                    <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Average quarterly mortgage rates in Singapore over the periods to Q2 2026:<br>• 5 years: 3.2% (range 1.1%–4.7%)<br>• 10 years: 2.5% (range 1.1%–4.7%)<br>• 15 years: 2.0% (range 1.0%–4.7%)<br>• 20 years: 2.0% (range 1.0%–4.7%)<br><br>Rates peaked at about 4.7% in late 2023 and were near 1.0% in 2012–2014. HDB concessionary loans are fixed at 2.6% (the CPF OA rate + 0.1%).<br><br>Source: Global Property Guide, quarterly averages based on Monetary Authority of Singapore data.<br><br>The default of 2.5% is close to the 10-year average and above the 15- and 20-year averages.</div></div>
+                                    <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Singapore bank loans are priced from 3-month SORA (the benchmark rate) plus a bank spread. Average 3-month SORA over the periods to Q2 2026:<br>• 5 years: 3.2% (range 1.1%–4.7%)<br>• 10 years: 2.5% (range 1.1%–4.7%)<br>• 15 years: 2.0% (range 1.0%–4.7%)<br>• 20 years: 2.0% (range 1.0%–4.7%)<br><br>SORA peaked at about 4.7% in late 2023 and was near 1.0% in 2012–2014. Bank packages add a spread on top (about 0.2–0.3 percentage points on September 2026 packages).<br><br>Sources: Monetary Authority of Singapore data via Global Property Guide; bank packages via PropertyNet.SG.<br><br>The default of 2.5% equals the 10-year SORA average. Adding a typical bank spread gives about 2.7%–2.8%, a slightly more cautious choice.</div></div>
                                     <span class="assume-pill">Assumption</span>
                                 </label>
                                 <input type="number" id="inp-mortgageRateLong" class="assumption-input" value="2.5" step="0.1" oninput="runSim()">
-                                <div class="assume-note">Averages to Q2 2026: 5 yrs 3.2% · 10 yrs 2.5% · 15 yrs 2.0% · 20 yrs 2.0%.</div>
+                                <div class="assume-note">3-month SORA averages to Q2 2026: 5 yrs 3.2% · 10 yrs 2.5% · 15 yrs 2.0% · 20 yrs 2.0%, before a bank spread.</div>
                             </div>
 
                             <div style="grid-column: 1 / -1; border-top: 1px solid #e2e8f0; padding-top: 0.5rem; margin-top: 0.5rem;">
@@ -620,11 +628,11 @@
                         <div>
                             <label class="lbl">
                                 Global Investment Volatility (% / yr)
-                                <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">How much Global Investment returns swing from year to year (standard deviation). Broad developed-market equity indices such as MSCI World have typically swung around 15% a year. A bond-heavy portfolio swings less; a concentrated stock portfolio swings more.</div></div>
+                                <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">How much Global Investment returns swing from year to year (standard deviation). MSCI World's annualised volatility was about 14.9% over the 10 years to August 2026 (in USD). A bond-heavy portfolio swings less; a concentrated stock portfolio swings more.</div></div>
                                 <span class="assume-pill">Assumption</span>
                             </label>
                             <input type="number" id="inp-volGlobal" class="assumption-input" value="15.0" step="0.5" oninput="runSim()">
-                            <div class="assume-note">Typical for a global equity index.</div>
+                            <div class="assume-note">MSCI World: ~14.9% over the last 10 years.</div>
                         </div>
                         <div>
                             <label class="lbl">
@@ -656,7 +664,7 @@
                         <div class="bank-only">
                             <label class="lbl">
                                 Mortgage Rate Volatility (% / yr)
-                                <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">How much your bank loan rate swings around your long-run rate after the lock-in period. Singapore mortgage rates ranged from about 1.0% to 4.7% over the 20 years to Q2 2026. HDB loans stay fixed.</div></div>
+                                <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">How much your bank loan rate swings around your long-run rate after the lock-in period. 3-month SORA, which bank loans are priced from, ranged from about 1.0% to 4.7% over the 20 years to Q2 2026. HDB loans stay fixed.</div></div>
                                 <span class="assume-pill">Assumption</span>
                             </label>
                             <input type="number" id="inp-volMort" class="assumption-input" value="1.0" step="0.1" oninput="runSim()">
@@ -668,8 +676,8 @@
                                 <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">More simulations give a steadier result but take longer to calculate. The same random sequence is used every time, so results only change when your inputs change.</div></div>
                             </label>
                             <select id="inp-mcRuns" class="select-input" onchange="runSim()">
-                                <option value="500">500 (faster)</option>
-                                <option value="1000" selected>1,000</option>
+                                <option value="500" selected>500 (faster)</option>
+                                <option value="1000">1,000</option>
                                 <option value="2000">2,000 (steadier)</option>
                             </select>
                         </div>
@@ -761,6 +769,20 @@
             </div> <!-- End of .chart-column -->
         </div> <!-- End of .planner-split -->
     </main>
+
+    <!-- Footer: disclaimer and methodology (R28, R20) -->
+    <footer class="app-footer">
+        <p class="disclaimer"><strong>This is an educational tool, not financial advice.</strong> Results are projections based on your inputs and assumptions, not guarantees.</p>
+        <details class="how-it-works">
+            <summary>How this works</summary>
+            <p><strong>What it does.</strong> The simulator projects your cash, investments and CPF year by year until age 100. Until your target financial freedom age, it adds your monthly savings and CPF contributions. After that, it pays your living expenses and mortgage from your cash and investments, plus any income streams and CPF LIFE payouts. It then checks whether your money lasts.</p>
+            <p><strong>What it models.</strong> Investment returns and inflation, an HDB or bank mortgage, CPF Ordinary and Special Accounts, the Retirement Account at 55 and CPF LIFE from 65 to 70, one-off windfalls, expenses and property downgrades, and regular income such as rent. Expert mode adds random market returns (Monte Carlo) to show how often a plan lasts.</p>
+            <p><strong>What it doesn't model.</strong> Taxes, MediSave, healthcare costs beyond what you include in your expenses, SRS, insurance, the value of your home, CPF extra interest, and future changes to CPF rules. Investment fees are only included if you lower your expected return to allow for them.</p>
+            <p><strong>Where the figures come from.</strong> CPF rules and payouts from the CPF Board; inflation from the Singapore Department of Statistics; interest rates from the Monetary Authority of Singapore; market returns from index providers and fund factsheets. Each figure's source is in its ℹ️ note. Figures are reviewed once a year.</p>
+            <p><strong>Your privacy.</strong> Your inputs stay in your browser. Nothing you enter is sent to a server. Share links contain your numbers, so only send them to people you trust.</p>
+        </details>
+        <p class="footer-meta">Figures as of <span id="figures-as-of">Oct 2026</span> · Version <span id="app-version"></span></p>
+    </footer>
 
     <script src="engine.js"></script>
 </body>
