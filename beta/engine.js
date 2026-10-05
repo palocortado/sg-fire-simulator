@@ -1124,7 +1124,7 @@ function simulatePath(inp, opts = {}) {
         const liquidNow = liquidOf();
         if (recordStates) states.push(Object.assign({}, st));
         if (record) {
-            path.push({ age, liquid: Math.max(0, liquidNow), locked: lockedOf(), phase, rem: st.rem, lifePay: lifeNow, short: 0, pidx: priceIdx }
+            path.push({ age, liquid: Math.max(0, liquidNow), locked: lockedOf(), phase, rem: st.rem, lifePay: lifeNow, short: 0, pidx: priceIdx });
             if (liquidNow > peakLiquid) peakLiquid = liquidNow;
         }
         if (age === 100) break;
