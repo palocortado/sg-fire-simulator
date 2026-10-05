@@ -471,3 +471,11 @@ input:disabled { background: #f1f5f9 !important; color: #94a3b8 !important; }
 .scen-row select { padding: 0.4rem; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.82rem; background: #fff; }
 .btn-small { padding: 0.45rem 0.9rem; font-size: 0.82rem; }
 body.example-mode .scen-builder { display: none !important; }
+
+/* =============================================================================
+   V6 Batch 6
+   ============================================================================= */
+
+/* R15: Expert-only sections (Expert also shows everything in Advanced) */
+body:not(.expert-mode) .expert-only { display: none !important; }
+body.expert-mode .expert-only { animation: v6-fade-in 0.35s ease-out; }

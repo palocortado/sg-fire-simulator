@@ -97,7 +97,7 @@
                     <div class="segmented-control">
                         <label><input type="radio" name="mode" id="mode-simple" value="simple" checked onchange="setMode('simple')"> Simple</label>
                         <label><input type="radio" name="mode" id="mode-advanced" value="advanced" onchange="setMode('advanced')"> Advanced</label>
-                        <label class="disabled"><input type="radio" name="mode" id="mode-expert" value="expert" disabled> Expert 🔒</label>
+                        <label><input type="radio" name="mode" id="mode-expert" value="expert" onchange="setMode('expert')"> Expert</label>
                     </div>
                     <div id="mode-notice" class="mode-notice" style="display:none;"></div>
 
@@ -609,6 +609,75 @@
                     <div class="inline-input-row">
                         <label for="inp-swrRate">My withdrawal rate (%)</label>
                         <input type="number" id="inp-swrRate" class="assumption-input" value="3.5" step="0.1" oninput="runSim()" disabled>
+                    </div>
+                </div>
+
+                <!-- Step 6: Uncertainty (Expert, R15) -->
+                <div class="card wizard-card expert-only">
+                    <div class="wizard-header"><span class="step-num">6</span><h3>Uncertainty (Monte Carlo)</h3></div>
+                    <div class="field-note" style="margin-bottom:0.75rem;">Instead of one fixed return every year, Expert mode runs your plan many times with random yearly returns, inflation and interest rates, then shows how often your money lasts to 100. Your expected returns are treated as the typical (median) year, so the middle of the range lines up with your fixed-return projection.</div>
+                    <div class="form-grid-2">
+                        <div>
+                            <label class="lbl">
+                                Global Investment Volatility (% / yr)
+                                <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">How much Global Investment returns swing from year to year (standard deviation). Broad developed-market equity indices such as MSCI World have typically swung around 15% a year. A bond-heavy portfolio swings less; a concentrated stock portfolio swings more.</div></div>
+                                <span class="assume-pill">Assumption</span>
+                            </label>
+                            <input type="number" id="inp-volGlobal" class="assumption-input" value="15.0" step="0.5" oninput="runSim()">
+                            <div class="assume-note">Typical for a global equity index.</div>
+                        </div>
+                        <div>
+                            <label class="lbl">
+                                Singapore Investment Volatility (% / yr)
+                                <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">How much Singapore Investment returns swing from year to year. A single-country index such as the STI is usually a little more volatile than a global index, roughly 17% a year. Global and Singapore returns are assumed to move together most of the time (correlation 0.7).</div></div>
+                                <span class="assume-pill">Assumption</span>
+                            </label>
+                            <input type="number" id="inp-volSg" class="assumption-input" value="17.0" step="0.5" oninput="runSim()">
+                            <div class="assume-note">Typical for a single-country index.</div>
+                        </div>
+                        <div>
+                            <label class="lbl">
+                                Inflation Volatility (% / yr)
+                                <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">How much inflation swings around your inflation assumption each year. Singapore's annual inflation has varied by roughly 2 percentage points a year since the 1980s, including spikes above 6% in 2008 and 2022.</div></div>
+                                <span class="assume-pill">Assumption</span>
+                            </label>
+                            <input type="number" id="inp-volInfl" class="assumption-input" value="1.8" step="0.1" oninput="runSim()">
+                            <div class="assume-note">Approximate historical swing.</div>
+                        </div>
+                        <div class="usd-only">
+                            <label class="lbl">
+                                USD/SGD Volatility (% / yr)
+                                <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">How much the USD/SGD exchange rate swings around your expected drift each year. Only used when Global Investments are entered in USD. The 5% default is an estimate.</div></div>
+                                <span class="assume-pill">Assumption</span>
+                            </label>
+                            <input type="number" id="inp-volFx" class="assumption-input" value="5.0" step="0.5" oninput="runSim()">
+                            <div class="assume-note">Estimate; to be checked against data.</div>
+                        </div>
+                        <div class="bank-only">
+                            <label class="lbl">
+                                Mortgage Rate Volatility (% / yr)
+                                <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">How much your bank loan rate swings around your long-run rate after the lock-in period. Singapore mortgage rates ranged from about 1.0% to 4.7% over the 20 years to Q2 2026. HDB loans stay fixed.</div></div>
+                                <span class="assume-pill">Assumption</span>
+                            </label>
+                            <input type="number" id="inp-volMort" class="assumption-input" value="1.0" step="0.1" oninput="runSim()">
+                            <div class="assume-note">Estimate from the 2005–2026 rate history.</div>
+                        </div>
+                        <div>
+                            <label class="lbl">
+                                Number of Simulations
+                                <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">More simulations give a steadier result but take longer to calculate. The same random sequence is used every time, so results only change when your inputs change.</div></div>
+                            </label>
+                            <select id="inp-mcRuns" class="select-input" onchange="runSim()">
+                                <option value="500">500 (faster)</option>
+                                <option value="1000" selected>1,000</option>
+                                <option value="2000">2,000 (steadier)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row checkbox-row" style="margin-top:0.75rem;">
+                        <label><input type="checkbox" id="inp-blackSwan" onchange="runSim()"> Include market crashes more often (fat tails)
+                            <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Real markets have extreme years (like 2008) more often than a normal bell curve suggests. Tick this to draw returns from a fat-tailed distribution with the same average volatility, so very bad and very good years happen more often.</div></div>
+                        </label>
                     </div>
                 </div>
 

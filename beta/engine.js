@@ -1,7 +1,13 @@
 /* =============================================================================
    Financial Independence Simulator for Singapore — engine.js
-   Version: V6 staging, Batch 5
-   -----------------------------------------------------------------------------
+    Version: V6 staging, Batch 6
+    -----------------------------------------------------------------------------
+    Batch 6 (roadmap R15):
+        - Expert mode unlocked: everything in Advanced plus Monte Carlo (Step 6)
+        - Random yearly returns (lognormal, your return = median), inflation,
+        USD/SGD and bank mortgage rates; Global/Singapore correlation 0.7;
+        optional fat tails; fixed seed so results only change with inputs
+        - Success rate, 10th/50th/90th percentile wealth band on the chart
    Batch 5 (roadmap R8, R11, R13, R14, R16, R22; R12 unchanged by design):
      - R14 CPF realism at 55: Retirement Account up to your Full Retirement Sum
        (or Basic with a property pledge), excess + S$5,000 withdrawable,
@@ -26,7 +32,7 @@ let incomeStreamCount = 0;
 let milestoneCount = 0;
 let isLoading = true;
 
-const APP_VERSION = "6.0-batch5";
+const APP_VERSION = "6.0-batch6";
 const STORAGE_KEY = 'fireSimState_v6';
 const LEGACY_STORAGE_KEYS = ['fireSimState', 'fireSimState_v5'];
 
@@ -76,8 +82,17 @@ const DEFAULTS = Object.freeze({
     lifePlan: 'standard',     // 'standard' or 'escalating'
 
     // Safe withdrawal rate override (Advanced)
-    swrRate: 3.5              // %
+    swrRate: 3.5,             // %
+
+    // Monte Carlo (Expert, R15)
+    mcRuns: 1000,
+    volGlobal: 15,            // % a year, global equity index
+    volSg: 17,                // % a year, single-country index
+    volInfl: 1.8,             // percentage points a year
+    volFx: 5,                 // % a year (estimate; R19)
+    volMort: 1.0              // percentage points a year, bank loans after lock-in
 });
+
 
 // Field ID -> starting value. '' = blank (personal input, shows a placeholder example).
 const FIELD_DEFAULTS = {
@@ -115,16 +130,23 @@ const FIELD_DEFAULTS = {
     'inp-frsGrowth': DEFAULTS.frsGrowth,
     'inp-lifeAge': DEFAULTS.lifeAge,
     'inp-lifePlan': DEFAULTS.lifePlan,
-    'inp-swrRate': DEFAULTS.swrRate
+    'inp-swrRate': DEFAULTS.swrRate,
+    'inp-mcRuns': DEFAULTS.mcRuns,
+    'inp-volGlobal': DEFAULTS.volGlobal,
+    'inp-volSg': DEFAULTS.volSg,
+    'inp-volInfl': DEFAULTS.volInfl,
+    'inp-volFx': DEFAULTS.volFx,
+    'inp-volMort': DEFAULTS.volMort
 };
 
 // Fields reset to their default by "Clear" (assumptions). All other fields are blanked.
 const ASSUMPTION_FIELDS = ['inp-expenseShare', 'inp-inflation', 'inp-realContribGrowth',
     'inp-invRet', 'inp-globalRet', 'inp-fxRate', 'inp-fxDrift', 'inp-sgRet', 'inp-cashYield', 'inp-mortgageRate', 'inp-mortgageShare',
-    'inp-mortgageRateLong', 'inp-lockYrs', 'inp-frsGrowth', 'inp-lifeAge', 'inp-lifePlan', 'inp-swrRate'];
+    'inp-mortgageRateLong', 'inp-lockYrs', 'inp-frsGrowth', 'inp-lifeAge', 'inp-lifePlan', 'inp-swrRate',
+    'inp-mcRuns', 'inp-volGlobal', 'inp-volSg', 'inp-volInfl', 'inp-volFx', 'inp-volMort'];
 
 const PERSISTED_TOGGLES = ['toggle-expense-partner', 'toggle-mortgage', 'toggle-mortgage-partner', 'inp-maxOA', 'inp-showFireCurve',
-    'toggle-ownhome', 'inp-pledge', 'inp-swrOverride'];
+    'toggle-ownhome', 'inp-pledge', 'inp-swrOverride', 'inp-blackSwan'];
 
 // Yes/No and HDB/Bank choices (radio groups) and their defaults
 const CHOICE_DEFAULTS = { cpfHas: 'yes', cpfContrib: 'yes', loanType: 'hdb' };
@@ -278,14 +300,16 @@ function onLoanTypeChange(type) {
 // Mode handling (Simple / Advanced) — reversible
 // -----------------------------------------------------------------------------
 function getMode() {
-    if (document.body.classList.contains('advanced-mode')) return 'advanced';
     if (document.body.classList.contains('expert-mode')) return 'expert';
+    if (document.body.classList.contains('advanced-mode')) return 'advanced';
     return 'simple';
 }
 
 function applyModeClass(mode) {
     document.body.classList.remove('simple-mode', 'advanced-mode', 'expert-mode');
     document.body.classList.add(mode + '-mode');
+    // R15: Expert shows everything in Advanced as well
+    if (mode === 'expert') document.body.classList.add('advanced-mode');
     const r = document.getElementById('mode-' + mode);
     if (r) r.checked = true;
     document.body.classList.toggle('bank-loan-active', mode !== 'simple' && getRadio('loanType', 'hdb') === 'bank');
@@ -315,10 +339,12 @@ function advancedInUse() {
 function setMode(mode) {
     const prev = getMode();
     if (prev === mode) return;
-    if (prev === 'simple' && mode === 'advanced') onEnterAdvanced();
-    if (prev === 'advanced' && mode === 'simple') onEnterSimple();
+    if (prev === 'simple') onEnterAdvanced();     // into Advanced or Expert
+    if (mode === 'simple') onEnterSimple();       // out of Advanced or Expert
     scenarios = [];
     applyModeClass(mode);
+    syncPanels();
+    if (mode === 'expert') showNotice('Expert mode runs your plan many times with random market returns and shows how often it lasts to 100. Adjust the volatility settings in <strong>Step 6</strong>.');
     if (!isLoading) runSim();
 }
 
@@ -523,7 +549,7 @@ function loadState(state) {
             modeState = Object.assign({ advInitialized: false, simpleAtSwitch: null }, state.modeState || {});
             setChartView(state.chartView === 'future' ? 'future' : 'today');
             setExampleState(state.exampleState && PERSONAS[state.exampleState] ? state.exampleState : null);
-            applyModeClass(state.mode === 'advanced' ? 'advanced' : 'simple');
+            applyModeClass((state.mode === 'advanced' || state.mode === 'expert') ? state.mode : 'simple');
             const sc = document.getElementById('income-streams-container');
             if (sc) { sc.innerHTML = ''; (state.incomeStreams || []).forEach(st => addIncomeStream(st.name, st.amt, st.start, st.end, st.fixed)); }
             const mc = document.getElementById('milestones-container');
@@ -599,14 +625,14 @@ function clearAllInputs() {
             if (ASSUMPTION_FIELDS.includes(id)) setFieldDefault(id);
             else setVal(id, '', false);
         });
-        ['toggle-expense-partner', 'toggle-mortgage', 'toggle-mortgage-partner', 'inp-showFireCurve', 'toggle-ownhome', 'inp-pledge', 'inp-swrOverride'].forEach(id => setChecked(id, false));
+        ['toggle-expense-partner', 'toggle-mortgage', 'toggle-mortgage-partner', 'inp-showFireCurve', 'toggle-ownhome', 'inp-pledge', 'inp-swrOverride', 'inp-blackSwan'].forEach(id => setChecked(id, false));
         scenarios = [];
         const rows = document.getElementById('scen-custom-rows'); if (rows) rows.innerHTML = '';
         setChecked('inp-maxOA', true);
         setChoices(null);
         setGlobalCcyState('SGD');
         modeState = { advInitialized: false, simpleAtSwitch: null };
-        if (getMode() === 'advanced') onEnterAdvanced();
+        if (getMode() !== 'simple') onEnterAdvanced();
         setExampleState(null);
         showMissing = false;
         document.querySelectorAll('.persona-card').forEach(c => c.classList.remove('active'));
@@ -955,6 +981,15 @@ function collectInputs() {
         currentExpenses: adv ? readNum('inp-currentExpenses') : null,
         showFireCurve: adv && isChecked('inp-showFireCurve'),
         swr: { override: adv && isChecked('inp-swrOverride'), rate: rateOr('inp-swrRate', DEFAULTS.swrRate) / 100 },
+        mc: {
+            runs: Math.max(100, Math.min(5000, Math.round(rateOr('inp-mcRuns', DEFAULTS.mcRuns)))),
+            volGlobal: Math.max(0, rateOr('inp-volGlobal', DEFAULTS.volGlobal)) / 100,
+            volSg: Math.max(0, rateOr('inp-volSg', DEFAULTS.volSg)) / 100,
+            volInfl: Math.max(0, rateOr('inp-volInfl', DEFAULTS.volInfl)) / 100,
+            volFx: Math.max(0, rateOr('inp-volFx', DEFAULTS.volFx)) / 100,
+            volMort: Math.max(0, rateOr('inp-volMort', DEFAULTS.volMort)) / 100,
+            blackSwan: isChecked('inp-blackSwan')
+        },
         chartView: getChartView()
     };
 }
@@ -1052,11 +1087,25 @@ function simulatePath(inp, opts = {}) {
         st.oa += amt - toRA;
     };
 
+    // R15: yearly rates come from Monte Carlo draws (opts.shocks) or are fixed
+    const sh = opts.shocks || null;
+    const nY = Math.max(1, 101 - currentAge);
+    const priceArr = new Array(nY), contribArr = new Array(nY), fxArr = new Array(nY);
+    priceArr[0] = 1; contribArr[0] = 1; fxArr[0] = g.isUSD ? g.fx : 1;
+    for (let k = 1; k < nY; k++) {
+        const inf = sh ? sh.infl[k - 1] : inp.inflation;
+        priceArr[k] = priceArr[k - 1] * (1 + inf);
+        contribArr[k] = contribArr[k - 1] * (1 + inf) * (1 + inp.realContribGrowth);
+        fxArr[k] = g.isUSD ? fxArr[k - 1] * (1 + (sh ? sh.fx[k - 1] : g.fxDrift)) : 1;
+    }
+
     for (let age = startAge; age <= 100; age++) {
         const yrs = age - currentAge;
-        const priceIdx = Math.pow(1 + inp.inflation, yrs);
-        const contribIdx = Math.pow((1 + inp.inflation) * (1 + inp.realContribGrowth), yrs);
-        fx = g.isUSD ? g.fx * Math.pow(1 + g.fxDrift, yrs) : 1;
+        const priceIdx = priceArr[yrs];
+        const contribIdx = contribArr[yrs];
+        fx = fxArr[yrs];
+        const gMonthly = sh ? sh.g[yrs] : 1 + g.ret / 12;
+        const sMonthly = sh ? sh.s[yrs] : 1 + s.ret / 12;
 
         if (cpf.has && !st.at55 && age >= DEFAULTS.cpfUnlockAge) doCpf55();
         if (cpf.has && st.at55 && !st.lifeOn && age >= cpf.lifeAge && st.ra > 0) {
@@ -1075,7 +1124,7 @@ function simulatePath(inp, opts = {}) {
         const liquidNow = liquidOf();
         if (recordStates) states.push(Object.assign({}, st));
         if (record) {
-            path.push({ age, liquid: Math.max(0, liquidNow), locked: lockedOf(), phase, rem: st.rem, lifePay: lifeNow, short: 0 });
+            path.push({ age, liquid: Math.max(0, liquidNow), locked: lockedOf(), phase, rem: st.rem, lifePay: lifeNow, short: 0, pidx: priceIdx }
             if (liquidNow > peakLiquid) peakLiquid = liquidNow;
         }
         if (age === 100) break;
@@ -1118,7 +1167,7 @@ function simulatePath(inp, opts = {}) {
 
         // R9: bank loans in Advanced mode reprice to the long-run rate after the lock-in period
         const mortActiveNow = m.has && age < mortgageEndAge && st.rem > 0.5;
-        const yearRate = (m.twoStage && yrs >= m.lockYrs) ? m.rateLong : m.rate;
+        const yearRate = (m.twoStage && yrs >= m.lockYrs) ? (sh ? Math.max(0, m.rateLong + sh.mort[yrs]) : m.rateLong) : m.rate;
         const monthlyPmt = mortActiveNow ? calcPmt(st.rem, yearRate, mortgageEndAge - age) : 0;
         const personalPmt = monthlyPmt * m.share;
         const monthlySpend = isWorking ? 0 : inp.expenses * priceIdx * (inp.expenseShare / 100);
@@ -1128,8 +1177,8 @@ function simulatePath(inp, opts = {}) {
         });
 
         for (let mo = 1; mo <= 12; mo++) {
-            st.glob *= 1 + g.ret / 12;
-            st.sg *= 1 + s.ret / 12;
+            st.glob *= gMonthly;
+            st.sg *= sMonthly;
             st.cash *= 1 + c.yield / 12;
             st.oa *= 1 + cpf.oaRate / 12;
             st.sa *= 1 + cpf.saRate / 12;
@@ -1252,6 +1301,86 @@ function buildFinishLine(inp, base) {
         curve.push(req);
     }
     return curve;
+}
+
+// -----------------------------------------------------------------------------
+// R15: Monte Carlo (Expert mode)
+//   - Fixed seed: the same random sequence every run, so results only change
+//     when inputs change.
+//   - Investment growth is lognormal with your expected return as the median
+//     year, so the median path lines up with the fixed-return projection.
+//   - Global and Singapore returns are correlated (0.7). Optional fat tails use
+//     a Student-t(5) scaled to the same volatility.
+// -----------------------------------------------------------------------------
+const MC_SEED = 20261003;
+const MC_CORR = 0.7;
+
+function mulberry32(seed) {
+    let a = seed;
+    return function () {
+        a = (a + 0x6D2B79F5) | 0;
+        let t = Math.imul(a ^ (a >>> 15), 1 | a);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+}
+
+function makeNormal(rand) {
+    let spare = null;
+    return function () {
+        if (spare !== null) { const v = spare; spare = null; return v; }
+        let u = rand();
+        while (u === 0) u = rand();
+        const v = rand();
+        const r = Math.sqrt(-2 * Math.log(u));
+        spare = r * Math.sin(2 * Math.PI * v);
+        return r * Math.cos(2 * Math.PI * v);
+    };
+}
+
+function makeShocks(inp, normal, years) {
+    const mc = inp.mc;
+    const fatTail = () => {
+        const z = normal();
+        let c = 0;
+        for (let i = 0; i < 5; i++) { const x = normal(); c += x * x; }
+        return (z / Math.sqrt(c / 5)) * Math.sqrt(3 / 5);
+    };
+    const eq = mc.blackSwan ? fatTail : normal;
+    const gMu = 12 * Math.log(1 + inp.glob.ret / 12);
+    const sMu = 12 * Math.log(1 + inp.sg.ret / 12);
+    const fxMu = Math.log(1 + inp.glob.fxDrift);
+    const rho2 = Math.sqrt(1 - MC_CORR * MC_CORR);
+    const sh = { g: [], s: [], infl: [], fx: [], mort: [] };
+    for (let k = 0; k < years; k++) {
+        const z1 = eq();
+        const z2 = MC_CORR * z1 + rho2 * eq();
+        sh.g.push(Math.exp((gMu + mc.volGlobal * z1) / 12));
+        sh.s.push(Math.exp((sMu + mc.volSg * z2) / 12));
+        sh.infl.push(inp.inflation + mc.volInfl * normal());
+        sh.fx.push(Math.exp(fxMu + mc.volFx * normal()) - 1);
+        sh.mort.push(mc.volMort * normal());
+    }
+    return sh;
+}
+
+function runMonteCarlo(inp) {
+    const n = inp.mc.runs;
+    const normal = makeNormal(mulberry32(MC_SEED));
+    const years = 101 - inp.currentAge;
+    const nom = Array.from({ length: years }, () => new Float64Array(n));
+    const real = Array.from({ length: years }, () => new Float64Array(n));
+    const depl = new Float64Array(n);
+    let ok = 0;
+    for (let r = 0; r < n; r++) {
+        const res = simulatePath(inp, { shocks: makeShocks(inp, normal, years) });
+        if (res.solvent) ok++;
+        depl[r] = res.solvent ? 101 : res.depletionAge;
+        res.path.forEach((p, i) => { nom[i][r] = p.liquid; real[i][r] = p.liquid / p.pidx; });
+    }
+    const q = (arr, p) => { const s = arr.slice().sort(); return s[Math.min(s.length - 1, Math.floor(p * s.length))]; };
+    const bands = set => ({ p10: set.map(a => q(a, 0.1)), p50: set.map(a => q(a, 0.5)), p90: set.map(a => q(a, 0.9)) });
+    return { n, success: ok / n, deplP10: q(depl, 0.1), nom: bands(nom), real: bands(real) };
 }
 
 // R8: the withdrawal rate your plan supports at your target financial freedom age
@@ -1419,7 +1548,7 @@ let simTimer = null;
 function runSim() {
     if (isLoading) return;
     clearTimeout(simTimer);
-    const heavy = (getMode() !== 'simple' && isChecked('inp-showFireCurve')) || scenarios.length > 0;
+    const heavy = getMode() === 'expert' || (getMode() !== 'simple' && isChecked('inp-showFireCurve')) || scenarios.length > 0;
     if (heavy) simTimer = setTimeout(runSimNow, 120);
     else runSimNow();
 }
@@ -1510,8 +1639,30 @@ function runSimNow() {
         datasets.push({ label: 'What-if: ' + r.label, data: r.path.map((p, i) => adj(p.liquid, i)), borderColor: SCEN_COLORS[k], borderDash: [8, 5], fill: false, tension: 0.2, pointRadius: 0, borderWidth: 2.5, pointStyle: 'line' });
     });
 
+    // R15: Expert mode replaces the wealth lines with Monte Carlo percentile bands
+    const mc = inp.mode === 'expert' ? runMonteCarlo(inp) : null;
+    if (mc) {
+        const P = today ? mc.real : mc.nom;
+        const fixedLine = base.path.map((p, i) => adj(p.liquid, i));
+        datasets.splice(0, 3,
+            { label: '90th percentile (good luck)', data: P.p90, borderColor: '#10b981', borderDash: [5, 5], fill: false, tension: 0.2, pointRadius: 0, borderWidth: 1.5, pointStyle: 'line' },
+            { label: '10th percentile (bad luck)', data: P.p10, borderColor: '#f59e0b', borderDash: [5, 5], fill: '-1', backgroundColor: 'rgba(37, 99, 235, 0.10)', tension: 0.2, pointRadius: 0, borderWidth: 1.5, pointStyle: 'line' },
+            { label: 'Median outcome', data: P.p50, borderColor: '#2563eb', fill: false, tension: 0.2, pointRadius: 0, borderWidth: 3, pointStyle: 'line' },
+            { label: 'Fixed-return projection', data: fixedLine, borderColor: '#94a3b8', borderDash: [2, 3], fill: false, tension: 0.2, pointRadius: 0, borderWidth: 1.5, pointStyle: 'line' }
+        );
+    }
+
     // Status card
-    if (base.solvent) {
+    if (mc) {
+        const pct = Math.round(mc.success * 1000) / 10;
+        const cls = pct >= 90 ? 'success' : (pct >= 70 ? 'warning' : 'danger');
+        const icon = pct >= 90 ? '✅' : (pct >= 70 ? '🐢' : '⚠️');
+        const bad = mc.deplP10 > 100
+            ? 'Even in the worst 10% of simulations, your money lasts to 100.'
+            : `In the worst 10% of simulations, money runs out by age ${mc.deplP10}.`;
+        setStatus(cls, `${icon} ${pct}% of ${fmt(mc.n)} simulations last to 100`,
+            `Median wealth at 100: ${moneyM(mc.real.p50[mc.real.p50.length - 1])} in today's dollars. ${bad}`);
+    } else if (base.solvent) {
         const finalBal = base.path[base.path.length - 1].liquid;
         const pvBal = finalBal / Math.pow(1 + inp.inflation, 100 - inp.currentAge);
         setStatus('success', '✅ Financial Independence Secured to Age 100',
@@ -1537,6 +1688,9 @@ function runSimNow() {
         if (inp.mode === 'simple') {
             const cpfTxt = inp.cpf.has ? `, CPF floor rates (OA ${DEFAULTS.oaRate}%, SA/RA ${DEFAULTS.saRate}%) and CPF LIFE Standard Plan from 65` : '';
             assumptionsLine.innerText = `Assumes ${DEFAULTS.inflation}% inflation, ${DEFAULTS.cashYield}% cash yield${cpfTxt}. Change these in Advanced.`;
+            assumptionsLine.style.display = 'block';
+        } else if (inp.mode === 'expert') {
+            assumptionsLine.innerText = `Based on ${fmt(inp.mc.runs)} simulations with random yearly returns${inp.mc.blackSwan ? ' (fat tails on)' : ''}. The shaded band runs from the 10th to the 90th percentile of wealth at each age; the grey dotted line is the fixed-return projection. Coaching, the finish line, the "stop working" age and what-ifs use the fixed-return projection.`;
             assumptionsLine.style.display = 'block';
         } else {
             assumptionsLine.style.display = 'none';
@@ -1823,8 +1977,8 @@ function renderChart(labels, datasets, inp, hasLocked = false, base = null) {
                 };
             }
         });
-        // R13: shade the years when there isn't enough money to cover spending
-        if (base) {
+        // R13: shade the years when there isn't enough money to cover spending (fixed projection only)
+        if (base && inp.mode !== 'expert') {
             let k = 0, n = 0;
             while (k < base.path.length) {
                 if (base.path[k].short > 0) {
