@@ -2186,7 +2186,7 @@ window.quickScenario = function (kind) {
 // -----------------------------------------------------------------------------
 // Chart
 // -----------------------------------------------------------------------------
-function renderChart(labels, datasets, inp, hasLocked = false, base = null) {
+function renderChart(labels, datasets, inp, hasLocked = false, base = null, mcInfo = null) {
     const canvas = document.getElementById('fireChart');
     if (!canvas || typeof Chart === 'undefined') return;
     const ctx = canvas.getContext('2d');
