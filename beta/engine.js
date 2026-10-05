@@ -996,7 +996,7 @@ const PERSONAS = {
             'inp-cashStart': 80000, 'inp-cashContrib': 700,
             'inp-mortgagePrincipal': 1100000, 'inp-loanYrs': 24, 'inp-mortgageRate': 2.8, 'inp-mortgageShare': 50,
             'inp-oaStart': 35000, 'inp-oaContrib': 1500,
-            'inp-saStart':
+            'inp-saStart': 60000, 'inp-saContrib': 390 },
         toggles: { 'toggle-expense-partner': true, 'toggle-mortgage': true, 'toggle-mortgage-partner': true, 'inp-maxOA': true },
         choices: { cpfHas: 'yes', cpfContrib: 'yes', loanType: 'bank' }
     },
