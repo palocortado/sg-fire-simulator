@@ -497,3 +497,13 @@ body.expert-mode .expert-only { animation: v6-fade-in 0.35s ease-out; }
 .how-it-works summary { cursor: pointer; font-weight: 600; color: var(--primary); margin-bottom: 0.5rem; }
 .how-it-works p { margin: 0 0 0.6rem; }
 .footer-meta { margin-top: 0.75rem; font-size: 0.75rem; color: #94a3b8; }
+
+/* =============================================================================
+   Version 7.0 (Batch 8)
+   ============================================================================= */
+
+/* A5: Retirement Account field only for people 55 and over */
+body:not(.age55) .age55-only { display: none !important; }
+
+/* R31: Typical / Full range toggle under the chart header (Expert) */
+.chart-range-row { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; font-size: 0.8rem; color: var(--text-secondary); }

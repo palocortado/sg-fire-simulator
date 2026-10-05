@@ -1,6 +1,17 @@
 /* =============================================================================
    Financial Independence Simulator for Singapore — engine.js
-    Version: V6 staging, Batch 7
+    Version: 7.0 (first public release)
+    -----------------------------------------------------------------------------
+    Batch 8 / 7.0 (roadmap R30, R31, R19, D7, go-live):
+        - R30 CPF below the retirement sum: Retirement Accounts under S$60,000
+          pay monthly to about 90 (Retirement Sum Scheme), not for life; OA
+          saved after 55 stays locked until the RA target is met (can still
+          pay the mortgage); S$5,000 always withdrawable at 55; RA field for 55+
+        - R31 Expert chart: Typical / Full range toggle; marker where the
+          bad-luck (10th percentile) line runs out
+        - D7 Long-run bank rate default 2.7% (SORA average plus spread)
+        - R19 STI volatility 18%; USD/SGD volatility sourced
+        - Go-live: favicon, link-preview tags
     -----------------------------------------------------------------------------
     Batch 7 (roadmap R19, R20, R21, R25, R26, R27, R28, R29):
         - R25 Save format 2: format number, step-by-step conversion of older
@@ -44,7 +55,7 @@ let incomeStreamCount = 0;
 let milestoneCount = 0;
 let isLoading = true;
 
-const APP_VERSION = "6.0-batch7";
+const APP_VERSION = "7.0";
 const SAVE_FORMAT = 2;            // R25: bump when the save layout changes, and add a step to migrateState()
 const FIGURES_AS_OF = 'Oct 2026'; // R20: shown in the footer; update at the yearly refresh
 
@@ -85,8 +96,8 @@ const DEFAULTS = Object.freeze({
 
     // Housing
     mortgageRate: 2.6,        // % (HDB concessionary = CPF OA rate + 0.1%)
-    mortgageRateBank: 2.5,    // % starting value when switching to a bank loan
-    mortgageRateLong: 2.5,    // % long-run bank rate after lock-in (10-yr avg to Q2 2026 ~2.5%)
+    mortgageRateBank: 2.7,    // % starting value when switching to a bank loan (10-yr SORA avg + spread)
+    mortgageRateLong: 2.7,    // % long-run bank rate after lock-in (10-yr SORA avg 2.5% + ~0.2 spread)
     lockYrs: 2,               // years left on the current bank package
     mortgageShare: 50,        // % (only used when partner toggle is on)
 
@@ -105,7 +116,8 @@ const DEFAULTS = Object.freeze({
     // Monte Carlo (Expert, R15)
     mcRuns: 500,
     volGlobal: 15,            // % a year, global equity index
-    volSg: 17,                // % a year, single-country index
+    volSg: 18,                // % a year, STI long-run (NYU V-Lab ~18-20%)
+
     volInfl: 1.8,             // percentage points a year
     volFx: 5,                 // % a year (estimate; R19)
     volMort: 1.0              // percentage points a year, bank loans after lock-in
@@ -126,11 +138,13 @@ const DEFAULTS = Object.freeze({
 //   MSCI World volatility, ~14.9% over 10 yrs, MSCI, H volGlobal, E DEFAULTS.volGlobal
 //   SPDR STI ETF return, ~8.6%/yr Apr 2002 to Jul 2026, SSGA factsheet; ~7%/yr over
 //     10 yrs to Sep 2026, fund data, H Singapore return tooltip and note, E WARN_TEXT.sg
-//   STI volatility, 17%, ESTIMATE (not yet verified), H volSg, E DEFAULTS.volSg
+//   STI volatility, 18%, NYU Stern V-Lab long-run ~18-20% (1990-2026), H volSg, E DEFAULTS.volSg
 //   Inflation volatility, 1.8 pts, std dev of annual CPI 1986-2025 (IMF / World Bank),
 //     H volInfl, E DEFAULTS.volInfl
 //   USD/SGD spot, 1.28 on 2 Oct 2026, H fxRate tooltip and note, E DEFAULTS.fxRate
-//   USD/SGD volatility, 5%, ESTIMATE (not yet verified), H volFx, E DEFAULTS.volFx
+//   USD/SGD volatility, 5%, last 12 months ~3.7% (daily rates to Oct 2026), H volFx, E DEFAULTS.volFx
+//   CPF LIFE automatic inclusion, S$60,000 in the RA when payouts start (nominal), CPF Board,
+//     E CPF_LIFE_MIN; below it, payouts to about 90 (Retirement Sum Scheme, approximation)
 //   3-month SORA averages, 3.2% / 2.5% / 2.0% / 2.0% (5/10/15/20 yrs to Q2 2026),
 //     range 1.0%-4.7%, MAS via Global Property Guide, H both mortgage tooltips
 //     and notes, E WARN_TEXT.mortHigh / mortLow / longLow, E DEFAULTS.mortgageRateLong
@@ -175,6 +189,7 @@ const FIELD_DEFAULTS = {
     'inp-oaContrib': '',
     'inp-saStart': '',
     'inp-saContrib': '',
+    'inp-raStart': '',
     'inp-mortgagePrincipal': '',
     'inp-loanYrs': '',
     'inp-mortgageRate': DEFAULTS.mortgageRate,
@@ -579,6 +594,7 @@ function getState() {
         mode: getMode(),
         globalCcy: globalCcyState,
         chartView: getChartView(),
+        chartRange: getChartRange(),
         exampleState: exampleState,
         modeState: modeState,
         choices: getChoices(),
@@ -1128,6 +1144,7 @@ function collectInputs() {
                 hasSA: has,
                 saStart: has ? amt('inp-saStart') : 0,
                 saContrib: contributing ? amt('inp-saContrib') : 0,
+                raStart: has && readNum('inp-currentAge') !== null && readNum('inp-currentAge') >= DEFAULTS.cpfUnlockAge ? amt('inp-raStart') : 0,
                 oaRate: DEFAULTS.oaRate / 100,
                 saRate: DEFAULTS.saRate / 100,
                 unlockAge: DEFAULTS.cpfUnlockAge,
@@ -1195,12 +1212,21 @@ const CPF_LIFE_DEFER_PER_YR = 0.019;      // payout per RA dollar rises ~1.9%/yr
 const CPF_ESCALATING_START = 0.80;        // Escalating Plan starts ~20% lower ...
 const CPF_ESCALATING_GROWTH = 0.02;       // ... and rises 2% a year
 const CPF_MIN_WITHDRAWAL = 5000;          // withdrawable at 55 even if the retirement sum isn't met
+const CPF_LIFE_MIN = 60000;               // R30: below this in the RA when payouts start, no automatic CPF LIFE
+const CPF_RSS_END_AGE = 90;               // R30: Retirement Sum Scheme payouts last to about this age (approximation)
 const DOWNGRADE_COSTS = 0.03;             // selling + buying costs, % of sale price
 
 function cpfTargets(inp) {
     // Retirement sums are fixed in the year you turn 55: S$220,400 FRS for the 2026 cohort, grown yearly
     const frs = DEFAULTS.frs2026 * Math.pow(1 + inp.cpf.frsGrowth, DEFAULTS.cpfUnlockAge - inp.currentAge);
     return { frs, brs: frs / 2, target: inp.cpf.pledge ? frs / 2 : frs };
+}
+
+// R30: level monthly payout that uses up the RA by about age 90 (RA keeps earning the SA/RA rate)
+function rssMonthly(raBalance, age) {
+    const n = Math.max(12, (CPF_RSS_END_AGE - age) * 12);
+    const r = DEFAULTS.saRate / 100 / 12;
+    return raBalance * r / (1 - Math.pow(1 + r, -n));
 }
 
 function cpfLifeMonthly(raBalance, inp) {
@@ -1223,9 +1249,9 @@ function simulatePath(inp, opts = {}) {
 
     const st = opts.state ? Object.assign({}, opts.state) : {
         glob: g.start, sg: s.start, cash: c.start,
-        oa: cpf.oaStart, sa: cpf.hasSA ? cpf.saStart : 0, ra: 0,
+        oa: cpf.oaStart, sa: cpf.hasSA ? cpf.saStart : 0, ra: cpf.raStart || 0, oaLock: 0,
         rem: m.has ? m.principal : 0,
-        at55: false, lifeOn: false, lifePay: 0, lifeStart: 0
+        at55: false, lifeOn: false, lifePay: 0, lifeStart: 0, rss: false
     };
 
     const path = [], states = [];
@@ -1233,7 +1259,8 @@ function simulatePath(inp, opts = {}) {
     let fx = 1;
 
     const liquidOf = () => st.cash + st.sg + st.glob * fx + (st.at55 ? st.oa : 0);
-    const lockedOf = () => (st.at55 ? st.ra : st.oa + st.sa);
+    const lockedOf = () => (st.at55 ? st.ra + st.oaLock : st.oa + st.sa);
+
     const flagDepletion = age => { if (solvent) { solvent = false; depletionAge = age; } };
 
     // Proportional withdrawal across all liquid buckets. Returns any unpaid amount.
@@ -1247,14 +1274,26 @@ function simulatePath(inp, opts = {}) {
         return amount - take;
     };
 
-    // CPF at 55: SA first, then OA, into the RA up to the target; the rest is withdrawable
-    const doCpf55 = () => {
+    // CPF at 55: SA first, then OA, into the RA up to the target. If the target is met, everything
+    // above it is withdrawable; if not, S$5,000 is. Anyone already past 55 keeps the rest in a locked OA.
+    const doCpf55 = alreadyPast => {
+        const room = Math.max(0, T.target - st.ra);
         const total = st.sa + st.oa;
-        // Full (or Basic, with a pledge) sum met: everything above it is available.
-        // Not met: up to S$5,000 is still available.
-        const released = total >= T.target ? total - T.target : Math.min(total, CPF_MIN_WITHDRAWAL);
-        st.ra += total - released;
-        st.oa = released;
+        if (room <= 0.5 || total >= room + CPF_MIN_WITHDRAWAL) {
+            st.ra += room;
+            st.oa = total - room;
+        } else if (alreadyPast) {
+            const fromSa = Math.min(st.sa, room);
+            st.ra += fromSa;
+            const rest = total - fromSa;
+            const free = Math.min(rest, CPF_MIN_WITHDRAWAL);
+            st.oaLock += rest - free;
+            st.oa = free;
+        } else {
+            const free = Math.min(total, CPF_MIN_WITHDRAWAL);
+            st.ra += total - free;
+            st.oa = free;
+        }
         st.sa = 0;
         st.at55 = true;
     };
@@ -1288,18 +1327,28 @@ function simulatePath(inp, opts = {}) {
         const gMonthly = sh ? sh.g[yrs] : 1 + g.ret / 12;
         const sMonthly = sh ? sh.s[yrs] : 1 + s.ret / 12;
 
-        if (cpf.has && !st.at55 && age >= DEFAULTS.cpfUnlockAge) doCpf55();
-        if (cpf.has && st.at55 && !st.lifeOn && age >= cpf.lifeAge && st.ra > 0) {
-            st.lifePay = cpfLifeMonthly(st.ra, inp);
-            st.lifeStart = age;
-            st.lifeOn = true;
-            st.ra = 0;
+        if (cpf.has && !st.at55 && age >= DEFAULTS.cpfUnlockAge) doCpf55(age > DEFAULTS.cpfUnlockAge);
+        if (cpf.has && st.at55 && !st.lifeOn && age >= cpf.lifeAge) {
+            // R30: locked OA tops up the RA before payouts start; anything left over is withdrawable
+            if (st.oaLock > 0) {
+                const mv = Math.min(Math.max(0, T.target - st.ra), st.oaLock);
+                st.ra += mv; st.oa += st.oaLock - mv; st.oaLock = 0;
+            }
+            if (st.ra > 0) {
+                st.rss = st.ra < CPF_LIFE_MIN;
+                st.lifePay = st.rss ? rssMonthly(st.ra, age) : cpfLifeMonthly(st.ra, inp);
+                st.lifeStart = age;
+                st.lifeOn = true;
+                st.ra = 0;
+            }
         }
-
+        // R30: once the RA target is met (or payouts have started), locked OA becomes withdrawable
+        if (st.at55 && st.oaLock > 0 && (st.lifeOn || st.ra >= T.target - 0.5)) { st.oa += st.oaLock; st.oaLock = 0; }
         const isWorking = age < retireAge;
         const mortgageActive = m.has && age < mortgageEndAge && st.rem > 0.5;
         const phase = isWorking ? 1 : (mortgageActive ? 2 : 3);
-        const lifeNow = st.lifeOn ? st.lifePay * (inp.cpf.lifePlan === 'escalating' ? Math.pow(1 + CPF_ESCALATING_GROWTH, age - st.lifeStart) : 1) : 0;
+        const lifeNow = !st.lifeOn ? 0 : st.rss ? (age < CPF_RSS_END_AGE ? st.lifePay : 0)
+            : st.lifePay * (inp.cpf.lifePlan === 'escalating' ? Math.pow(1 + CPF_ESCALATING_GROWTH, age - st
 
         // Day 1 anchor: record before anything happens this year
         const liquidNow = liquidOf();
@@ -1364,6 +1413,7 @@ function simulatePath(inp, opts = {}) {
             st.oa *= 1 + cpf.oaRate / 12;
             st.sa *= 1 + cpf.saRate / 12;
             st.ra *= 1 + cpf.saRate / 12;
+            st.oaLock
 
             if (isWorking) {
                 st.glob += g.contrib * contribIdx;   // in the Global bucket's own currency
@@ -1373,7 +1423,9 @@ function simulatePath(inp, opts = {}) {
                     st.oa += cpf.oaContrib * contribIdx;
                     if (cpf.hasSA) st.sa += cpf.saContrib * contribIdx;
                 } else {
-                    st.oa += cpf.oaContrib * contribIdx;
+                    // R30: after 55, OA savings stay locked until the RA reaches its target
+                    if (!st.lifeOn && st.ra < T.target - 0.5) st.oaLock += cpf.oaContrib * contribIdx;
+                    else st.oa += cpf.oaContrib * contribIdx;
                     if (cpf.hasSA) toCpf(cpf.saContrib * contribIdx);   // SA share now goes to the RA until the target is met
                 }
             }
@@ -1383,11 +1435,13 @@ function simulatePath(inp, opts = {}) {
                 const interest = st.rem * yearRate / 12;
                 st.rem = Math.max(0, st.rem - (monthlyPmt - interest));
                 const oaTarget = (isWorking && !m.payWithOA) ? Math.min(m.customOACap, personalPmt) : personalPmt;
-                const fromOA = Math.min(Math.max(0, st.oa), oaTarget);
+                const fromLock = Math.min(Math.max(0, st.oaLock), oaTarget);   // R30: locked OA can still pay the mortgage
+                st.oaLock -= fromLock;
+                const fromOA = Math.min(Math.max(0, st.oa), oaTarget - fromLock);
                 st.oa -= fromOA;
                 // While working, any cash top-up comes out of salary (excluded from the savings inputs).
                 // In retirement, it is drawn from liquid wealth.
-                if (!isWorking) need += personalPmt - fromOA;
+                if (!isWorking) need += personalPmt - fromLock - fromOA;
             }
 
             const net = need - monthlyIncome;
@@ -1405,7 +1459,7 @@ function simulatePath(inp, opts = {}) {
     const lifeEntry = path.find(p => p.lifePay > 0);
 
     return { path, states, solvent, depletionAge, peakLiquid, totalShortfall, recoveredAfterUnlock,
-             cpfLifeMonthly: lifeEntry ? lifeEntry.lifePay : 0, cpfLifeAge: lifeEntry ? lifeEntry.age : null, targets: T };
+             cpfLifeMonthly: lifeEntry ? lifeEntry.lifePay : 0, cpfLifeAge: lifeEntry ? lifeEntry.age : null, cpfRss: !!st.rss, targets: T };
 }
 
 // SGD-equivalent return of the Global bucket
@@ -1720,7 +1774,21 @@ function getChartView() {
     const r = document.querySelector('input[name="chartView"]:checked');
     return r ? r.value : 'today';
 }
+function getChartRange() {
+    const r = document.querySelector('input[name="chartRange"]:checked');
+    return r ? r.value : 'typical';
+}
+function setChartRange(v) {
+    document.querySelectorAll('input[name="chartRange"]').forEach(r => { r.checked = (r.value === v); });
+}
+// Round up to a tidy axis maximum (1, 1.5, 2, 2.5 ... x a power of ten)
+function niceCeil(v) {
+    const p = Math.pow(10, Math.floor(Math.log10(v)));
+    return Math.ceil(v / p * 2) / 2 * p;
+}
+
 function setChartView(v) {
+
     document.querySelectorAll('input[name="chartView"]').forEach(r => { r.checked = (r.value === v); });
 }
 
@@ -1822,11 +1890,20 @@ function runSimNow() {
 
     // R15: Expert mode replaces the wealth lines with Monte Carlo percentile bands
     const mc = inp.mode === 'expert' ? runMonteCarlo(inp) : null;
+    let mcInfo = null;
     if (mc) {
         const P = today ? mc.real : mc.nom;
         const fixedLine = base.path.map((p, i) => adj(p.liquid, i));
+        // R31: Typical range caps the axis just above the median, fixed-return and CPF lines
+        const lockedVals = base.path.map((p, i) => adj(p.locked, i));
+        const focusTop = Math.max(1, ...P.p50, ...fixedLine, ...lockedVals) * 1.15;
+        const capped = getChartRange() === 'typical' && Math.max(...P.p90) > focusTop;
+        mcInfo = {
+            yMax: capped ? niceCeil(focusTop) : null,
+            zeroIdx: P.p10.findIndex((v, i) => i > 0 && v <= 0.5)
+        };
         datasets.splice(0, 3,
-            { label: '90th percentile (good luck)', data: P.p90, borderColor: '#10b981', borderDash: [5, 5], fill: false, tension: 0.2, pointRadius: 0, borderWidth: 1.5, pointStyle: 'line' },
+            { label: capped ? '90th percentile (good luck, continues above)' : '90th percentile (good luck)', data: P.p90, borderColor: '#10b981', borderDash: [5, 5], fill: false, tension: 0.2, pointRadius: 0, borderWidth: 1.5, pointStyle: 'line' },
             { label: '10th percentile (bad luck)', data: P.p10, borderColor: '#f59e0b', borderDash: [5, 5], fill: '-1', backgroundColor: 'rgba(37, 99, 235, 0.10)', tension: 0.2, pointRadius: 0, borderWidth: 1.5, pointStyle: 'line' },
             { label: 'Median outcome', data: P.p50, borderColor: '#2563eb', fill: false, tension: 0.2, pointRadius: 0, borderWidth: 3, pointStyle: 'line' },
             { label: 'Fixed-return projection', data: fixedLine, borderColor: '#94a3b8', borderDash: [2, 3], fill: false, tension: 0.2, pointRadius: 0, borderWidth: 1.5, pointStyle: 'line' }
@@ -1861,7 +1938,8 @@ function runSimNow() {
     if (inp.cpf.has && base.cpfLifeMonthly > 0) {
         const pv = base.cpfLifeMonthly / Math.pow(1 + inp.inflation, base.cpfLifeAge - inp.currentAge);
         const esc = inp.cpf.lifePlan === 'escalating' ? ', rising 2% a year' : '';
-        setLine('status-cpf', `🧓 CPF LIFE pays about ${money(base.cpfLifeMonthly)}/month from age ${base.cpfLifeAge}${esc} (about ${money(pv)} in today's dollars).`);
+        if (base.cpfRss) setLine('status-cpf', `🧓 Your Retirement Account will hold less than S$60,000 when payouts start, so it pays about ${money(base.cpfLifeMonthly)}/month from age ${base.cpfLifeAge} until about 90 (about ${money(pv)} in today's dollars), not for life.`);
+        else setLine('status-cpf', `🧓 CPF LIFE pays about ${money(base.cpfLifeMonthly)}/month from age ${base.cpfLifeAge}${esc} (about ${money(pv)} in today's dollars).`);
     } else setLine('status-cpf', '');
 
     // Simple mode: disclose hidden assumptions under the result
@@ -1888,7 +1966,7 @@ function runSimNow() {
         generateCoaching(inp, base.solvent);
         renderScenarioPanel(scenResults);
     }
-    renderChart(labels, datasets, inp, hasLocked, base);
+    renderChart(labels, datasets, inp, hasLocked, base, mcInfo);
     saveState();
 }
 
@@ -1928,7 +2006,7 @@ function updateSwrUI(inp, info) {
 // -----------------------------------------------------------------------------
 const PRESETS = {
     cautious:   { label: 'Cautious',   inflation: 3.0, globalRetSGD: 5.0, globalRetUSD: 5.5, sgRet: 4.5, cashYield: 1.0, mortgageRateLong: 3.0 },
-    balanced:   { label: 'Balanced',   inflation: 2.5, globalRetSGD: 6.5, globalRetUSD: 7.0, sgRet: 6.0, cashYield: 1.5, mortgageRateLong: 2.5 },
+    balanced:   { label: 'Balanced',   inflation: 2.5, globalRetSGD: 6.5, globalRetUSD: 7.0, sgRet: 6.0, cashYield: 1.5, mortgageRateLong: 2.7 },
     optimistic: { label: 'Optimistic', inflation: 2.0, globalRetSGD: 7.5, globalRetUSD: 8.0, sgRet: 7.0, cashYield: 2.0, mortgageRateLong: 2.0 }
 };
 
@@ -2158,6 +2236,14 @@ function renderChart(labels, datasets, inp, hasLocked = false, base = null) {
                 };
             }
         });
+        // R31: where the bad-luck (10th percentile) line runs out
+        if (mcInfo && mcInfo.zeroIdx > 0) {
+            ann.p10Zero = {
+                type: 'line', xMin: mcInfo.zeroIdx, xMax: mcInfo.zeroIdx,
+                borderColor: 'rgba(245, 158, 11, 0.85)', borderWidth: 1.5, borderDash: [4, 3],
+                label: { display: true, content: 'Bad-luck case runs out at ' + labels[mcInfo.zeroIdx], position: 'center', backgroundColor: '#f59e0b', color: '#fff', font: { size: 11 } }
+            };
+        }
         // R13: shade the years when there isn't enough money to cover spending (fixed projection only)
         if (base && inp.mode !== 'expert') {
             let k = 0, n = 0;
@@ -2185,7 +2271,7 @@ function renderChart(labels, datasets, inp, hasLocked = false, base = null) {
             responsive: true, maintainAspectRatio: false,
             interaction: { mode: 'index', intersect: false },
             scales: {
-                y: { title: { display: true, text: (inp && inp.chartView === 'future') ? "Wealth (Future SGD)" : "Wealth (Today's SGD)" }, ticks: { callback: v => '$' + (v / 1000000).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + 'M' } }
+                y: { max: (mcInfo && mcInfo.yMax) ? mcInfo.yMax : undefined, title: { display: true, text: (inp && inp.chartView === 'future') ? "Wealth (Future SGD)" : "Wealth (Today's SGD)" }, ticks: { callback: v => '$' + (v / 1000000).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + 'M' } }
             },
             plugins: {
                 legend: { labels: { usePointStyle: true, boxWidth: 15 } },

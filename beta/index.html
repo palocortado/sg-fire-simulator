@@ -4,6 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Financial Independence Simulator for Singapore</title>
+    <meta name="description" content="See when your savings, investments and CPF could let you stop working. A free Singapore financial independence simulator with CPF LIFE, HDB and bank loans, and market-risk scenarios.">
+    data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%8F%81%3C/text%3E%3C/svg%3E
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://palocortado.github.io/sg-fire-simulator/">
+    <meta property="og:title" content="Financial Independence Simulator for Singapore">
+    <meta property="og:description" content="See when your savings, investments and CPF could let you stop working. Free, private, and built for Singapore.">
+    <meta property="og:image" content="https://palocortado.github.io/sg-fire-simulator/preview.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://palocortado.github.io/sg-fire-simulator/preview.png">
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.2.1/chartjs-plugin-annotation.min.js"></script>
@@ -123,7 +134,7 @@
                             <label><input type="radio" name="preset" value="optimistic" onchange="applyPreset('optimistic')"> Optimistic</label>
                         </div>
                         <span id="preset-custom" class="preset-custom" style="display:none;">Custom</span>
-                        <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">One click sets inflation, investment returns, cash yield and the long-run bank mortgage rate together.<br><br><strong>Cautious:</strong> inflation 3.0%, Global 5.0% (SGD) / 5.5% (USD), Singapore 4.5%, cash 1.0%, mortgage 3.0%.<br><strong>Balanced</strong> (the defaults): inflation 2.5%, Global 6.5% / 7.0%, Singapore 6.0%, cash 1.5%, mortgage 2.5%.<br><strong>Optimistic:</strong> inflation 2.0%, Global 7.5% / 8.0%, Singapore 7.0%, cash 2.0%, mortgage 2.0%.<br><br>If you change any of these yourself, the set shows as Custom. To see your plan under another set without changing your inputs, use the what-if tools under the chart.</div></div>
+                        <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">One click sets inflation, investment returns, cash yield and the long-run bank mortgage rate together.<br><br><strong>Cautious:</strong> inflation 3.0%, Global 5.0% (SGD) / 5.5% (USD), Singapore 4.5%, cash 1.0%, mortgage 3.0%.<br><strong>Balanced</strong> (the defaults): inflation 2.5%, Global 6.5% / 7.0%, Singapore 6.0%, cash 1.5%, mortgage 2.7%.<br><strong>Optimistic:</strong> inflation 2.0%, Global 7.5% / 8.0%, Singapore 7.0%, cash 2.0%, mortgage 2.0%.<br><br>If you change any of these yourself, the set shows as Custom. To see your plan under another set without changing your inputs, use the what-if tools under the chart.</div></div>
                     </div>
                 </div>
 
@@ -344,7 +355,7 @@
                     <div>
                         <h4 class="section-h4" style="display:flex; align-items:center;">
                             CPF
-                            <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text"><strong>Before 55:</strong> your OA and SA are locked, shown as a dashed line. Your OA can still pay your mortgage.<br><br><strong>At 55:</strong> your SA, then your OA, move into a Retirement Account (RA) up to your Full Retirement Sum (S$220,400 for people turning 55 in 2026; the engine grows this 3.5% a year for later years). Anything above that, plus up to S$5,000, becomes available to you. With a property pledge (Advanced), only the Basic Retirement Sum (half) stays in the RA.<br><br><strong>From 65:</strong> your RA pays you a monthly CPF LIFE income for life instead of a lump sum. The engine uses the CPF Board's Standard Plan table (about S$1,780 a month from 65 for a Full Retirement Sum set aside in 2026). The RA then drops out of your wealth line, because it's income, not savings you can spend.<br><br>The engine uses the floor interest rates (OA 2.5%, SA/RA 4%) without extra interest. It doesn't model the optional 20% RA withdrawal at 65, which permanently lowers your payouts.<br><br>CPF contributions only apply to the first S$8,000 of monthly salary (2026). The ceiling rises in steps, not with inflation, so inflation-linked CPF inflows may slightly overstate future contributions for high earners.<br><br>If you're already 55 or older, enter your Retirement Account balance as your SA balance.</div></div>
+                            <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text"><strong>Before 55:</strong> your OA and SA are locked, shown as a dashed line. Your OA can still pay your mortgage.<br><br><strong>At 55:</strong> your SA, then your OA, move into a Retirement Account (RA) up to your Full Retirement Sum (S$220,400 for people turning 55 in 2026; the engine grows this 3.5% a year for later years). Anything above that becomes available to you; if you are short of it, you can still take out S$5,000. Any OA savings you add after 55 stay locked until your Retirement Account reaches its target (they can still pay your mortgage). With a property pledge (Advanced), only the Basic Retirement Sum (half) stays in the RA.<br><br><strong>From 65:</strong> your RA pays you a monthly CPF LIFE income for life instead of a lump sum. The engine uses the CPF Board's Standard Plan table (about S$1,780 a month from 65 for a Full Retirement Sum set aside in 2026). The RA then drops out of your wealth line, because it's income, not savings you can spend.<br><br>The engine uses the floor interest rates (OA 2.5%, SA/RA 4%) without extra interest. It doesn't model the optional 20% RA withdrawal at 65, which permanently lowers your payouts.<br><br>CPF contributions only apply to the first S$8,000 of monthly salary (2026). The ceiling rises in steps, not with inflation, so inflation-linked CPF inflows may slightly overstate future contributions for high earners.<br><br>If your Retirement Account has less than S$60,000 when payouts start, you are not automatically placed in CPF LIFE. The engine then pays it out monthly until about age 90 (the Retirement Sum Scheme).<br><br>If you're already 55 or older, enter your Retirement Account balance in the RA field that appears.</div></div>
                         </h4>
                         <div class="cpf-toggle-box">
                             <div class="cpf-question">
@@ -371,6 +382,10 @@
                                     <div>
                                         <label for="inp-saStart">SA Balance (Today's SGD)</label>
                                         <input type="text" id="inp-saStart" class="num-format" placeholder="e.g. 40,000">
+                                    </div>
+                                    <div class="age55-only">
+                                        <label for="inp-raStart">RA Balance (Today's SGD)</label>
+                                        <input type="text" id="inp-raStart" class="num-format" placeholder="e.g. 150,000">
                                     </div>
                                 </div>
 
@@ -537,10 +552,10 @@
                             <div class="bank-only">
                                 <label class="lbl">
                                     Long-run Rate After That (%)
-                                    <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Singapore bank loans are priced from 3-month SORA (the benchmark rate) plus a bank spread. Average 3-month SORA over the periods to Q2 2026:<br>• 5 years: 3.2% (range 1.1%–4.7%)<br>• 10 years: 2.5% (range 1.1%–4.7%)<br>• 15 years: 2.0% (range 1.0%–4.7%)<br>• 20 years: 2.0% (range 1.0%–4.7%)<br><br>SORA peaked at about 4.7% in late 2023 and was near 1.0% in 2012–2014. Bank packages add a spread on top (about 0.2–0.3 percentage points on September 2026 packages).<br><br>Sources: Monetary Authority of Singapore data via Global Property Guide; bank packages via PropertyNet.SG.<br><br>The default of 2.5% equals the 10-year SORA average. Adding a typical bank spread gives about 2.7%–2.8%, a slightly more cautious choice.</div></div>
+                                    <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Singapore bank loans are priced from 3-month SORA (the benchmark rate) plus a bank spread. Average 3-month SORA over the periods to Q2 2026:<br>• 5 years: 3.2% (range 1.1%–4.7%)<br>• 10 years: 2.5% (range 1.1%–4.7%)<br>• 15 years: 2.0% (range 1.0%–4.7%)<br>• 20 years: 2.0% (range 1.0%–4.7%)<br><br>SORA peaked at about 4.7% in late 2023 and was near 1.0% in 2012–2014. Bank packages add a spread on top (about 0.2–0.3 percentage points on September 2026 packages).<br><br>Sources: Monetary Authority of Singapore data via Global Property Guide; bank packages via PropertyNet.SG.<br><br>The default of 2.7% is the 10-year SORA average (2.5%) plus a typical bank spread.</div></div>
                                     <span class="assume-pill">Assumption</span>
                                 </label>
-                                <input type="number" id="inp-mortgageRateLong" class="assumption-input" value="2.5" step="0.1" oninput="runSim()">
+                                <input type="number" id="inp-mortgageRateLong" class="assumption-input" value="2.7" step="0.1" oninput="runSim()">
                                 <div class="assume-note">3-month SORA averages to Q2 2026: 5 yrs 3.2% · 10 yrs 2.5% · 15 yrs 2.0% · 20 yrs 2.0%, before a bank spread.</div>
                             </div>
 
@@ -637,12 +652,11 @@
                         <div>
                             <label class="lbl">
                                 Singapore Investment Volatility (% / yr)
-                                <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">How much Singapore Investment returns swing from year to year. A single-country index such as the STI is usually a little more volatile than a global index, roughly 17% a year. Global and Singapore returns are assumed to move together most of the time (correlation 0.7).</div></div>
+                                <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">How much Singapore Investment returns swing from year to year. Long-run estimates for the STI are about 18–20% a year (NYU Stern V-Lab models, 1990–2026); recent years have been calmer, around 10–15%. Global and Singapore returns are assumed to move together most of the time (correlation 0.7).</div></div>
                                 <span class="assume-pill">Assumption</span>
                             </label>
-                            <input type="number" id="inp-volSg" class="assumption-input" value="17.0" step="0.5" oninput="runSim()">
-                            <div class="assume-note">Typical for a single-country index.</div>
-                        </div>
+                            <input type="number" id="inp-volSg" class="assumption-input" value="18.0" step="0.5" oninput="runSim()">
+                            <div class="assume-note">STI long-run: ~18–20%; recent years calmer.</div>                        </div>
                         <div>
                             <label class="lbl">
                                 Inflation Volatility (% / yr)
@@ -655,7 +669,7 @@
                         <div class="usd-only">
                             <label class="lbl">
                                 USD/SGD Volatility (% / yr)
-                                <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">How much the USD/SGD exchange rate swings around your expected drift each year. Only used when Global Investments are entered in USD. The 5% default is an estimate.</div></div>
+                                <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">How much the USD/SGD exchange rate swings around your expected drift each year. Only used when Global Investments are entered in USD. USD/SGD moved about 3.7% a year over the 12 months to October 2026; the 5% default allows for rougher years such as 2022.</div></div>
                                 <span class="assume-pill">Assumption</span>
                             </label>
                             <input type="number" id="inp-volFx" class="assumption-input" value="5.0" step="0.5" oninput="runSim()">
@@ -727,6 +741,15 @@
                                 <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Adds a red dashed line to the chart showing roughly how much wealth you'd need at each age to stop working and still last to 100. It rises over time because your living expenses grow with inflation. It drops as your mortgage is paid down, because there's less debt left to cover. When your wealth line is above it, you could stop working at that age.</div></div>
                             </label>
                         </div>
+                        <!-- Expert: chart range (R31) -->
+                        <div class="expert-only chart-options-row chart-range-row">
+                            <span>Show:</span>
+                            <div class="segmented-control segmented-mini">
+                                <label><input type="radio" name="chartRange" value="typical" checked onchange="runSim()"> Typical range</label>
+                                <label><input type="radio" name="chartRange" value="full" onchange="runSim()"> Full range</label>
+                            </div>
+                            <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text"><strong>Typical range</strong> zooms in on the median and fixed-return lines, so the bad-luck line is easier to read. The good-luck line runs off the top of the chart.<br><br><strong>Full range</strong> fits every line on the chart.</div></div>
+                        </div>
                         <div style="position: relative; height: 350px; width: 100%;">
                             <canvas id="fireChart"></canvas>
                         </div>
@@ -776,7 +799,7 @@
         <details class="how-it-works">
             <summary>How this works</summary>
             <p><strong>What it does.</strong> The simulator projects your cash, investments and CPF year by year until age 100. Until your target financial freedom age, it adds your monthly savings and CPF contributions. After that, it pays your living expenses and mortgage from your cash and investments, plus any income streams and CPF LIFE payouts. It then checks whether your money lasts.</p>
-            <p><strong>What it models.</strong> Investment returns and inflation, an HDB or bank mortgage, CPF Ordinary and Special Accounts, the Retirement Account at 55 and CPF LIFE from 65 to 70, one-off windfalls, expenses and property downgrades, and regular income such as rent. Expert mode adds random market returns (Monte Carlo) to show how often a plan lasts.</p>
+            <p><strong>What it models.</strong> Investment returns and inflation, an HDB or bank mortgage, CPF Ordinary and Special Accounts, the Retirement Account at 55, CPF LIFE from 65 to 70 (or monthly payouts to about 90 for balances under S$60,000), one-off windfalls, expenses and property downgrades, and regular income such as rent. Expert mode adds random market returns (Monte Carlo) to show how often a plan lasts.</p>
             <p><strong>What it doesn't model.</strong> Taxes, MediSave, healthcare costs beyond what you include in your expenses, SRS, insurance, the value of your home, CPF extra interest, and future changes to CPF rules. Investment fees are only included if you lower your expected return to allow for them.</p>
             <p><strong>Where the figures come from.</strong> CPF rules and payouts from the CPF Board; inflation from the Singapore Department of Statistics; interest rates from the Monetary Authority of Singapore; market returns from index providers and fund factsheets. Each figure's source is in its ℹ️ note. Figures are reviewed once a year.</p>
             <p><strong>Your privacy.</strong> Your inputs stay in your browser. Nothing you enter is sent to a server. Share links contain your numbers, so only send them to people you trust.</p>
