@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prototype: story-led first visit (fearful saver and fee payer)</title>
+<style>
+:root{--bg:#faf7f2;--card:#ffffff;--ink:#1f2a37;--muted:#5b6675;--line:#e6dfd3;--accent:#1f6f6b;--accent-dark:#175552;--soft:#e8f2f1;--warm:#b8462f;--warm-soft:#fbeae6;--gold:#8a5a00;--gold-soft:#fff6df}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:#e9e4da;color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5;font-size:17px}
+.banner{background:var(--gold-soft);color:var(--gold);font-size:13px;text-align:center;padding:6px 10px;border-bottom:1px solid #ecd9a8}
+.app{max-width:440px;margin:0 auto;min-height:calc(100vh - 32px);background:var(--bg);box-shadow:0 0 30px rgba(0,0,0,.12)}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line);font-size:14px;color:var(--muted);position:sticky;top:0;background:var(--bg);z-index:5}
+.link{background:none;border:none;color:var(--accent);font:inherit;font-size:14px;cursor:pointer;padding:8px 4px;min-height:40px}
+.link:focus-visible,.btn:focus-visible,.opt:focus-visible,.chip:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid #f0b429;outline-offset:2px}
+.screen{display:none;padding:20px 20px 40px}
+.screen.active{display:block}
+.eyebrow{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);font-weight:700;margin:0 0 8px}
+h1{font-size:1.65rem;line-height:1.2;margin:0 0 12px}
+h2{font-size:1.2rem;margin:20px 0 8px}
+.lead{color:var(--muted);margin:0 0 18px}
+.story{background:var(--soft);border-radius:14px;padding:14px 16px;margin:0 0 20px;font-size:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin:0 0 14px}
+.btn{display:block;width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;font:inherit;font-weight:700;padding:14px 16px;min-height:48px;cursor:pointer;margin-top:18px}
+.btn:hover{background:var(--accent-dark)}
+.btn.ghost{background:transparent;color:var(--accent);border:2px solid var(--accent)}
+.btn.small{display:inline-block;width:auto;margin-top:10px;padding:10px 14px;font-size:15px}
+.door{display:block;width:100%;text-align:left;background:var(--card);border:2px solid var(--line);border-radius:14px;padding:16px;margin:0 0 12px;font:inherit;cursor:pointer}
+.door:hover{border-color:var(--accent)}
+.door b{display:block;font-size:18px;margin-bottom:2px}
+.door span{color:var(--muted);font-size:15px}
+label{display:block;font-weight:600;margin:14px 0 6px}
+.hint{font-size:14px;color:var(--muted);font-weight:400;margin:2px 0 0}
+input[type=range]{width:100%;accent-color:var(--accent);height:32px}
+input[type=number],select{width:100%;font:inherit;padding:11px 12px;border:1px solid #cfc7b8;border-radius:10px;background:#fff;min-height:46px}
+.big{font-size:2.3rem;font-weight:800;line-height:1.1;margin:6px 0}
+.big.warm{color:var(--warm)}.big.good{color:var(--accent)}
+.val{font-weight:800;font-size:1.3rem;color:var(--accent)}
+.opts{display:grid;gap:10px;margin:8px 0}
+.opt{display:block;text-align:left;background:#fff;border:2px solid var(--line);border-radius:12px;padding:12px 14px;font:inherit;cursor:pointer;width:100%;margin:0;font-weight:400}
+.opt.sel{border-color:var(--accent);background:var(--soft)}
+.opt b{display:block}
+.opt span{font-size:14px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.chip{border:2px solid var(--line);background:#fff;border-radius:999px;padding:9px 14px;font:inherit;font-size:15px;cursor:pointer;min-height:42px}
+.chip.sel{border-color:var(--accent);background:var(--soft);font-weight:700}
+.seg{display:inline-flex;border:2px solid var(--line);border-radius:999px;overflow:hidden;background:#fff}
+.seg button{border:none;background:none;font:inherit;font-size:15px;padding:8px 16px;cursor:pointer;min-height:40px}
+.seg button.sel{background:var(--accent);color:#fff;font-weight:700}
+.bars{margin:12px 0}
+.bar{height:34px;border-radius:8px;margin:6px 0;display:flex;align-items:center;padding:0 10px;color:#fff;font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden}
+.bar.a{background:var(--accent)}.bar.w{background:var(--warm)}
+.layer{border-radius:12px;padding:14px;margin:0 0 10px;border:1px solid var(--line)}
+.layer h3{margin:0 0 2px;font-size:16px}
+.layer .amt{font-weight:800;font-size:1.25rem}
+.layer p{margin:4px 0 0;font-size:14px;color:var(--muted)}
+.l1{background:#eef4fb}.l2{background:#e8f2f1}.l3{background:#fdf1d9}
+.path h3{margin:0;font-size:16px}
+.path .what{font-size:14px;color:var(--muted);margin:4px 0 0}
+.path .bad{font-size:14px;margin:6px 0 0;color:var(--warm)}
+details{margin:10px 0}
+summary{cursor:pointer;color:var(--accent);font-weight:600;padding:6px 0;min-height:36px}
+details>div{font-size:15px;color:var(--muted);padding:4px 0}
+.notes{margin-top:26px;border-top:1px dashed #cfc7b8;padding-top:6px}
+.notes summary{font-size:13px;color:var(--muted);font-weight:600}
+.notes div{font-size:13px}
+.callout{background:var(--gold-soft);border-left:4px solid #e0b040;border-radius:8px;padding:10px 12px;font-size:14px;margin:12px 0;color:#5a4400}
+.ok{background:var(--soft);border-left:4px solid var(--accent);border-radius:8px;padding:10px 12px;font-size:15px;margin:12px 0}
+.fine{font-size:13px;color:var(--muted);margin-top:14px}
+svg{width:100%;height:auto;display:block}
+.xr{display:grid;grid-template-columns:1fr auto;gap:2px 10px;font-size:15px;margin:10px 0}
+.xr .barwrap{grid-column:1/3;background:#f0ebe1;border-radius:6px;height:10px;margin-bottom:6px}
+.xr .barfill{height:10px;border-radius:6px;background:var(--warm)}
+.xr .barfill.pos{background:var(--accent)}
+.grp{font-size:13px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:20px 0 0}
+.tot{background:#fff;border:1px dashed #cfc7b8;border-radius:10px;padding:10px 12px;margin-top:14px;font-size:15px}
+ul.ask{padding-left:20px;margin:8px 0}
+ul.ask li{margin:6px 0}
+.hide{display:none!important}
+@media print{.banner,.topbar,.btn,.notes,.link{display:none!important}.app{box-shadow:none}.screen{display:none}.screen.active{display:block}}
+</style>
+</head>
+<body>
+<div class="banner" role="note">Prototype for testing: example numbers, not financial advice</div>
+<div class="app">
+<div class="topbar">
+  <button class="link" id="backBtn" onclick="prev()" aria-label="Go back">&larr; Back</button>
+  <span id="progress" aria-live="polite"></span>
+  <button class="link" onclick="toHome()">Start again</button>
+</div>
+
+<!-- ============================== HOME ============================== -->
+<section class="screen active" id="home" aria-labelledby="homeTitle">
+  <p class="eyebrow">Singapore money, made clear</p>
+  <h1 id="homeTitle">Where would you like to start?</h1>
+  <p class="lead">Pick the one that sounds most like you. Each takes about three to five minutes. Nothing you type leaves this page.</p>
+  <button class="door" onclick="startFlow('A')"><b>I keep most of my savings in the bank</b><span>See what it's doing, and how much to keep safe.</span></button>
+  <button class="door" onclick="startFlow('B')"><b>I invest through a platform, adviser or insurance plan</b><span>See what the fees really add up to.</span></button>
+  <a class="door" href="https://palocortado.github.io/sg-fire-simulator/" style="text-decoration:none;color:inherit"><b>Show me the full planner</b><span>Work out when you could stop needing a paycheque.</span></a>
+  <details class="notes"><summary>For the person showing this</summary><div>Watch which door they pick without help. Ask: "Which of these sounds most like you, and why?" If they hesitate on all three, note the words they use for themselves.</div></details>
+</section>
+
+<!-- ============================== FLOW A ============================== -->
+<section class="screen" id="a1">
+  <p class="eyebrow">Your money, at your pace</p>
+  <h1>Keeping your money safe, and keeping its value</h1>
+  <p class="lead">A three-minute look at what your savings are doing. It won't ask you to buy anything.</p>
+  <div class="story"><b>Meet Ling, 33.</b> She earns well and lives simply. She keeps S$350,000 in a savings account because it feels safe. She worries about her family's medical bills, and she isn't sure what is okay to do with the rest.<br><em>We'll start with her numbers. Change them to yours.</em></div>
+  <button class="btn" onclick="next()">Start</button>
+  <details class="notes"><summary>For the person showing this</summary><div>Do they relax or tense up reading the story? Ask: "Does Ling sound like anyone you know?" Watch for the word "safe".</div></details>
+</section>
+
+<section class="screen" id="a2">
+  <h1>Where is your money today?</h1>
+  <label for="aSavings">About how much do you keep in savings accounts? <span class="val" id="aSavingsOut"></span></label>
+  <input type="range" id="aSavings" min="10000" max="1000000" step="5000" value="350000">
+  <p class="hint">Include cash you could withdraw tomorrow. Leave out CPF and your home.</p>
+  <label>What interest does it earn?</label>
+  <div class="opts" role="radiogroup" aria-label="Interest on savings">
+    <button class="opt sel" role="radio" aria-checked="true" data-rate="basic"><b>A basic savings account</b><span>Around 0.05% a year</span></button>
+    <button class="opt" role="radio" aria-checked="false" data-rate="hy"><b>A high-interest savings account</b><span>Around 1.5% a year, after the bonus conditions</span></button>
+    <button class="opt" role="radio" aria-checked="false" data-rate="basic"><b>I'm not sure</b><span>Most basic accounts pay about 0.05%. Your bank app will show it.</span></button>
+  </div>
+  <button class="btn" onclick="next()">Continue</button>
+  <details class="notes"><summary>For the person showing this</summary><div>Do they know their rate? If not, that is a finding in itself. Do they hesitate to type their real amount? Offer to use Ling's.</div></details>
+</section>
+
+<section class="screen" id="a3">
+  <h1>What money buys changes over time</h1>
+  <div class="card"><p style="margin:0">Think back: things that cost <b>S$10,000 in 2000</b> cost about <b>S$15,800 in 2025</b>.</p></div>
+  <p class="lead" style="margin-bottom:6px">Now your savings, left where they are:</p>
+  <div class="seg" role="group" aria-label="Number of years"><button data-yrs="10">10 years</button><button data-yrs="20" class="sel">20 years</button><button data-yrs="30">30 years</button></div>
+  <div class="card" style="margin-top:14px">
+    <p style="margin:0" id="a3Today"></p>
+    <div class="bars" aria-hidden="true"><div class="bar a" id="a3BarNow" style="width:100%"></div><div class="bar w" id="a3BarLater"></div></div>
+    <p style="margin:0" id="a3Text" aria-live="polite"></p>
+  </div>
+  <p class="big warm" id="a3Loss"></p>
+  <p id="a3LossText" class="hint" style="margin-top:0"></p>
+  <details><summary>Why does this happen?</summary><div>Prices rise in most years. If your money earns less than prices rise, each year it buys a little less, even though the number in your account goes up. We assume prices rise 2.5% a year, which is about the long-run Singapore average since the 1960s. Recent years have been lower. The point is the direction, not the exact figure.</div></details>
+  <button class="btn" onclick="next()">Continue</button>
+  <details class="notes"><summary>For the person showing this</summary><div>Ask: "Is this surprising, or did you already know?" Watch for relief, guilt or shrugging. Does the 2000 to 2025 line land, or does the future number land more?</div></details>
+</section>
+
+<section class="screen" id="a4">
+  <h1>What would you want this money ready for?</h1>
+  <p class="lead">Most careful savers have a specific worry behind their savings. Let's put a number on it, so the rest can be named.</p>
+  <label for="aSpend">About how much do you spend in a month? <span class="val" id="aSpendOut"></span></label>
+  <input type="range" id="aSpend" min="1000" max="10000" step="100" value="3500">
+  <label for="aMonths">If your income stopped, how many months would you want covered? <span class="val" id="aMonthsOut"></span></label>
+  <input type="range" id="aMonths" min="3" max="12" step="1" value="6">
+  <label for="aMed">How much would you want ready for family medical bills? <span class="val" id="aMedOut"></span></label>
+  <input type="range" id="aMed" min="0" max="200000" step="5000" value="50000">
+  <p class="hint">MediShield Life and MediSave cover a large part of many hospital bills. This is for the part they don't, and for family members who may not be fully covered.</p>
+  <div class="callout">Placeholder: the real tool will show ranges from official hospital-bill data. For now, use your own sense of what would let you sleep.</div>
+  <button class="btn" onclick="next()">Continue</button>
+  <details class="notes"><summary>For the person showing this</summary><div>Which slider do they spend the most time on? Do they know what family members are covered for? Ask: "What would you need to know to feel sure about this number?"</div></details>
+</section>
+
+<section class="screen" id="a5">
+  <h1>Your safety, in three layers</h1>
+  <p class="lead">Safety and growth can sit side by side. Here is your money, sorted by when you might need it.</p>
+  <div id="a5Layers"></div>
+  <div class="ok" id="a5Msg"></div>
+  <a href="#" class="link" onclick="go('a4');return false;">Adjust these numbers</a>
+  <button class="btn" onclick="next()">Continue</button>
+  <details class="notes"><summary>For the person showing this</summary><div>Do the layers make sense without explanation? Ask: "Which layer worries you most?" Does moving money out of the bank in layer 2 feel acceptable?</div></details>
+</section>
+
+<section class="screen" id="a6">
+  <h1>Three paths for your freedom money</h1>
+  <p class="lead">This is the money you won't need for a long time (layer 3). Here is what it could buy in <span id="a6Yrs"></span> years, in today's prices.</p>
+  <div id="a6Cards"></div>
+  <details><summary>What is an index fund, really?</summary><div>Instead of choosing one company, you own a tiny slice of thousands of large companies. When the economy grows over the years, those companies grow too. Some years it falls, sometimes a lot, which is why it only suits money you won't need for 10 years or more. It isn't a bet against anyone: it grows when businesses grow. If a global fund feels too far away, a Singapore-only fund is a simpler first step, though less spread out.</div></details>
+  <p class="fine">Assumptions: T-bills and Singapore Savings Bonds at about 3% (placeholder: check current yields); a steady mix of investments at about 6% a year on average, with about 1 year in 10 going badly. Prices rising 2.5% a year.</p>
+  <button class="btn" onclick="next()">Continue</button>
+  <details class="notes"><summary>For the person showing this</summary><div>Which card do they look at first? Which words stop them? Ask: "Which of these three feels like something you would do?" If the answer is the middle one, that is a win.</div></details>
+</section>
+
+<section class="screen" id="a7">
+  <h1>What room could this give you?</h1>
+  <div class="card"><p style="margin:0" id="a7Now"></p><p class="big good" id="a7NowBig" style="margin:4px 0"></p></div>
+  <div class="card"><p style="margin:0" id="a7Later"></p><p class="hint" id="a7LaterText"></p></div>
+  <p class="fine" style="margin-top:0">This isn't a retirement date. It is a feel for how much breathing room your savings give you. The full planner can estimate when you could stop working.</p>
+  <h2>If time were yours, what would you do with it?</h2>
+  <div class="chips" id="a7Chips"></div>
+  <p id="a7Reflect" class="ok hide"></p>
+  <button class="btn" onclick="next()">Continue</button>
+  <details class="notes"><summary>For the person showing this</summary><div>Ask: "Did this feel reassuring or meaningless?" and "Which of these chips would you pick?" Note anything they say that isn't on the list. Does it feel manipulative, or genuine?</div></details>
+</section>
+
+<section class="screen" id="a8">
+  <h1>Your next step, your choice</h1>
+  <p class="lead">Any one of these is enough. None is also fine.</p>
+  <div id="a8Cards"></div>
+  <div class="ok" id="a8Total"></div>
+  <button class="btn" onclick="window.print()">Save this summary</button>
+  <button class="btn ghost" onclick="toHome()">Not today</button>
+  <details class="notes"><summary>For the person showing this</summary><div>Ask: "What would you do this week, if anything?" Then ask what would get in the way (a form, a login, trusting the website, telling a partner). Write the answer down word for word.</div></details>
+</section>
+
+<!-- ============================== FLOW B ============================== -->
+<section class="screen" id="b1">
+  <p class="eyebrow">You're already investing</p>
+  <h1>Let's check one number most people never see</h1>
+  <p class="lead">That puts you ahead of most people. This takes about four minutes.</p>
+  <div class="story"><b>Meet Daniel, 31.</b> He puts S$1,000 a month into a managed portfolio and has S$100,000 in it. The fee looks small, so he has never looked closer.<br><em>We'll start with his numbers. Change them to yours.</em></div>
+  <button class="btn" onclick="next()">Start</button>
+  <details class="notes"><summary>For the person showing this</summary><div>Watch for defensiveness on "check one number". Ask: "Do you know what you pay a year?" Note whether they quote a percentage or a dollar amount.</div></details>
+</section>
+
+<section class="screen" id="b2">
+  <h1>What do you invest through?</h1>
+  <div class="opts" id="bProducts" role="radiogroup" aria-label="Type of product"></div>
+  <label>Is this one you already have?</label>
+  <div class="seg" id="bMode" role="group" aria-label="Already have or being offered"><button data-mode="hold" class="sel">I already have it</button><button data-mode="offered">I'm being offered it</button></div>
+  <div id="bHold">
+    <label for="bBalance">How much is in it today? <span class="val" id="bBalanceOut"></span></label>
+    <input type="range" id="bBalance" min="0" max="500000" step="5000" value="100000">
+  </div>
+  <label for="bMonthly">How much do you add each month? <span class="val" id="bMonthlyOut"></span></label>
+  <input type="range" id="bMonthly" min="0" max="5000" step="100" value="1000">
+  <label for="bYears">How many years until you'd want the money? <span class="val" id="bYearsOut"></span></label>
+  <input type="range" id="bYears" min="5" max="40" step="1" value="30">
+  <label for="bMix">What is it mostly invested in?</label>
+  <select id="bMix"><option value="shares">Mostly shares</option><option value="mix">A mix of shares and bonds</option><option value="bonds">Mostly bonds and cash</option></select>
+  <p class="hint">We compare like with like: the same investments, with and without the extras.</p>
+  <button class="btn" onclick="next()">Continue</button>
+  <details class="notes"><summary>For the person showing this</summary><div>Do the product names match how they think of it? Which did they choose? If "something else", what do they call it? Can they say what it's invested in?</div></details>
+</section>
+
+<section class="screen" id="b3">
+  <h1>Now the fine print</h1>
+  <p class="lead">You'll find these in your product summary or fee statement. The numbers below are examples. Replace them with yours, or leave them and we'll show you what to ask for.</p>
+  <p class="callout" id="bHint"></p>
+
+  <div class="grp">When you pay in</div>
+  <div id="fEntryWrap"><label for="fEntry">Charge on each payment in <span class="val" id="fEntryOut"></span></label><p class="hint">Also called a sales charge, front-end load or premium charge.</p><input type="range" id="fEntry" min="0" max="8" step="0.25" value="0"></div>
+  <div id="fBonusWrap"><label for="fBonus">Welcome bonus <span class="val" id="fBonusOut"></span></label><p class="hint">Some plans add a percentage of your first year's payments. It is real, but it often comes with a lock-in.</p><input type="range" id="fBonus" min="0" max="60" step="1" value="0"></div>
+
+  <div class="grp">Every year</div>
+  <div><label for="fAdv">Advice or management fee <span class="val" id="fAdvOut"></span></label><p class="hint">Paid to the adviser or manager. Sometimes called a trailer fee or commission.</p><input type="range" id="fAdv" min="0" max="2" step="0.05" value="0"></div>
+  <div><label for="fPlat">Platform or account fee <span class="val" id="fPlatOut"></span></label><p class="hint">Charged for holding your investments, by the app or platform.</p><input type="range" id="fPlat" min="0" max="2" step="0.05" value="0"></div>
+  <div><label for="fTer">Cost of the funds inside <span class="val" id="fTerOut"></span></label><p class="hint">Also called the total expense ratio (TER). Often not shown on the platform's own page.</p><input type="range" id="fTer" min="0" max="3" step="0.05" value="0"></div>
+  <div id="fInsWrap"><label for="fIns">Insurance and policy charges <span class="val" id="fInsOut"></span></label><p class="hint">Taken from your account to pay for the life cover and running the policy.</p><input type="range" id="fIns" min="0" max="3" step="0.05" value="0"></div>
+  <div class="tot" id="fTotal" aria-live="polite"></div>
+  <label style="margin-top:14px"><input type="checkbox" id="fChangeOn"> The fees drop after some years</label>
+  <div id="fChangeBox" class="hide"><label for="fChangeYear">They drop after year <span class="val" id="fChangeYearOut"></span></label><input type="range" id="fChangeYear" min="2" max="25" step="1" value="10"><label for="fAfter">and the yearly total becomes <span class="val" id="fAfterOut"></span></label><input type="range" id="fAfter" min="0" max="3" step="0.05" value="1.85"></div>
+
+  <div class="grp">If you leave</div>
+  <div><label for="fLock"><span id="fLockLabel">Lock-in</span> <span class="val" id="fLockOut"></span></label><p class="hint">A period when leaving costs you money. Some products have none.</p><input type="range" id="fLock" min="0" max="25" step="1" value="0"></div>
+  <div id="fExitWrap"><label for="fExit">Charge for leaving early <span class="val" id="fExitOut"></span></label><p class="hint">As a share of your account. Ask for the "surrender value table" or "early withdrawal charges".</p><input type="range" id="fExit" min="0" max="60" step="1" value="0"></div>
+
+  <div id="fCoverWrap" class="hide"><label style="margin-top:14px"><input type="checkbox" id="fCover"> I want to keep the life cover that comes with it</label><p class="hint">If ticked, the low-cost route also pays for a separate term life plan (about S$560 a year, an example). Cover amounts differ, so this is only a rough comparison. Check what protection you already have before paying for more.</p></div>
+  <button class="btn" onclick="next()">Show me the numbers</button>
+  <details class="notes"><summary>For the person showing this</summary><div>Which fields can they fill from memory? Which did they need to look up? Which words are unfamiliar? Note the ones they skip. Would they be able to find these numbers in real life?</div></details>
+</section>
+
+<section class="screen" id="b4">
+  <h1 id="b4Title">What the fees cost you</h1>
+  <p class="big warm" id="b4Big"></p>
+  <p id="b4Text" aria-live="polite"></p>
+  <div class="card"><svg id="b4Chart" viewBox="0 0 320 200" role="img" aria-label="Chart comparing your product with the low-cost route over time"></svg>
+  <p class="fine" style="margin:4px 0 0"><span style="color:#b8462f">&#9632;</span> Your product &nbsp; <span style="color:#1f6f6b">&#9632;</span> Low-cost route (all in today's prices)</p></div>
+  <div class="card" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:center"><div><div class="hint">Your product</div><div class="val" style="color:#b8462f" id="b4P"></div></div><div><div class="hint">Low-cost route</div><div class="val" id="b4D"></div></div></div>
+  <details><summary>How we compared</summary><div id="b4How"></div></details>
+  <button class="btn" onclick="next()">Continue</button>
+  <details class="notes"><summary>For the person showing this</summary><div>First reaction? Do they say "that's a lot", "that's fine" or "I don't believe it"? Ask: "Which part would you want to check?"</div></details>
+</section>
+
+<section class="screen" id="b5">
+  <h1>The same cost, in years</h1>
+  <p class="big warm" id="b5Big"></p>
+  <p id="b5Text"></p>
+  <p class="hint">Because every extra year of paid work is a year of your life. That is why this number often lands harder than the dollars.</p>
+  <button class="btn" onclick="next()">Continue</button>
+  <details class="notes"><summary>For the person showing this</summary><div>Which landed harder: the dollars or the years? Ask why.</div></details>
+</section>
+
+<section class="screen" id="b6">
+  <h1>Where the money goes</h1>
+  <p class="lead">Roughly how much each part of the price costs you over <span id="b6Yrs"></span> years, in today's prices.</p>
+  <div id="b6Rows"></div>
+  <p class="fine">These are approximate. The parts don't add up exactly because costs compound on each other.</p>
+  <button class="btn" onclick="next()">Continue</button>
+  <details class="notes"><summary>For the person showing this</summary><div>Which row surprises them? Did they know the fund costs inside were a separate charge?</div></details>
+</section>
+
+<section class="screen" id="b7">
+  <h1>If you wanted out early</h1>
+  <p class="lead">Lock-ins and leaving charges only matter if your plans change. Drag to see what you would get back.</p>
+  <label for="bExitYear">If you left in year <span class="val" id="bExitYearOut"></span></label>
+  <input type="range" id="bExitYear" min="1" max="30" step="1" value="3">
+  <div class="card" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:center"><div><div class="hint">You'd get</div><div class="val" style="color:#b8462f" id="b7P"></div></div><div><div class="hint">Low-cost route</div><div class="val" id="b7D"></div></div></div>
+  <p id="b7Text" aria-live="polite"></p>
+  <button class="btn" onclick="next()">Continue</button>
+  <details class="notes"><summary>For the person showing this</summary><div>Did they know the lock-in existed? Do they feel stuck, or fine about it?</div></details>
+</section>
+
+<section class="screen" id="b8">
+  <h1>What are you paying for?</h1>
+  <p class="lead">Fees can buy real things. Tap what matters most to you.</p>
+  <div class="chips" id="b8Chips"></div>
+  <div id="b8Reply" class="ok hide"></div>
+  <p class="fine">If paying a fee keeps you invested through a crash, it may be worth it to you. The question is whether this is the right price.</p>
+  <button class="btn" onclick="next()">Continue</button>
+  <details class="notes"><summary>For the person showing this</summary><div>Which chip do they tap first? Does the reply feel fair, or does it feel like a sales pitch for the other side?</div></details>
+</section>
+
+<section class="screen" id="b9">
+  <h1>Your options</h1>
+  <p class="lead">You don't have to switch everything. Here are three ways forward, with your numbers.</p>
+  <div id="b9Cards"></div>
+  <h2>Questions to ask your provider</h2>
+  <ul class="ask">
+    <li>What is the total yearly cost, including the funds inside?</li>
+    <li>Is there a charge each time I pay in, or a welcome bonus?</li>
+    <li>How long is the lock-in, and what would I get back if I left in year 1, 3, 5 and 10?</li>
+    <li>What part of the charges pays for insurance, and what cover do I get?</li>
+    <li>How is the adviser paid, and does that change what they recommend?</li>
+    <li>What are the funds invested in?</li>
+  </ul>
+  <button class="btn" onclick="window.print()">Save this summary</button>
+  <a class="btn ghost" style="text-align:center;text-decoration:none" href="https://palocortado.github.io/sg-fire-simulator/">Plan the rest in the full tool</a>
+  <p class="fine">In the real product, your numbers would carry over into the full planner. For anything involving an insurance policy, speak to an independent professional before cancelling it.</p>
+  <details class="notes"><summary>For the person showing this</summary><div>Which option would they pick? What would stop them? Would they actually ask the provider these questions?</div></details>
+</section>
+
+</div>
+
+<script>
+'use strict';
+var INFL = 0.025;
+var $ = function(id){ return document.getElementById(id); };
+function money(n){ return 'S$' + Math.round(n).toLocaleString('en-SG'); }
+function money1k(n){ return 'S$' + (Math.round(n/1000)*1000).toLocaleString('en-SG'); }
+function approx(n){ return n >= 20000 ? money1k(n) : money(Math.round(n/100)*100); }
+function pc(x, d){ return (+x).toFixed(d === undefined ? 2 : d).replace(/\.?0+$/, '') + '%'; }
+function realMult(rate, yrs){ return Math.pow((1 + rate) / (1 + INFL), yrs); }
+
+var FLOWS = { A: ['a1','a2','a3','a4','a5','a6','a7','a8'], B: ['b1','b2','b3','b4','b5','b6','b7','b8','b9'] };
+var flow = null, idx = 0, cur = 'home';
+
+/* ---------------------------- state ---------------------------- */
+var A = { savings: 350000, rate: 0.0005, years: 20, spend: 3500, months: 6, med: 50000, dream: null, chose: {} };
+var RATES = { bank: 0.0005, hy: 0.015, safe: 0.03, mix: 0.06 };
+var VOL = 0.15;
+var GROSS = { shares: 0.065, mix: 0.05, bonds: 0.03 };
+var DIY_COST = 0.003;
+var TERM_COST = 560;
+
+var PRODUCTS = {
+  robo:    { name: 'Robo-adviser', desc: 'An app picks and manages a portfolio for you', entry: 0, bonus: 0, adv: 0.5, plat: 0, ter: 0.2, ins: 0, changeOn: false, changeYear: 10, after: 0, lock: 0, exit: 0, hint: 'Many robo-advisers quote one "all-in" fee. Check whether the funds inside charge extra on top.' },
+  adviser: { name: 'Adviser or platform-managed portfolio', desc: 'A financial adviser recommends funds on a platform', entry: 0, bonus: 0, adv: 1.0, plat: 0.25, ter: 0.6, ins: 0, changeOn: false, changeYear: 10, after: 0, lock: 0, exit: 0, hint: 'Three layers often stack up here: the adviser, the platform and the funds themselves.' },
+  trust:   { name: 'Bank unit trust or fund', desc: 'A fund sold through your bank', entry: 3.0, bonus: 0, adv: 0, plat: 0, ter: 1.5, ins: 0, changeOn: false, changeYear: 10, after: 0, lock: 0, exit: 0, hint: 'Look for the sales charge on each payment in, and the yearly fund cost (TER) in the fund fact sheet.' },
+  ilp:     { name: 'Investment-linked policy (from an insurer)', desc: 'Insurance and investing bundled into one plan', entry: 0, bonus: 43, adv: 0, plat: 0.75, ter: 1.5, ins: 1.5, changeOn: true, changeYear: 10, after: 1.85, lock: 10, exit: 25, hint: 'Ask for the product summary and the benefit illustration. The page showing the total effect of charges is the one that matters.' },
+  other:   { name: 'Something else', desc: 'Enter your own numbers', entry: 0, bonus: 0, adv: 0, plat: 0, ter: 0, ins: 0, changeOn: false, changeYear: 10, after: 0, lock: 0, exit: 0, hint: 'Fill in what you know. For anything you don\'t, the checklist at the end shows what to ask.' }
+};
+var B = { product: 'adviser', mode: 'hold', balance: 100000, monthly: 1000, years: 30, mix: 'shares', cover: false, exitYear: 3, picked: {} };
+Object.assign(B, { entry: 0, bonus: 0, adv: 1.0, plat: 0.25, ter: 0.6, ins: 0, changeOn: false, changeYear: 10, after: 0, lock: 0, exit: 0 });
+
+/* ---------------------------- navigation ---------------------------- */
+function seq(){
+  if (flow === 'B') return FLOWS.B.filter(function(id){ return id !== 'b7' || lockApplies(); });
+  return FLOWS[flow] || [];
+}
+function lockApplies(){ return B.lock > 0 && B.exit > 0; }
+function show(id){
+  cur = id;
+  Array.prototype.forEach.call(document.querySelectorAll('.screen'), function(s){ s.classList.toggle('active', s.id === id); });
+  window.scrollTo(0, 0);
+  var s = seq(), pos = s.indexOf(id);
+  $('progress').textContent = (flow && pos >= 0) ? ('Step ' + (pos + 1) + ' of ' + s.length) : '';
+  $('backBtn').style.visibility = (id === 'home') ? 'hidden' : 'visible';
+  refresh();
+}
+function startFlow(f){ flow = f; idx = 0; show(seq()[0]); }
+function next(){ var s = seq(); if (idx < s.length - 1) { idx++; show(s[idx]); } else { toHome(); } }
+function prev(){ if (!flow || idx === 0) { toHome(); return; } idx--; show(seq()[idx]); }
+function go(id){ var p = seq().indexOf(id); if (p >= 0) idx = p; show(id); }
+function toHome(){ flow = null; idx = 0; show('home'); }
+
+/* ---------------------------- Flow A ---------------------------- */
+function futureValue(amount, rate, yrs){ return amount * Math.pow(1 + rate, yrs); }
+function layers(){
+  var l1 = A.months * A.spend, l2 = A.med;
+  var l3 = A.savings - l1 - l2;
+  return { l1: l1, l2: l2, l3: Math.max(0, l3), short: l3 < 0, shortBy: -l3 };
+}
+function updA2(){ $('aSavingsOut').textContent = money(A.savings); }
+function updA3(){
+  var y = A.years, r = A.rate;
+  var real = A.savings * realMult(r, y);
+  $('a3Today').innerHTML = 'Today: <b>' + money(A.savings) + '</b>';
+  $('a3BarNow').textContent = 'Buys ' + money1k(A.savings) + ' worth today';
+  var w = Math.max(8, Math.min(100, real / A.savings * 100));
+  $('a3BarLater').style.width = w + '%';
+  $('a3BarLater').textContent = w < 30 ? money1k(real) : 'Buys ' + money1k(real) + ' worth';
+  var perYear = A.savings * (INFL - r) / (1 + INFL);
+  if (r >= INFL) {
+    $('a3Text').innerHTML = 'In ' + y + ' years your money keeps up with rising prices, buying about what <b>' + money1k(real) + '</b> buys today.';
+    $('a3Loss').textContent = 'Keeping pace';
+    $('a3LossText').textContent = 'A savings rate at or above price rises keeps your money\'s buying power.';
+  } else {
+    $('a3Text').innerHTML = 'In ' + y + ' years, your ' + money(A.savings) + ' will buy about what <b>' + money1k(real) + '</b> buys today.';
+    $('a3Loss').textContent = 'About ' + approx(perYear) + ' a year';
+    $('a3LossText').textContent = 'of buying power slips away in the first year, with no one doing anything wrong. It just isn\'t visible.';
+  }
+}
+function updA4(){
+  $('aSpendOut').textContent = money(A.spend);
+  $('aMonthsOut').textContent = A.months + ' months';
+  $('aMedOut').textContent = money(A.med);
+}
+function updA5(){
+  var L = layers();
+  var h = '';
+  h += '<div class="layer l1"><h3>1. Everyday</h3><div class="amt">' + money1k(L.l1) + '</div><p>' + A.months + ' months of spending. Keep it in a high-interest account so you can reach it today.</p></div>';
+  h += '<div class="layer l2"><h3>2. Emergency reserve</h3><div class="amt">' + money1k(L.l2) + '</div><p>For family medical bills. Singapore Savings Bonds or T-bills: backed by the Singapore government, and you can get your money back when you need it.</p></div>';
+  h += '<div class="layer l3"><h3>3. Freedom money</h3><div class="amt">' + money1k(L.l3) + '</div><p>Everything else. Money you won\'t need for ten years or more.</p></div>';
+  $('a5Layers').innerHTML = h;
+  $('a5Msg').textContent = L.short
+    ? 'Your savings are slightly short of the safety you described, by about ' + money1k(L.shortBy) + '. Layers 1 and 2 come first. That is a perfectly good place to be.'
+    : 'Layers 1 and 2 are covered. That means layer 3 is money you can think about calmly.';
+}
+function riskyP10(amount, yrs){
+  var m = Math.pow(1 + RATES.mix, yrs);
+  return amount * m * Math.exp(-1.2816 * VOL * Math.sqrt(yrs)) / Math.pow(1 + INFL, yrs);
+}
+function updA6(){
+  var L = layers(), y = A.years;
+  $('a6Yrs').textContent = y;
+  var bank = L.l3 * realMult(A.rate, y);
+  var safe = L.l3 * realMult(RATES.safe, y);
+  var mix = L.l3 * realMult(RATES.mix, y);
+  var bad = riskyP10(L.l3, y);
+  var h = '';
+  h += '<div class="card path"><h3>Leave it in the bank</h3><div class="big" style="color:#3b4654">' + money1k(bank) + '</div><p class="what">Buys about this much in today\'s prices.</p><p class="what">Nothing goes wrong. It just buys a little less every year.</p></div>';
+  h += '<div class="card path"><h3>Singapore Savings Bonds and T-bills</h3><div class="big good">' + money1k(safe) + '</div><p class="what">Backed by the Singapore government, and no stock-market ups and downs.</p><p class="bad">Rates can change when you reinvest, so this is an estimate.</p></div>';
+  h += '<div class="card path"><h3>A steady mix of investments, including an index fund</h3><div class="big good">' + money1k(mix) + '</div><p class="what">In a typical case. Higher on average, but the road is bumpy.</p><p class="bad">In about 1 case in 10, you\'d end up with about ' + money1k(bad) + ' or less. Only for money you won\'t need for ten years or more.</p></div>';
+  $('a6Cards').innerHTML = h;
+}
+var DREAMS = ['Care for family', 'Change careers', 'Learn something new', 'Give back', 'Rest for a while', 'Something else'];
+var DREAM_REPLY = {
+  'Care for family': 'Time to care for people is one of the most valuable things money can buy. A reserve for their medical bills is the first piece of that.',
+  'Change careers': 'Having a cushion changes how it feels to leave a job you don\'t love. It means you choose when, rather than being pushed.',
+  'Learn something new': 'A few years of room can turn a someday into a plan.',
+  'Give back': 'Money that is safe and growing can also be shared, on your terms.',
+  'Rest for a while': 'Rest is a perfectly good use of time. Knowing you can afford it is half the benefit.',
+  'Something else': 'Whatever it is, it is yours to decide. That is what this is for.'
+};
+function updA7(){
+  var L = layers(), y = A.years, annual = A.spend * 12;
+  var now = L.l3 / annual;
+  $('a7Now').textContent = 'Your freedom money covers about this many years of your current spending, today:';
+  $('a7NowBig').textContent = now.toFixed(1).replace('.0', '') + ' years';
+  var mix = L.l3 * realMult(RATES.mix, y) / annual;
+  var bank = L.l3 * realMult(A.rate, y) / annual;
+  $('a7Later').innerHTML = 'In ' + y + ' years, in today\'s prices: about <b>' + bank.toFixed(1).replace('.0', '') + ' years</b> if left in the bank, or about <b>' + mix.toFixed(1).replace('.0', '') + ' years</b> in a typical case with a steady mix.';
+  $('a7LaterText').textContent = 'Years of your current lifestyle, not a retirement date.';
+  var h = '';
+  DREAMS.forEach(function(d){ h += '<button class="chip' + (A.dream === d ? ' sel' : '') + '" data-dream="' + d + '">' + d + '</button>'; });
+  $('a7Chips').innerHTML = h;
+  var r = $('a7Reflect');
+  if (A.dream) { r.textContent = DREAM_REPLY[A.dream]; r.classList.remove('hide'); } else { r.classList.add('hide'); }
+}
+function updA8(){
+  var L = layers();
+  var g1 = Math.max(0, L.l1 * (RATES.hy - A.rate));
+  var g2 = Math.max(0, L.l2 * (RATES.safe - A.rate));
+  var h = '';
+  h += card8('s1', 'Put your everyday money in a high-interest account', g1 > 0 ? 'About ' + money(g1) + ' more a year. It takes one app session, and your money stays available.' : 'You are already earning about this. Nothing to change here.');
+  h += card8('s2', 'Move your emergency reserve into Singapore Savings Bonds or T-bills', 'About ' + money(g2) + ' more a year, backed by the Singapore government. They are available through the main local banks, and the bonds can be redeemed without a penalty.');
+  h += card8('s3', 'Explore what to do with your freedom money', 'Open the full planner with your numbers to see when you could stop needing a paycheque. No rush, and no need to decide today.');
+  $('a8Cards').innerHTML = h;
+  var tot = (A.chose.s1 ? g1 : 0) + (A.chose.s2 ? g2 : 0);
+  $('a8Total').textContent = (A.chose.s1 || A.chose.s2)
+    ? 'Doing just what you ticked would earn you about ' + money(tot) + ' more a year, with no stock-market risk. That alone is a good outcome.'
+    : 'Tick any step to see what it would be worth. Choosing none is fine too.';
+}
+function card8(key, title, text){
+  return '<button class="opt' + (A.chose[key] ? ' sel' : '') + '" data-step="' + key + '" role="checkbox" aria-checked="' + (!!A.chose[key]) + '"><b>' + title + '</b><span>' + text + '</span></button>';
+}
+
+/* ---------------------------- Flow B ---------------------------- */
+function totalFee(p){ return p.adv + p.plat + p.ter + p.ins; }
+function simProduct(o, years){
+  var bal = o.balance, out = [bal];
+  var k1 = o.fee1, k2 = o.changeOn ? o.feeAfter : o.fee1;
+  for (var m = 1; m <= years * 12; m++) {
+    var y = Math.ceil(m / 12);
+    var fee = (o.changeOn && y > o.changeYear) ? k2 : k1;
+    bal += (o.monthly - (o.term || 0)) * (1 - o.entry);
+    if (m === 1 && o.bonus) bal += o.bonus * o.monthly * 12;
+    bal *= Math.pow(Math.max(0.0001, 1 + o.gross - fee), 1 / 12);
+    if (m % 12 === 0) out.push(bal);
+  }
+  return out;
+}
+function realSeries(s){ return s.map(function(v, i){ return v / Math.pow(1 + INFL, i); }); }
+function paramsProduct(over){
+  var gross = GROSS[B.mix];
+  var o = { balance: B.mode === 'hold' ? B.balance : 0, monthly: B.monthly, gross: gross,
+    entry: B.entry / 100, bonus: B.mode === 'offered' ? B.bonus / 100 : 0,
+    fee1: totalFee(B) / 100, changeOn: B.changeOn, changeYear: B.changeYear, feeAfter: B.after / 100, term: 0 };
+  if (over) Object.keys(over).forEach(function(k){ o[k] = over[k]; });
+  return o;
+}
+function paramsDiy(){
+  var o = paramsProduct();
+  o.entry = 0; o.bonus = 0; o.fee1 = DIY_COST; o.changeOn = false;
+  o.term = B.cover ? TERM_COST / 12 : 0;
+  return o;
+}
+function model(){
+  var y = B.years;
+  var p = realSeries(simProduct(paramsProduct(), y));
+  var d = realSeries(simProduct(paramsDiy(), y));
+  var gap = d[y] - p[y];
+  return { p: p, d: d, gap: gap, frac: d[y] > 0 ? gap / d[y] : 0 };
+}
+function catchUp(){
+  var y = B.years, dEnd = simProduct(paramsDiy(), y)[y];
+  var s = simProduct(paramsProduct(), y + 30);
+  for (var i = y; i < s.length; i++) { if (s[i] >= dEnd) return i - y; }
+  return null;
+}
+function xray(){
+  var base = simProduct(paramsProduct(), B.years); var end = base[B.years] / Math.pow(1 + INFL, B.years);
+  function without(key){
+    var f = B.changeOn && B.adv + B.plat + B.ter + B.ins > 0 ? (B.after / (B.adv + B.plat + B.ter + B.ins)) : 1;
+    var comp = (key === 'adv' ? B.adv : key === 'plat' ? B.plat : key === 'ter' ? B.ter : key === 'ins' ? B.ins : 0);
+    var o = paramsProduct();
+    if (key === 'entry') o.entry = 0;
+    else if (key === 'bonus') o.bonus = 0;
+    else { o.fee1 = (totalFee(B) - comp) / 100; if (B.changeOn) o.feeAfter = Math.max(0, (B.after - comp * f)) / 100; }
+    var s = simProduct(o, B.years);
+    return s[B.years] / Math.pow(1 + INFL, B.years) - end;
+  }
+  return [
+    { label: 'Charge on each payment in', v: B.entry > 0 ? without('entry') : 0 },
+    { label: 'Advice or management fee', v: B.adv > 0 ? without('adv') : 0 },
+    { label: 'Platform or account fee', v: B.plat > 0 ? without('plat') : 0 },
+    { label: 'Cost of the funds inside', v: B.ter > 0 ? without('ter') : 0 },
+    { label: 'Insurance and policy charges', v: B.ins > 0 ? without('ins') : 0 },
+    { label: 'Welcome bonus (helps you)', v: (B.mode === 'offered' && B.bonus > 0) ? -without('bonus') : 0, pos: true }
+  ].filter(function(r){ return Math.abs(r.v) > 1; });
+}
+function chart(svg, a, b, yrs){
+  var W = 320, H = 200, L = 46, R = 10, T = 10, Bt = 26;
+  var max = Math.max.apply(null, a.concat(b)) * 1.05 || 1;
+  function x(i){ return L + (W - L - R) * i / yrs; }
+  function y(v){ return H - Bt - (H - T - Bt) * v / max; }
+  var o = '';
+  for (var g = 0; g <= 4; g++) {
+    var v = max * g / 4;
+    o += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(v) + '" y2="' + y(v) + '" stroke="#e6dfd3"/>';
+    o += '<text x="' + (L - 6) + '" y="' + (y(v) + 4) + '" text-anchor="end" font-size="10" fill="#5b6675">S$' + Math.round(v / 1000) + 'k</text>';
+  }
+  [0, Math.round(yrs / 2), yrs].forEach(function(i){
+    o += '<text x="' + x(i) + '" y="' + (H - 8) + '" text-anchor="' + (i === yrs ? 'end' : (i === 0 ? 'start' : 'middle')) + '" font-size="10" fill="#5b6675">' + (i === 0 ? 'Now' : 'Yr ' + i) + '</text>';
+  });
+  var pa = '', pb = '';
+  for (var i = 0; i <= yrs; i++) { pa += (i ? ' ' : '') + x(i) + ',' + y(a[i]); pb += (i ? ' ' : '') + x(i) + ',' + y(b[i]); }
+  var area = pa + ' ' + pb.split(' ').reverse().join(' ');
+  o += '<polygon points="' + area + '" fill="#fbeae6" opacity="0.8"/>';
+  o += '<polyline points="' + pb + '" fill="none" stroke="#1f6f6b" stroke-width="3"/>';
+  o += '<polyline points="' + pa + '" fill="none" stroke="#b8462f" stroke-width="3"/>';
+  svg.innerHTML = o;
+}
+function renderProducts(){
+  var h = '';
+  Object.keys(PRODUCTS).forEach(function(k){
+    h += '<button class="opt' + (B.product === k ? ' sel' : '') + '" role="radio" aria-checked="' + (B.product === k) + '" data-prod="' + k + '"><b>' + PRODUCTS[k].name + '</b><span>' + PRODUCTS[k].desc + '</span></button>';
+  });
+  $('bProducts').innerHTML = h;
+}
+function applyProduct(k){
+  B.product = k;
+  var p = PRODUCTS[k];
+  ['entry','bonus','adv','plat','ter','ins','changeOn','changeYear','after','lock','exit'].forEach(function(f){ B[f] = p[f]; });
+  if (B.mode === 'hold' && k === 'ilp') { B.lock = 5; }
+}
+function syncB3(){
+  var P = PRODUCTS[B.product];
+  $('bHint').textContent = P.hint;
+  var showIns = (B.product === 'ilp' || B.product === 'other');
+  var showBonus = (B.mode === 'offered');
+  $('fInsWrap').classList.toggle('hide', !showIns);
+  $('fCoverWrap').classList.toggle('hide', !showIns);
+  $('fBonusWrap').classList.toggle('hide', !showBonus);
+  $('fLockLabel').textContent = B.mode === 'hold' ? 'Years left in the lock-in' : 'Lock-in length';
+  $('fExitWrap').classList.toggle('hide', B.lock <= 0);
+  $('fChangeBox').classList.toggle('hide', !B.changeOn);
+  $('fChangeOn').checked = B.changeOn;
+  var map = { fEntry: ['entry','%'], fBonus: ['bonus','%'], fAdv: ['adv','%'], fPlat: ['plat','%'], fTer: ['ter','%'], fIns: ['ins','%'], fChangeYear: ['changeYear',' yrs'], fAfter: ['after','%'], fLock: ['lock',' yrs'], fExit: ['exit','%'] };
+  Object.keys(map).forEach(function(id){
+    var f = map[id][0], u = map[id][1];
+    $(id).value = B[f];
+    var txt = (u === '%') ? (id === 'fEntry' || id === 'fBonus' || id === 'fExit' ? B[f] + '%' : pc(B[f])) : (B[f] + u);
+    if (id === 'fChangeYear') txt = 'year ' + B[f];
+    $(id + 'Out').textContent = txt;
+  });
+  var t = totalFee(B);
+  var s = 'Total every year: <b>' + pc(t) + '</b>';
+  if (B.changeOn) s += ' for the first ' + B.changeYear + ' years, then <b>' + pc(B.after) + '</b>';
+  s += '. A low-cost index fund bought yourself costs about <b>' + pc(DIY_COST * 100) + '</b>.';
+  $('fTotal').innerHTML = s;
+}
+function fracText(f){
+  if (f >= 0.08) return 'about 1 in ' + Math.max(2, Math.round(1 / f)) + ' dollars';
+  return 'about ' + Math.max(1, Math.round(f * 100)) + ' dollars in every 100';
+}
+function updB4(){
+  var M = model(), y = B.years;
+  var low = (B.entry === 0 && B.bonus === 0 && totalFee(B) <= 0.45 && (!B.changeOn));
+  $('b4How').innerHTML = 'We assume the same investments in both cases, growing ' + pc(GROSS[B.mix] * 100) + ' a year before costs, and prices rising ' + pc(INFL * 100) + ' a year. The low-cost route is a single index fund you buy yourself, costing about ' + pc(DIY_COST * 100) + ' a year in fund and trading costs, with no sales charge, no bonus and no lock-in.' + (B.cover ? ' It also pays for a separate term life plan (about S$560 a year, an example).' : '') + ' Real markets go up and down, so treat this as a comparison, not a forecast.';
+  $('b4P').textContent = money1k(M.p[y]);
+  $('b4D').textContent = money1k(M.d[y]);
+  chart($('b4Chart'), M.p, M.d, y);
+  if (M.p[y] + M.d[y] === 0) { $('b4Big').textContent = 'No numbers yet'; $('b4Text').textContent = 'Go back and add an amount you pay in, or a balance.'; return; }
+  if (low || M.frac < 0.03) {
+    $('b4Title').textContent = 'You\'re already paying close to the minimum';
+    $('b4Big').className = 'big good'; $('b4Big').textContent = 'Well done';
+    $('b4Text').textContent = 'On these numbers, the extras cost you about ' + money1k(Math.max(0, M.gap)) + ' over ' + y + ' years, which is small. The next question is simply whether you stay invested when markets fall.';
+  } else if (M.gap < 0) {
+    $('b4Title').textContent = 'On these numbers, you come out ahead';
+    $('b4Big').className = 'big good'; $('b4Big').textContent = money1k(-M.gap) + ' ahead';
+    $('b4Text').textContent = 'The bonus outweighs the fees over ' + y + ' years, if you stay for the whole time. Check the lock-in and leaving charges on the next screens before you rely on this.';
+  } else {
+    $('b4Title').textContent = 'What the fees cost you';
+    $('b4Big').className = 'big warm'; $('b4Big').textContent = money1k(M.gap);
+    $('b4Text').textContent = 'Over ' + y + ' years, in today\'s prices, the extras cost you about this much. That is ' + fracText(M.frac) + ' you would otherwise have.';
+  }
+}
+function updB5(){
+  var M = model(), c = catchUp();
+  if (M.gap <= 0) { $('b5Big').className = 'big good'; $('b5Big').textContent = 'No extra years'; $('b5Text').textContent = 'On these numbers your product keeps pace with the low-cost route.'; return; }
+  $('b5Big').className = 'big warm';
+  if (c === null) { $('b5Big').textContent = 'More than 30 more years'; $('b5Text').textContent = 'To end up with the same amount after ' + B.years + ' years, you would have to keep paying in for more than 30 additional years.'; return; }
+  $('b5Big').textContent = c + (c === 1 ? ' more year' : ' more years');
+  $('b5Text').textContent = 'To end up with the same amount as the low-cost route does after ' + B.years + ' years, you would need to keep paying in for about ' + c + ' more ' + (c === 1 ? 'year' : 'years') + '.';
+}
+function updB6(){
+  $('b6Yrs').textContent = B.years;
+  var rows = xray();
+  if (!rows.length) { $('b6Rows').innerHTML = '<p>No separate charges were entered. Go back and add them to see the split.</p>'; return; }
+  var max = Math.max.apply(null, rows.map(function(r){ return Math.abs(r.v); }));
+  var h = '';
+  rows.forEach(function(r){
+    var w = Math.max(4, Math.abs(r.v) / max * 100);
+    h += '<div class="xr"><span>' + r.label + '</span><b>' + (r.pos ? '+' : '') + money1k(Math.abs(r.v)) + '</b><div class="barwrap"><div class="barfill' + (r.pos ? ' pos' : '') + '" style="width:' + w + '%"></div></div></div>';
+  });
+  $('b6Rows').innerHTML = h;
+}
+function updB7(){
+  var ey = Math.min(B.exitYear, B.years);
+  $('bExitYearOut').textContent = 'year ' + ey;
+  var p = realSeries(simProduct(paramsProduct(), B.years)), d = realSeries(simProduct(paramsDiy(), B.years));
+  var penal = ey < B.lock ? B.exit / 100 : 0;
+  var pv = p[ey] * (1 - penal), dv = d[ey];
+  $('b7P').textContent = money1k(pv); $('b7D').textContent = money1k(dv);
+  $('b7Text').textContent = penal > 0
+    ? 'Leaving in year ' + ey + ' would cost you the ' + B.exit + '% charge, about ' + money1k(p[ey] * penal) + '. The low-cost route has no lock-in.'
+    : (B.lock > 0 ? 'By year ' + B.lock + ' the lock-in is over, so there is no leaving charge.' : 'No lock-in applies.');
+}
+var WHY = [
+  ['Not having to think', 'Fair. A single index fund with a monthly auto-invest also needs only about an hour to set up, and then no decisions. A platform does that for you for a much higher price. Whether the convenience is worth the difference is your call.'],
+  ['Someone to ask', 'That has real value. Some planners charge a one-off or hourly fee instead of a yearly percentage, which can cover the same ground for far less over decades.'],
+  ['Stops me panic-selling', 'This is the biggest real benefit. If a fee keeps you invested through a 30% fall, it can be worth paying. Ask yourself honestly what you would do in a crash, and whether this is the right price.'],
+  ['The life cover', 'That is insurance, not investment. It can be compared with a separate term plan. First check what protection you already have through your home loan, CPF or work.'],
+  ['None of these', 'Then the fee may be buying you less than it seems. That doesn\'t mean you must switch today. It does mean it is worth asking the questions at the end.']
+];
+function updB8(){
+  var h = '';
+  WHY.forEach(function(w, i){ h += '<button class="chip' + (B.picked[i] ? ' sel' : '') + '" data-why="' + i + '">' + w[0] + '</button>'; });
+  $('b8Chips').innerHTML = h;
+  var ks = Object.keys(B.picked).filter(function(k){ return B.picked[k]; });
+  var r = $('b8Reply');
+  if (ks.length) { r.innerHTML = ks.map(function(k){ return '<p style="margin:0 0 8px"><b>' + WHY[k][0] + '.</b> ' + WHY[k][1] + '</p>'; }).join(''); r.classList.remove('hide'); } else { r.classList.add('hide'); }
+}
+function updB9(){
+  var y = B.years;
+  var stay = simProduct(paramsProduct(), y)[y] / Math.pow(1 + INFL, y);
+  // option 2: leave existing money where it is, point new payments to the low-cost route
+  var existing = simProduct(paramsProduct({ monthly: 0 }), y)[y];
+  var newOnly = simProduct(Object.assign(paramsDiy(), { balance: 0 }), y)[y];
+  var opt2 = (existing + newOnly) / Math.pow(1 + INFL, y);
+  // option 3: move everything now
+  var pen = (B.lock > 0 ? B.exit / 100 : 0);
+  var o3 = paramsDiy(); o3.balance = (B.mode === 'hold' ? B.balance : 0) * (1 - pen);
+  var opt3 = simProduct(o3, y)[y] / Math.pow(1 + INFL, y);
+  var h = '';
+  h += '<div class="card"><b>1. Keep it, and ask the questions</b><p class="what" style="margin:4px 0 0;color:#5b6675;font-size:15px">Your current path ends at about ' + money1k(stay) + ' in ' + y + ' years (today\'s prices). Use the checklist below to find your real numbers.</p></div>';
+  if (B.mode === 'hold') {
+    h += '<div class="card"><b>2. Keep what\'s there, and send new payments elsewhere</b><p style="margin:4px 0 0;color:#5b6675;font-size:15px">Ends at about ' + money1k(opt2) + ', which is ' + (opt2 >= stay ? money1k(opt2 - stay) + ' more' : money1k(stay - opt2) + ' less') + '. No leaving charge on the money already in.</p></div>';
+    h += '<div class="card"><b>3. Move everything</b><p style="margin:4px 0 0;color:#5b6675;font-size:15px">Ends at about ' + money1k(opt3) + ', which is ' + (opt3 >= stay ? money1k(opt3 - stay) + ' more' : money1k(stay - opt3) + ' less') + (pen > 0 ? ', after a leaving charge of about ' + money1k(B.balance * pen) + ' today' : '') + '. Check timing and any charges first.</p></div>';
+  } else {
+    var diy = model().d[y];
+    h += '<div class="card"><b>2. Ask for a lower-cost version</b><p style="margin:4px 0 0;color:#5b6675;font-size:15px">Ask whether the same investments are offered without the sales charge, or through a cheaper class of the fund.</p></div>';
+    h += '<div class="card"><b>3. Go the low-cost route</b><p style="margin:4px 0 0;color:#5b6675;font-size:15px">Ends at about ' + money1k(diy) + ' in ' + y + ' years, compared with ' + money1k(stay) + ' with this product.</p></div>';
+  }
+  $('b9Cards').innerHTML = h;
+}
+
+/* ---------------------------- refresh + events ---------------------------- */
+var UPD = { a2: updA2, a3: updA3, a4: updA4, a5: updA5, a6: updA6, a7: updA7, a8: updA8, b2: updB2, b3: syncB3, b4: updB4, b5: updB5, b6: updB6, b7: updB7, b8: updB8, b9: updB9 };
+function updB2(){
+  renderProducts();
+  $('bHold').classList.toggle('hide', B.mode !== 'hold');
+  $('bBalanceOut').textContent = money(B.balance);
+  $('bMonthlyOut').textContent = money(B.monthly);
+  $('bYearsOut').textContent = B.years + ' years';
+  $('bMix').value = B.mix;
+  Array.prototype.forEach.call($('bMode').children, function(b){ b.classList.toggle('sel', b.dataset.mode === B.mode); });
+  $('bExitYear').max = B.years;
+}
+function refresh(){ if (UPD[cur]) UPD[cur](); }
+
+function bind(){
+  var rngA = { aSavings: 'savings', aSpend: 'spend', aMonths: 'months', aMed: 'med' };
+  Object.keys(rngA).forEach(function(id){ $(id).addEventListener('input', function(e){ A[rngA[id]] = +e.target.value; refresh(); }); });
+  Array.prototype.forEach.call(document.querySelectorAll('#a2 .opt'), function(b){
+    b.addEventListener('click', function(){
+      A.rate = RATES[b.dataset.rate];
+      Array.prototype.forEach.call(document.querySelectorAll('#a2 .opt'), function(x){ x.classList.toggle('sel', x === b); x.setAttribute('aria-checked', x === b); });
+    });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('#a3 .seg button'), function(b){
+    b.addEventListener('click', function(){
+      A.years = +b.dataset.yrs;
+      Array.prototype.forEach.call(document.querySelectorAll('#a3 .seg button'), function(x){ x.classList.toggle('sel', x === b); });
+      refresh();
+    });
+  });
+  $('a7Chips').addEventListener('click', function(e){ var d = e.target.dataset.dream; if (d) { A.dream = (A.dream === d) ? null : d; refresh(); } });
+  $('a8Cards').addEventListener('click', function(e){ var b = e.target.closest('[data-step]'); if (b) { A.chose[b.dataset.step] = !A.chose[b.dataset.step]; refresh(); } });
+
+  $('bProducts').addEventListener('click', function(e){ var b = e.target.closest('[data-prod]'); if (b) { applyProduct(b.dataset.prod); refresh(); } });
+  Array.prototype.forEach.call($('bMode').children, function(b){ b.addEventListener('click', function(){ B.mode = b.dataset.mode; applyProduct(B.product); refresh(); }); });
+  var rngB = { bBalance: 'balance', bMonthly: 'monthly', bYears: 'years', bExitYear: 'exitYear',
+    fEntry: 'entry', fBonus: 'bonus', fAdv: 'adv', fPlat: 'plat', fTer: 'ter', fIns: 'ins', fChangeYear: 'changeYear', fAfter: 'after', fLock: 'lock', fExit: 'exit' };
+  Object.keys(rngB).forEach(function(id){ $(id).addEventListener('input', function(e){ B[rngB[id]] = +e.target.value; refresh(); }); });
+  $('bMix').addEventListener('change', function(e){ B.mix = e.target.value; refresh(); });
+  $('fChangeOn').addEventListener('change', function(e){ B.changeOn = e.target.checked; if (B.changeOn && !B.after) B.after = Math.max(0.2, Math.round(totalFee(B) * 0.5 * 20) / 20); refresh(); });
+  $('fCover').addEventListener('change', function(e){ B.cover = e.target.checked; refresh(); });
+  $('b8Chips').addEventListener('click', function(e){ var i = e.target.dataset.why; if (i !== undefined) { B.picked[i] = !B.picked[i]; refresh(); } });
+}
+bind();
+applyProduct('adviser');
+show('home');
+</script>
+</body>
+</html>
