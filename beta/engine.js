@@ -1,6 +1,8 @@
 /* =============================================================================
    Financial Independence Simulator for Singapore — engine.js
-    Version: 7.1
+    Version: 7.1.1
+    7.1.1: the Retirement Account (RA) balance field in Step 2 now appears for people aged 55
+    and over. The age55 class that shows it was never being set, so the field stayed hidden.
     -----------------------------------------------------------------------------
     Batch 9 / 7.1 (roadmap R50, R41, R32, R33, R39, R36-lite, R45):
         - CPF: locked OA after 55 now earns the 2.5% OA rate (a truncated line had
@@ -66,7 +68,7 @@ let incomeStreamCount = 0;
 let milestoneCount = 0;
 let isLoading = true;
 
-const APP_VERSION = "7.1";
+const APP_VERSION = "7.1.1";
 const SAVE_FORMAT = 2;            // R25: bump when the save layout changes, and add a step to migrateState()
 const FIGURES_AS_OF = 'Oct 2026'; // R20: shown in the footer; update at the yearly refresh
 
@@ -1851,6 +1853,8 @@ function runSimNow() {
     const inp = collectInputs();
     checkInputWarnings(inp);
     updateMortgageReadout(inp);
+    // 7.1.1: show the RA balance field once you are 55 or over
+    document.body.classList.toggle('age55', inp.currentAge !== null && inp.currentAge >= DEFAULTS.cpfUnlockAge);
     detectPreset();
     detectSimplePreset();
 
