@@ -260,19 +260,20 @@ ul.ask li{margin:6px 0}
   <div id="fBonusWrap"><label for="fBonus">Welcome bonus <span class="val" id="fBonusOut"></span></label><p class="hint">Some plans add a percentage of your first year's payments. It is real, but it often comes with a lock-in.</p><input type="range" id="fBonus" min="0" max="60" step="1" value="0"></div>
 
   <div class="grp">Every year</div>
+  <div id="fPaidWrap"><label>How is your adviser paid?</label><div class="seg" id="fPaid" role="group" aria-label="How the adviser is paid"><button data-paid="fee">A separate fee</button><button data-paid="fund">Out of the fund's cost</button><button data-paid="unsure">Not sure</button></div><p class="hint" id="fPaidNote">Some advisers are paid through the fund's own cost (a trailer fee) instead of a separate fee. If so, counting both would count the same money twice.</p><button class="btn ghost small hide" id="fPaidZero">Set the advice fee to 0%</button></div>
   <div><label for="fAdv">Advice or management fee <span class="val" id="fAdvOut"></span></label><p class="hint">Paid to the adviser or manager. Sometimes called a trailer fee or commission.</p><input type="range" id="fAdv" min="0" max="2" step="0.05" value="0"></div>
   <div><label for="fPlat">Platform or account fee <span class="val" id="fPlatOut"></span></label><p class="hint">Charged for holding your investments, by the app or platform.</p><input type="range" id="fPlat" min="0" max="2" step="0.05" value="0"></div>
   <div><label for="fTer">Cost of the funds inside <span class="val" id="fTerOut"></span></label><p class="hint">Also called the total expense ratio (TER). Often not shown on the platform's own page.</p><input type="range" id="fTer" min="0" max="3" step="0.05" value="0"></div>
   <div id="fInsWrap"><label for="fIns">Insurance and policy charges <span class="val" id="fInsOut"></span></label><p class="hint">Taken from your account to pay for the life cover and running the policy.</p><input type="range" id="fIns" min="0" max="3" step="0.05" value="0"></div>
   <div class="tot" id="fTotal" aria-live="polite"></div>
   <label style="margin-top:14px"><input type="checkbox" id="fChangeOn"> The fees drop after some years</label>
-  <div id="fChangeBox" class="hide"><label for="fChangeYear">They drop after year <span class="val" id="fChangeYearOut"></span></label><input type="range" id="fChangeYear" min="2" max="25" step="1" value="10"><label for="fAfter">and the yearly total becomes <span class="val" id="fAfterOut"></span></label><input type="range" id="fAfter" min="0" max="3" step="0.05" value="1.85"></div>
+  <div id="fChangeBox" class="hide"><label for="fChangeYear">They drop after <span class="val" id="fChangeYearOut"></span></label><input type="range" id="fChangeYear" min="2" max="25" step="1" value="10"><label for="fAfter">and the yearly total becomes <span class="val" id="fAfterOut"></span></label><input type="range" id="fAfter" min="0" max="3" step="0.05" value="1.85"></div>
 
   <div class="grp">If you leave</div>
   <div><label for="fLock"><span id="fLockLabel">Lock-in</span> <span class="val" id="fLockOut"></span></label><p class="hint">A period when leaving costs you money. Some products have none.</p><input type="range" id="fLock" min="0" max="25" step="1" value="0"></div>
   <div id="fExitWrap"><label for="fExit">Charge for leaving early <span class="val" id="fExitOut"></span></label><p class="hint">As a share of your account. Ask for the "surrender value table" or "early withdrawal charges".</p><input type="range" id="fExit" min="0" max="60" step="1" value="0"></div>
 
-  <div id="fCoverWrap" class="hide"><label style="margin-top:14px"><input type="checkbox" id="fCover"> I want to keep the life cover that comes with it</label><p class="hint">If selected, the low-cost route also pays for a separate term life plan (about S$560 a year, an example). Cover amounts differ, so this is only a rough comparison. Check what protection you already have before paying for more.</p></div>
+  <div id="fCoverWrap" class="hide"><label style="margin-top:14px"><input type="checkbox" id="fCover"> I want to keep the life cover that comes with it</label><p class="hint">If selected, the low-cost route also pays for a separate term life plan (about S$400 a year for S$500,000 of cover for a 31-year-old non-smoker, an example). Cover amounts and ages differ, so this is only a rough comparison. Check what protection you already have before paying for more.</p></div>
   <button class="btn" onclick="next()">Show me the numbers</button>
   <details class="notes"><summary>For the person showing this</summary><div>Which fields can they fill from memory? Which did they need to look up? Which words are unfamiliar? Note the ones they skip. Would they be able to find these numbers in real life?</div></details>
 </section>
@@ -381,16 +382,16 @@ var SSB_CAP = 200000;   /* MAS: holding limit per person */
 var VOL = 0.15;
 var GROSS = { shares: 0.065, mix: 0.05, bonds: 0.03 };
 var DIY_COST = 0.003;
-var TERM_COST = 560;
+var TERM_COST = 400;   /* about S$400 a year for S$500,000 of cover, age 31, non-smoker (source library, R51d; placeholder) */
 
 var PRODUCTS = {
   robo:    { name: 'Robo-adviser', desc: 'An app picks and manages a portfolio for you', entry: 0, bonus: 0, adv: 0.6, plat: 0, ter: 0.2, ins: 0, changeOn: false, changeYear: 10, after: 0, lock: 0, exit: 0, hint: 'Many robo-advisers quote one "all-in" fee. Check whether the funds inside charge extra on top.' },
   adviser: { name: 'Adviser or platform-managed portfolio', desc: 'A financial adviser recommends funds on a platform', entry: 0, bonus: 0, adv: 1.0, plat: 0.25, ter: 0.6, ins: 0, changeOn: false, changeYear: 10, after: 0, lock: 0, exit: 0, hint: 'Three layers often stack up here: the adviser, the platform and the funds themselves.' },
   trust:   { name: 'Bank unit trust or fund', desc: 'A fund sold through your bank', entry: 3.0, bonus: 0, adv: 0, plat: 0, ter: 1.5, ins: 0, changeOn: false, changeYear: 10, after: 0, lock: 0, exit: 0, hint: 'Look for the sales charge on each payment in, and the yearly fund cost (TER) in the fund fact sheet.' },
-  ilp:     { name: 'Investment-linked policy (from an insurer)', desc: 'Insurance and investing bundled into one plan', entry: 0, bonus: 43, adv: 0, plat: 0.75, ter: 1.5, ins: 1.5, changeOn: true, changeYear: 10, after: 1.85, lock: 10, exit: 25, hint: 'These numbers are an illustration of one possible shape, not a typical product. Ask for the product summary and the benefit illustration. The page showing the total effect of charges is the one that matters.' },
+  ilp:     { name: 'Investment-linked policy (from an insurer)', desc: 'Insurance and investing bundled into one plan', entry: 0, bonus: 30, adv: 0, plat: 0.75, ter: 1.5, ins: 1.5, changeOn: true, changeYear: 10, after: 1.85, lock: 10, exit: 25, hint: 'These numbers are an illustration of one possible shape, not a typical product. The 30% welcome bonus is an example only: use the figure in your own illustration, and drag the slider to match it. Ask for the product summary and the benefit illustration. The page showing the total effect of charges is the one that matters.' },
   other:   { name: 'Something else', desc: 'Enter your own numbers', entry: 0, bonus: 0, adv: 0, plat: 0, ter: 0, ins: 0, changeOn: false, changeYear: 10, after: 0, lock: 0, exit: 0, hint: 'Fill in what you know. For anything you don\'t, the checklist at the end shows what to ask.' }
 };
-var B = { product: 'adviser', mode: 'hold', balance: 100000, monthly: 1000, years: 30, mix: 'shares', cover: false, exitYear: 3, picked: {} };
+var B = { paid: null, product: 'adviser', mode: 'hold', balance: 100000, monthly: 1000, years: 30, mix: 'shares', cover: false, exitYear: 3, picked: {} };
 Object.assign(B, { entry: 0, bonus: 0, adv: 1.0, plat: 0.25, ter: 0.6, ins: 0, changeOn: false, changeYear: 10, after: 0, lock: 0, exit: 0 });
 
 /* ---------------------------- navigation ---------------------------- */
@@ -641,7 +642,7 @@ function renderProducts(){
   $('bProducts').innerHTML = h;
 }
 function applyProduct(k){
-  B.product = k;
+  B.product = k; B.paid = null;
   var p = PRODUCTS[k];
   ['entry','bonus','adv','plat','ter','ins','changeOn','changeYear','after','lock','exit'].forEach(function(f){ B[f] = p[f]; });
   if (B.mode === 'hold' && k === 'ilp') { B.lock = 5; }
@@ -652,6 +653,14 @@ function syncB3(){
   var showIns = (B.product === 'ilp' || B.product === 'other');
   var showBonus = (B.mode === 'offered');
   $('fInsWrap').classList.toggle('hide', !showIns);
+  $('fPaidWrap').classList.toggle('hide', B.product === 'robo');
+  Array.prototype.forEach.call($('fPaid').children, function(b){ b.classList.toggle('sel', b.dataset.paid === B.paid); });
+  var paidNote = 'Some advisers are paid through the fund\'s own cost (a trailer fee) instead of a separate fee. If so, counting both would count the same money twice.';
+  if (B.paid === 'fund') paidNote = 'Then the adviser\'s pay is already inside the cost of the funds below, so a separate advice fee would count it twice.' + (B.adv > 0 ? ' You have an advice fee of ' + pc(B.adv) + ' entered. If it is the same money, set it to 0.' : ' Your advice fee is already 0, so nothing is counted twice.');
+  else if (B.paid === 'fee') paidNote = 'Then count the advice fee as its own line, and check that the fund cost below is only the funds themselves.';
+  else if (B.paid === 'unsure') paidNote = 'Ask your adviser: "Are you paid by a separate fee, or out of the fund\'s cost?" Until you know, the totals below may count the same money twice.';
+  $('fPaidNote').textContent = paidNote;
+  $('fPaidZero').classList.toggle('hide', !(B.paid === 'fund' && B.adv > 0));
   $('fCoverWrap').classList.toggle('hide', !showIns);
   $('fBonusWrap').classList.toggle('hide', !showBonus);
   $('fLockLabel').textContent = B.mode === 'hold' ? 'Years left in the lock-in' : 'Lock-in length';
@@ -679,7 +688,7 @@ function fracText(f){
 function updB4(){
   var M = model(), y = B.years;
   var low = (B.entry === 0 && B.bonus === 0 && totalFee(B) <= 0.45 && (!B.changeOn));
-  $('b4How').innerHTML = 'We assume the same investments in both cases, growing ' + pc(GROSS[B.mix] * 100) + ' a year before costs, and prices rising ' + pc(INFL * 100) + ' a year. The low-cost route is a single index fund you buy yourself, costing about ' + pc(DIY_COST * 100) + ' a year in fund and trading costs, with no sales charge, no bonus and no lock-in.' + (B.cover ? ' It also pays for a separate term life plan (about S$560 a year, an example).' : '') + ' Real markets go up and down, so treat this as a comparison, not a forecast.';
+  $('b4How').innerHTML = 'We assume the same investments in both cases, growing ' + pc(GROSS[B.mix] * 100) + ' a year before costs, and prices rising ' + pc(INFL * 100) + ' a year. The low-cost route is a single index fund you buy yourself, costing about ' + pc(DIY_COST * 100) + ' a year in fund and trading costs, with no sales charge, no bonus and no lock-in. This assumes a low-fee online broker. A local broker with a per-trade minimum can cost more on small monthly purchases (see your options).' + (B.cover ? ' It also pays for a separate term life plan (about S$400 a year for S$500,000 of cover at age 31, an example).' : '') + ' Real markets go up and down, so treat this as a comparison, not a forecast.';
   $('b4P').textContent = money1k(M.p[y]);
   $('b4D').textContent = money1k(M.d[y]);
   chart($('b4Chart'), M.p, M.d, y);
@@ -765,6 +774,15 @@ function updB9(){
     h += '<div class="card"><b>2. Ask for a lower-cost version</b><p style="margin:4px 0 0;color:#5b6675;font-size:15px">Ask whether the same investments are offered without the sales charge, or through a cheaper class of the fund.</p></div>';
     h += '<div class="card"><b>3. Go the low-cost route</b><p style="margin:4px 0 0;color:#5b6675;font-size:15px">Ends at about ' + money1k(diy) + ' in ' + y + ' years, compared with ' + money1k(stay) + ' with this product.</p></div>';
   }
+  var m = B.monthly;
+  if (m > 0) {
+    var lo1 = 9.9 / m * 100, hi1 = 25 / m * 100, lo2 = 1 / m * 100, hi2 = 2.5 / m * 100;
+    h += '<div class="card"><b>If you go the low-cost route: what the broker charges</b><p style="margin:4px 0 0;color:#5b6675;font-size:15px">Buying an index fund needs a broker, and brokers charge per trade. On your ' + money(m) + ' a month:</p>' +
+      '<p style="margin:8px 0 0;font-size:15px"><b>A local broker</b> usually has a minimum of about S$10 to S$25 a trade. That alone is about <b>' + pc(lo1, 1) + ' to ' + pc(hi1, 1) + '</b> of each purchase.</p>' +
+      '<p style="margin:8px 0 0;font-size:15px"><b>A low-fee online broker</b> often charges about S$1 to S$2.50 a trade. That is about <b>' + pc(lo2, 2) + ' to ' + pc(hi2, 2) + '</b> of each purchase.</p>' +
+      '<p style="margin:8px 0 0;color:#5b6675;font-size:15px">Buying every three months instead of every month cuts either figure by two-thirds. Online brokers differ on fees, currency conversion and which markets they offer, so compare a few and check the current fee page. Check that the broker is licensed in Singapore.</p>' +
+      '<p class="fine">These are example figures from published comparison sites, checked in October 2026. The 0.3% a year used for the low-cost route assumes an online broker.</p></div>';
+  }
   $('b9Cards').innerHTML = h;
 }
 
@@ -809,6 +827,8 @@ function bind(){
   Object.keys(rngB).forEach(function(id){ $(id).addEventListener('input', function(e){ B[rngB[id]] = +e.target.value; refresh(); }); });
   $('bMix').addEventListener('change', function(e){ B.mix = e.target.value; refresh(); });
   $('fChangeOn').addEventListener('change', function(e){ B.changeOn = e.target.checked; if (B.changeOn && !B.after) B.after = Math.max(0.2, Math.round(totalFee(B) * 0.5 * 20) / 20); refresh(); });
+  $('fPaid').addEventListener('click', function(e){ var d = e.target.dataset.paid; if (d) { B.paid = d; refresh(); } });
+  $('fPaidZero').addEventListener('click', function(){ B.adv = 0; refresh(); });
   $('fCover').addEventListener('change', function(e){ B.cover = e.target.checked; refresh(); });
   $('b8Chips').addEventListener('click', function(e){ var i = e.target.dataset.why; if (i !== undefined) { B.picked[i] = !B.picked[i]; refresh(); } });
 }
