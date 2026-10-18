@@ -1,6 +1,19 @@
 /* =============================================================================
    Financial Independence Simulator for Singapore — engine.js
-    Version: 7.0 (first public release)
+    Version: 7.1.1
+    7.1.1: the Retirement Account (RA) balance field in Step 2 now appears for people aged 55
+    and over. The age55 class that shows it was never being set, so the field stayed hidden.
+    -----------------------------------------------------------------------------
+    Batch 9 / 7.1 (roadmap R50, R41, R32, R33, R39, R36-lite, R45):
+        - CPF: locked OA after 55 now earns the 2.5% OA rate (a truncated line had
+          left it at 0%); R50 releases only the excess when the retirement sum is
+          met by less than S$5,000
+        - R41 Simple-mode assumption sets (Cautious / Balanced / Optimistic) and
+          Simple what-if buttons; nothing changes until one is picked
+        - R32 chart marks the CPF release at 55 and shows a faint total incl. CPF
+        - R33 Young Starter example reworked (lower salary basis)
+        - R36-lite keyboard focus and labels for info icons and coaching cards
+        - R39 Blind spots footer; R45 Chart.js version pinned
     -----------------------------------------------------------------------------
     Batch 8 / 7.0 (roadmap R30, R31, R19, D7, go-live):
         - R30 CPF below the retirement sum: Retirement Accounts under S$60,000
@@ -55,7 +68,7 @@ let incomeStreamCount = 0;
 let milestoneCount = 0;
 let isLoading = true;
 
-const APP_VERSION = "7.0";
+const APP_VERSION = "7.1.1";
 const SAVE_FORMAT = 2;            // R25: bump when the save layout changes, and add a step to migrateState()
 const FIGURES_AS_OF = 'Oct 2026'; // R20: shown in the footer; update at the yearly refresh
 
@@ -160,7 +173,20 @@ const DEFAULTS = Object.freeze({
 //   CPF floor interest rates, OA 2.5% and SA/RA 4%, CPF Board, E DEFAULTS.oaRate / saRate
 //   US stocks ~10%/yr since 1928 (Damodaran, NYU Stern) and developed markets ~8.5%/yr
 //     since 1900 (UBS Global Investment Returns Yearbook, not re-checked), E WARN_TEXT
+//   US dividend withholding on US-listed funds, 30% for Singapore residents (no US-Singapore
+//     income tax treaty); Ireland-domiciled funds 15% at fund level (US-Ireland treaty). From
+//     broker guides citing IRS Publication 515; not checked against the IRS text. H footer Blind spots
+//   US estate tax on US-situated assets of non-US persons, US$60,000 threshold (not indexed),
+//     IRS Form 706-NA page. H footer Blind spots
 // -----------------------------------------------------------------------------
+
+// R41: Simple-mode assumption sets. Balanced equals the starting values, so nothing changes
+// for anyone until they pick a set. "mortgage" applies only to bank loans (HDB stays at 2.6%).
+const SIMPLE_PRESETS = Object.freeze({
+    cautious:   { label: 'Cautious',   ret: 4.0, inflation: 3.0, cashYield: 1.0, mortgage: 3.0 },
+    balanced:   { label: 'Balanced',   ret: DEFAULTS.invRet, inflation: DEFAULTS.inflation, cashYield: DEFAULTS.cashYield, mortgage: DEFAULTS.mortgageRateBank },
+    optimistic: { label: 'Optimistic', ret: 6.0, inflation: 2.0, cashYield: 2.0, mortgage: 2.0 }
+});
 
 // Field ID -> starting value. '' = blank (personal input, shows a placeholder example).
 const FIELD_DEFAULTS = {
@@ -223,7 +249,8 @@ const CHOICE_DEFAULTS = { cpfHas: 'yes', cpfContrib: 'yes', loanType: 'hdb' };
 // Mode-switch memory (enables reversible Simple <-> Advanced)
 let modeState = {
     advInitialized: false,   // has the Advanced split ever been created?
-    simpleAtSwitch: null     // Simple values written when last leaving Advanced: {start, contrib, ret}
+    simpleAtSwitch: null,    // Simple values written when last leaving Advanced: {start, contrib, ret}
+    simplePreset: null       // R41: 'cautious' | 'balanced' | 'optimistic' once picked in Simple; null = untouched
 };
 let globalCcyState = DEFAULTS.globalCcy;
 let touchedAssumptions = new Set();   // R25: assumption fields the user has edited
@@ -456,9 +483,17 @@ function onEnterAdvanced() {
         setVal('inp-sgContrib', contribBlank ? '' : cur.contrib / 2, false);
         setVal('inp-globalRet', cur.ret, false);
         setVal('inp-sgRet', cur.ret, false);
+        // R41: a Simple assumption set carries into Advanced the first time, so the result doesn't jump
+        const sp = SIMPLE_PRESETS[modeState.simplePreset];
+        if (sp) {
+            setVal('inp-inflation', sp.inflation.toFixed(1), false);
+            setVal('inp-cashYield', sp.cashYield.toFixed(1), false);
+            setVal('inp-mortgageRateLong', sp.mortgage.toFixed(1), false);
+            ['inp-inflation', 'inp-cashYield', 'inp-mortgageRateLong'].forEach(id => touchedAssumptions.add(id));
+        }
         modeState.advInitialized = true;
         modeState.simpleAtSwitch = null;
-        showNotice('Your portfolio has been split evenly between <strong>Global</strong> and <strong>Singapore Investments</strong>, using the same return for both. Adjust each one to match your actual holdings.');
+        showNotice('Your portfolio has been split evenly between <strong>Global</strong> and <strong>Singapore Investments</strong>, using the same return for both. Adjust each one to match your actual holdings.' + (sp ? ' Your ' + sp.label + ' inflation and cash yield were carried over.' : ''));
         return;
     }
 
@@ -629,7 +664,8 @@ function loadState(state) {
             }
             setChoices(state.choices);
             setGlobalCcyState(state.globalCcy === 'USD' ? 'USD' : 'SGD');
-            modeState = Object.assign({ advInitialized: false, simpleAtSwitch: null }, state.modeState || {});
+            modeState = Object.assign({ advInitialized: false, simpleAtSwitch: null, simplePreset: null }, state.modeState || {});
+            if (!SIMPLE_PRESETS[modeState.simplePreset]) modeState.simplePreset = null;
             setChartView(state.chartView === 'future' ? 'future' : 'today');
             setExampleState(state.exampleState && PERSONAS[state.exampleState] ? state.exampleState : null);
             applyModeClass((state.mode === 'advanced' || state.mode === 'expert') ? state.mode : 'simple');
@@ -823,7 +859,7 @@ function clearAllInputs() {
         setChecked('inp-maxOA', true);
         setChoices(null);
         setGlobalCcyState('SGD');
-        modeState = { advInitialized: false, simpleAtSwitch: null };
+        modeState = { advInitialized: false, simpleAtSwitch: null, simplePreset: null };
         touchedAssumptions = new Set();
         if (getMode() !== 'simple') onEnterAdvanced();
 
@@ -991,8 +1027,8 @@ const PERSONAS = {
         fields: { 'inp-currentAge': 28, 'inp-retireAge': 55, 'inp-expenses': 3500,
             'inp-invStart': 10000, 'inp-invContrib': 500, 'inp-invRet': 5.0,
             'inp-cashStart': 20000, 'inp-cashContrib': 1000,
-            'inp-oaStart': 25000, 'inp-oaContrib': 1100,
-            'inp-saStart': 7000, 'inp-saContrib': 290 },
+            'inp-oaStart': 25000, 'inp-oaContrib': 870,
+            'inp-saStart': 7000, 'inp-saContrib': 230 },
         toggles: { 'toggle-expense-partner': false, 'toggle-mortgage': false, 'toggle-mortgage-partner': false },
         choices: { cpfHas: 'yes', cpfContrib: 'yes' }
     },
@@ -1079,7 +1115,7 @@ window.loadProfile = function (type) {
     syncPanels();
 
     // Advanced split is re-derived from the new persona
-    modeState = { advInitialized: false, simpleAtSwitch: null };
+    modeState = { advInitialized: false, simpleAtSwitch: null, simplePreset: null };
     if (getMode() === 'advanced') onEnterAdvanced();
 
     isLoading = false;
@@ -1104,7 +1140,7 @@ function collectInputs() {
         expenseShare: expensePartner ? rateOr('inp-expenseShare', DEFAULTS.expenseShare) : 100,
 
         // Advanced-only assumptions fall back to defaults in Simple (no leakage from hidden fields)
-        inflation: (adv ? rateOr('inp-inflation', DEFAULTS.inflation) : DEFAULTS.inflation) / 100,
+        inflation: (adv ? rateOr('inp-inflation', DEFAULTS.inflation) : simpleMacro('inflation')) / 100,
         realContribGrowth: (adv ? rateOr('inp-realContribGrowth', DEFAULTS.realContribGrowth) : 0) / 100,
 
         glob: adv ? {
@@ -1130,7 +1166,7 @@ function collectInputs() {
         cash: {
             start: amt('inp-cashStart'),
             contrib: amt('inp-cashContrib'),
-            yield: (adv ? rateOr('inp-cashYield', DEFAULTS.cashYield) : DEFAULTS.cashYield) / 100
+            yield: (adv ? rateOr('inp-cashYield', DEFAULTS.cashYield) : simpleMacro('cashYield')) / 100
         },
 
         cpf: (() => {
@@ -1279,7 +1315,7 @@ function simulatePath(inp, opts = {}) {
     const doCpf55 = alreadyPast => {
         const room = Math.max(0, T.target - st.ra);
         const total = st.sa + st.oa;
-        if (room <= 0.5 || total >= room + CPF_MIN_WITHDRAWAL) {
+        if (room <= 0.5 || total >= room) {   // 7.1 (R50): retirement sum met, so only the excess is released
             st.ra += room;
             st.oa = total - room;
         } else if (alreadyPast) {
@@ -1414,7 +1450,7 @@ function simulatePath(inp, opts = {}) {
             st.oa *= 1 + cpf.oaRate / 12;
             st.sa *= 1 + cpf.saRate / 12;
             st.ra *= 1 + cpf.saRate / 12;
-            st.oaLock
+            st.oaLock *= 1 + cpf.oaRate / 12;   // 7.1: locked OA earns the OA rate (this line was cut short before)
 
             if (isWorking) {
                 st.glob += g.contrib * contribIdx;   // in the Global bucket's own currency
@@ -1817,7 +1853,10 @@ function runSimNow() {
     const inp = collectInputs();
     checkInputWarnings(inp);
     updateMortgageReadout(inp);
+    // 7.1.1: show the RA balance field once you are 55 or over
+    document.body.classList.toggle('age55', inp.currentAge !== null && inp.currentAge >= DEFAULTS.cpfUnlockAge);
     detectPreset();
+    detectSimplePreset();
 
     const essentials = getEssentials(inp);
     updateRequiredUI(essentials);
@@ -1875,6 +1914,10 @@ function runSimNow() {
     const hasLocked = lockedData.some(v => v !== null);
     if (hasLocked) {
         datasets.push({ label: 'CPF (locked: OA/SA, then Retirement Account)', data: lockedData, borderColor: '#64748b', borderDash: [6, 4], fill: false, tension: 0.2, pointRadius: 0, borderWidth: 2, pointStyle: 'line' });
+        // R32: faint line of everything you own, so the release of CPF at 55 reads as a transfer, not a jump
+        if (inp.mode !== 'expert') {
+            datasets.push({ label: 'Total incl. CPF', data: base.path.map((p, i) => (p.locked > 0.5 ? adj(p.liquid + p.locked, i) : null)), borderColor: 'rgba(100, 116, 139, 0.45)', fill: false, tension: 0.2, pointRadius: 0, borderWidth: 1.5, pointStyle: 'line' });
+        }
     }
 
     // R8: simulation-based finish line
@@ -1947,7 +1990,7 @@ function runSimNow() {
     if (assumptionsLine) {
         if (inp.mode === 'simple') {
             const cpfTxt = inp.cpf.has ? `, CPF floor rates (OA ${DEFAULTS.oaRate}%, SA/RA ${DEFAULTS.saRate}%) and CPF LIFE Standard Plan from 65` : '';
-            assumptionsLine.innerText = `Assumes ${DEFAULTS.inflation}% inflation, ${DEFAULTS.cashYield}% cash yield${cpfTxt}. Change these in Advanced.`;
+            assumptionsLine.innerText = `Assumes a ${round2(inp.glob.ret * 100)}% portfolio return, ${round2(inp.inflation * 100)}% inflation, ${round2(inp.cash.yield * 100)}% cash yield${cpfTxt}. Pick another assumption set above, or change these in Advanced.`;
             assumptionsLine.style.display = 'block';
         } else if (inp.mode === 'expert') {
             assumptionsLine.innerText = `Based on ${fmt(inp.mc.runs)} simulations with random yearly returns${inp.mc.blackSwan ? ' (fat tails on)' : ''}. The shaded band runs from the 10th to the 90th percentile of wealth at each age; the grey dotted line is the fixed-return projection. Coaching, the finish line, the "stop working" age and what-ifs use the fixed-return projection.`;
@@ -2043,6 +2086,58 @@ function detectPreset() {
 }
 
 // -----------------------------------------------------------------------------
+// R41: Simple-mode assumption sets. Until one is picked, Simple behaves exactly as before.
+// -----------------------------------------------------------------------------
+function simpleMacro(key) {
+    const p = SIMPLE_PRESETS[modeState.simplePreset];
+    return p ? p[key] : DEFAULTS[key];
+}
+
+// Bank loans only, and only while the rate is still one of the standard starting values
+function simpleMortgageFollowsPreset() {
+    const ch = getChoices();
+    const bank = ch.cpfHas === 'no' || ch.loanType === 'bank';
+    const r = readNum('inp-mortgageRate');
+    return isChecked('toggle-mortgage') && bank && r !== null && [2.0, 2.7, 3.0].some(v => Math.abs(r - v) < 1e-9);
+}
+
+function simplePresetChanges(name) {
+    const p = SIMPLE_PRESETS[name];
+    const ch = [
+        { id: 'inp-invRet', val: p.ret },
+        { id: 'inp-inflation', val: p.inflation },
+        { id: 'inp-cashYield', val: p.cashYield }
+    ];
+    if (simpleMortgageFollowsPreset()) ch.push({ id: 'inp-mortgageRate', val: p.mortgage });
+    return ch;
+}
+
+window.applySimplePreset = function (name) {
+    const p = SIMPLE_PRESETS[name];
+    if (!p) return;
+    const mort = simpleMortgageFollowsPreset();
+    modeState.simplePreset = name;
+    setVal('inp-invRet', p.ret.toFixed(1));
+    touchedAssumptions.add('inp-invRet');
+    if (mort) { setVal('inp-mortgageRate', p.mortgage.toFixed(1)); touchedAssumptions.add('inp-mortgageRate'); }
+    scenarios = [];
+    runSim();
+};
+
+function detectSimplePreset() {
+    const ret = rateOr('inp-invRet', DEFAULTS.invRet);
+    const infl = simpleMacro('inflation'), cash = simpleMacro('cashYield');
+    let match = null;
+    Object.keys(SIMPLE_PRESETS).forEach(name => {
+        const p = SIMPLE_PRESETS[name];
+        if (Math.abs(ret - p.ret) < 0.001 && Math.abs(infl - p.inflation) < 0.001 && Math.abs(cash - p.cashYield) < 0.001) match = name;
+    });
+    setRadio('simplePreset', match || '__none');
+    const custom = document.getElementById('simple-preset-custom');
+    if (custom) custom.style.display = match ? 'none' : 'inline-block';
+}
+
+// -----------------------------------------------------------------------------
 // R11: What-if scenarios (previews only; not saved; cleared when your plan changes)
 // -----------------------------------------------------------------------------
 const SCEN_COLORS = ['#7c3aed', '#db2777'];
@@ -2061,7 +2156,8 @@ const SCEN_FIELDS = {
     'inp-sgRet':          { label: 'Singapore return %', set: (i, v) => { i.sg.ret = v / 100; } },
     'inp-inflation':      { label: 'Inflation %', set: (i, v) => { i.inflation = v / 100; } },
     'inp-cashYield':      { label: 'Cash yield %', set: (i, v) => { i.cash.yield = v / 100; } },
-    'inp-mortgageRateLong': { label: 'Long-run mortgage rate %', set: (i, v) => { if (i.mortgage.twoStage) i.mortgage.rateLong = v / 100; } }
+    'inp-mortgageRateLong': { label: 'Long-run mortgage rate %', set: (i, v) => { if (i.mortgage.twoStage) i.mortgage.rateLong = v / 100; } },
+    'inp-mortgageRate':   { label: 'Mortgage rate %', set: (i, v) => { if (!i.mortgage.twoStage) i.mortgage.rate = v / 100; } }
 };
 
 function planSignature(inp) {
@@ -2093,10 +2189,10 @@ function computeScenarios(inp, base, freedomAge) {
     return out;
 }
 
-function addScenario(label, changes) {
+function addScenario(label, changes, preset) {
     const inp = collectInputs();
     const max = inp.isAdvanced ? 2 : 1;
-    scenarios.push({ label, changes });
+    scenarios.push({ label, changes, preset });
     while (scenarios.length > max) scenarios.shift();
     scenarioSig = planSignature(inp);
     runSimNow();
@@ -2110,6 +2206,8 @@ window.compareTweak = function (id, val, label) {
 window.applyScenario = function (k) {
     const sc = scenarios[k];
     if (!sc) return;
+    // R41: in Simple, applying a what-if set means picking that assumption set
+    if (sc.preset && getMode() === 'simple') { applySimplePreset(sc.preset); scrollToResult(); return; }
     sc.changes.forEach(ch => {
         const el = document.getElementById(ch.id);
         const decimals = el && el.step && el.step.indexOf('.') !== -1;
@@ -2178,6 +2276,8 @@ window.quickScenario = function (kind) {
     if (kind === 'fees') {
         const cur = rateOr('inp-globalRet', globalDefaultRet(globalCcyState));
         addScenario('Lower fees (+1.3% return)', [{ id: 'inp-globalRet', val: round2(cur + 1.3) }]);
+    } else if (getMode() === 'simple' && SIMPLE_PRESETS[kind]) {
+        addScenario(SIMPLE_PRESETS[kind].label + ' assumptions', simplePresetChanges(kind), kind);
     } else if (PRESETS[kind]) {
         addScenario(PRESETS[kind].label + ' assumptions', presetChanges(kind));
     }
@@ -2186,6 +2286,18 @@ window.quickScenario = function (kind) {
 // -----------------------------------------------------------------------------
 // Chart
 // -----------------------------------------------------------------------------
+// R32: label for the CPF line at 55, with the amount that becomes available to spend
+function cpfReleaseLabel(inp, base) {
+    const i = DEFAULTS.cpfUnlockAge - inp.currentAge;
+    const st = base && base.states ? base.states[i] : null;
+    if (!st || !st.at55) return '🔓 CPF at 55';
+    const today = inp.chartView === 'today';
+    const v = st.oa / (today ? Math.pow(1 + inp.inflation, i) : 1);
+    if (v < 1000) return '🔓 CPF at 55';
+    const txt = v >= 1000000 ? 'S$' + (v / 1000000).toFixed(2) + 'M' : 'S$' + Math.round(v / 1000) + 'k';
+    return '🔓 CPF released: ' + txt + (today ? " (today's $)" : '');
+}
+
 function renderChart(labels, datasets, inp, hasLocked = false, base = null, mcInfo = null) {
     const canvas = document.getElementById('fireChart');
     if (!canvas || typeof Chart === 'undefined') return;
@@ -2206,7 +2318,7 @@ function renderChart(labels, datasets, inp, hasLocked = false, base = null, mcIn
             ann.lineCPF = {
                 type: 'line', xMin: idx(DEFAULTS.cpfUnlockAge), xMax: idx(DEFAULTS.cpfUnlockAge),
                 borderColor: 'rgba(100, 116, 139, 0.4)', borderWidth: 1,
-                label: { display: true, content: '🔓 CPF at 55', position: 'end', backgroundColor: 'transparent', color: '#475569', font: { size: 12 } }
+                label: { display: true, content: cpfReleaseLabel(inp, base), position: 'end', backgroundColor: 'transparent', color: '#475569', font: { size: 12 } }
             };
         }
         if (base && base.cpfLifeAge && base.cpfLifeAge > inp.currentAge) {
@@ -2464,7 +2576,7 @@ window.executeSimulation = function () {
 // R11: each card applies on click; "Compare" previews it as a what-if instead
 function coachCard(cls, id, val, text, pill, cmp) {
     const label = String(cmp || pill).replace(/['"<>]/g, '');
-    return `<div class="coach-card ${cls}" onclick="applyTweak('${id}', ${val})">
+    return `<div class="coach-card ${cls}" role="button" tabindex="0" onclick="applyTweak('${id}', ${val})">
                 <div class="coach-text">${text}</div>
                 <div class="coach-actions">
                     <button type="button" class="coach-compare" onclick="event.stopPropagation(); compareTweak('${id}', ${val}, '${label}')">Compare</button>
@@ -2566,6 +2678,8 @@ function showTooltip(container, pinned) {
     if (!src) return;
     const tt = ttEnsure();
     tt.innerHTML = '<button type="button" class="tt-close" aria-label="Close">×</button>' + src.innerHTML;
+    if (ttOwner && ttOwner !== container) ttOwner.removeAttribute('aria-describedby');
+    container.setAttribute('aria-describedby', 'tt-float');
     ttOwner = container;
     ttPinned = !!pinned;
     const vw = document.documentElement.clientWidth;
@@ -2590,6 +2704,7 @@ function hideTooltip(force) {
     if (!ttFloat) return;
     if (ttPinned && !force) return;
     ttFloat.className = '';
+    if (ttOwner) ttOwner.removeAttribute('aria-describedby');
     ttOwner = null;
     ttPinned = false;
 }
@@ -2626,8 +2741,25 @@ function initTooltips() {
 // -----------------------------------------------------------------------------
 // Initialisation
 // -----------------------------------------------------------------------------
+// R36-lite: make the info icons and coaching cards reachable and usable from the keyboard
+function initAccessibility() {
+    document.querySelectorAll('.tooltip-container').forEach(c => {
+        c.setAttribute('tabindex', '0');
+        c.setAttribute('role', 'button');
+        c.setAttribute('aria-label', 'More information');
+    });
+    document.addEventListener('keydown', e => {
+        const t = e.target;
+        if ((e.key === 'Enter' || e.key === ' ') && t && t.classList && (t.classList.contains('tooltip-container') || t.classList.contains('coach-card'))) {
+            e.preventDefault();
+            t.click();
+        }
+    });
+}
+
 function initApp() {
     initTooltips();
+    initAccessibility();
     // Thousands separators on all money fields, including rows added later (R7)
     document.addEventListener('focusin', e => {
         const t = e.target;

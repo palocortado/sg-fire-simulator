@@ -15,7 +15,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:image" content="https://palocortado.github.io/sg-fire-simulator/preview.png">
     <link rel="stylesheet" href="styles.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.2.1/chartjs-plugin-annotation.min.js"></script>
 </head>
 <body class="simple-mode">
@@ -29,7 +29,7 @@
     <header class="app-header">
         <div class="header-left">
             <h1>Financial Independence Simulator for Singapore</h1>
-            <p class="subtitle">Chart your path to financial freedom: see how adjusting your lifestyle, savings, and investments today can unlock your ideal retirement or funemployment.</p>
+            <p class="subtitle">Chart your path to financial freedom: see how adjusting your lifestyle, savings, and investments today can unlock your ideal retirement.</p>
         </div>
     </header>
 
@@ -37,10 +37,13 @@
         <div class="welcome-mat" style="text-align: left; padding: 2.5rem 3rem; max-width: 900px; margin: 0 auto 2rem auto; background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
             <h3 style="font-size: 1.5rem; margin-bottom: 1rem; color: #0f172a;">What is Financial Independence?</h3>
             <p style="color: var(--text-secondary); font-size: 1.05rem; line-height: 1.6; margin-bottom: 1rem;">
-                Financial Independence (FI) is the tipping point where your investments generate enough passive income to cover your living expenses indefinitely. You no longer have to work for money—giving you the ultimate freedom to design your time and life. It's the opportunity you've been waiting for - to tell your boss or your clients to go to hell and to know that you'll be just fine.
+                Financial independence means your savings and investments can cover your living costs, so working becomes a choice. This tool shows roughly when that could be true for you, and what would bring it closer. It's an estimate, not a promise.
+            </p>
+            <p style="color: var(--text-secondary); font-size: 1.05rem; line-height: 1.6; margin-bottom: 1rem;">
+                For many people the point isn't to stop working. It's to have a choice: more time with family, a career change, a rest, room to give.
             </p>
             <p style="color: var(--text-secondary); font-size: 1.05rem; line-height: 1.6; margin-bottom: 2rem;">
-                This simulator helps you visualize that finish line. By mapping out your current savings rate, investment choices, and desired future lifestyle, you can see exactly when you will cross the FI threshold—and discover which levers to pull to get there sooner.
+                This simulator helps you visualize that finish line. By mapping out your current savings rate, investment choices, and desired future lifestyle, you can see roughly when you could get there, and discover which levers to pull to get there sooner.
             </p>
             <div class="welcome-grid" style="margin-bottom: 2rem;">
                 <div class="welcome-step">
@@ -49,7 +52,7 @@
                 </div>
                 <div class="welcome-step">
                     <strong>2. Project</strong>
-                    <p>See exactly what age your wealth generates enough passive income to cover your life.</p>
+                    <p>See roughly what age your wealth could cover your living costs.</p>
                 </div>
                 <div class="welcome-step">
                     <strong>3. Optimize</strong>
@@ -72,7 +75,7 @@
             <div class="persona-grid">
                 <button type="button" class="persona-card" onclick="loadExample('young_starter')">
                     <div class="persona-name" style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.35rem; color: var(--text-main);">🌱 Young Starter</div>
-                    <div style="font-size: 0.825rem; color: var(--text-secondary); line-height: 1.4;">Age 28, renting or living at home, building a growth-oriented global portfolio.</div>
+                    <div style="font-size: 0.825rem; color: var(--text-secondary); line-height: 1.4;">Age 28, renting for now and saving toward a first home, investing for growth.</div>
                 </button>
                 <button type="button" class="persona-card" onclick="loadExample('hdb_couple')">
                     <div class="persona-name" style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.35rem; color: var(--text-main);">🏢 Newly married, new home-owner</div>
@@ -122,6 +125,18 @@
                     <div class="legend-row">
                         <span><span class="req-tag req-tag-demo">Required</span> fill in your own numbers</span>
                         <span><span class="assume-pill">Assumption</span> pre-filled estimate you can change</span>
+                    </div>
+
+                    <!-- Simple: assumption sets (R41) -->
+                    <div class="simple-only preset-row">
+                        <span>How cautious should the projection be?</span>
+                        <div class="segmented-control segmented-mini">
+                            <label><input type="radio" name="simplePreset" value="cautious" onchange="applySimplePreset('cautious')"> Cautious</label>
+                            <label><input type="radio" name="simplePreset" value="balanced" onchange="applySimplePreset('balanced')"> Balanced</label>
+                            <label><input type="radio" name="simplePreset" value="optimistic" onchange="applySimplePreset('optimistic')"> Optimistic</label>
+                        </div>
+                        <span id="simple-preset-custom" class="preset-custom" style="display:none;">Custom</span>
+                        <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">One click sets your portfolio return, inflation and cash yield together.<br><br><strong>Cautious:</strong> return 4.0%, inflation 3.0%, cash 1.0%.<br><strong>Balanced</strong> (the starting values): return 5.0%, inflation 2.5%, cash 1.5%.<br><strong>Optimistic:</strong> return 6.0%, inflation 2.0%, cash 2.0%.<br><br>If you have a bank loan, its rate moves too (3.0%, 2.7% or 2.0%) unless you've set your own. HDB loan rates don't change. If you've typed your own return, this shows Custom. To see your plan under another set without changing your inputs, use the what-if buttons under the chart.</div></div>
                     </div>
 
                     <!-- Advanced: assumption presets (R16) -->
@@ -763,6 +778,16 @@
                                 </table>
                             </div>
                         </div>
+                        <!-- Simple: what-if buttons (R41) -->
+                        <div id="scen-simple" class="simple-only scen-builder">
+                            <div class="scen-head"><strong>See it under other assumptions</strong>
+                                <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">Preview your plan with more cautious or more optimistic assumptions, without changing your inputs. Nothing changes until you click Apply. The preview shows as a dashed line and is cleared when you change your plan or reload the page.</div></div>
+                            </div>
+                            <div class="scen-quick">
+                                <button type="button" class="btn-secondary" onclick="quickScenario('cautious')">Cautious assumptions</button>
+                                <button type="button" class="btn-secondary" onclick="quickScenario('optimistic')">Optimistic assumptions</button>
+                            </div>
+                        </div>
                         <div id="scen-builder" class="advanced-only scen-builder">
                             <div class="scen-head"><strong>Build a what-if</strong>
                                 <div class="tooltip-container"><span class="info-icon">ℹ️</span><div class="tooltip-text">See how your plan would look with different numbers, without changing your inputs. Up to two what-ifs show on the chart as dashed lines. They're cleared when you change your plan or reload the page.</div></div>
@@ -800,6 +825,7 @@
             <p><strong>What it does.</strong> The simulator projects your cash, investments and CPF year by year until age 100. Until your target financial freedom age, it adds your monthly savings and CPF contributions. After that, it pays your living expenses and mortgage from your cash and investments, plus any income streams and CPF LIFE payouts. It then checks whether your money lasts.</p>
             <p><strong>What it models.</strong> Investment returns and inflation, an HDB or bank mortgage, CPF Ordinary and Special Accounts, the Retirement Account at 55, CPF LIFE from 65 to 70 (or monthly payouts to about 90 for balances under S$60,000), one-off windfalls, expenses and property downgrades, and regular income such as rent. Expert mode adds random market returns (Monte Carlo) to show how often a plan lasts.</p>
             <p><strong>What it doesn't model.</strong> Taxes, MediSave, healthcare costs beyond what you include in your expenses, SRS, insurance, the value of your home, CPF extra interest, and future changes to CPF rules. Investment fees are only included if you lower your expected return to allow for them.</p>
+            <p><strong>Blind spots to keep in mind.</strong> A market fall early in retirement does the most damage, because you are selling while prices are low. Expert mode shows this risk, and the cash buffer warnings in Step 2 help you plan for it. A year like 2022, when prices rose while markets fell, is not specifically tested: for a rough check, choose the Cautious assumption set and raise inflation. Tax is not modelled. For example, Singapore has no income tax treaty with the US, so US-listed funds can lose 30% of their dividends to US withholding tax, while Ireland-domiciled funds usually lose 15% at fund level. US-listed holdings above US$60,000 can also face US estate tax. Check current rules before you invest. Real spending often follows a smile: higher early in retirement, lower in the middle, and higher again with healthcare costs. You can approximate this with one-off expenses in Step 4.</p>
             <p><strong>Where the figures come from.</strong> CPF rules and payouts from the CPF Board; inflation from the Singapore Department of Statistics; interest rates from the Monetary Authority of Singapore; market returns from index providers and fund factsheets. Each figure's source is in its ℹ️ note. Figures are reviewed once a year.</p>
             <p><strong>Your privacy.</strong> Your inputs stay in your browser. Nothing you enter is sent to a server. Share links contain your numbers, so only send them to people you trust.</p>
         </details>
