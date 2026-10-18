@@ -507,3 +507,17 @@ body:not(.age55) .age55-only { display: none !important; }
 
 /* R31: Typical / Full range toggle under the chart header (Expert) */
 .chart-range-row { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; font-size: 0.8rem; color: var(--text-secondary); }
+
+/* =============================================================================
+   Version 7.1 (Batch 9)
+   ============================================================================= */
+
+/* R36-lite: visible keyboard focus, and radio groups that can be reached with the keyboard.
+   The radio dots stay invisible, but they are no longer removed from the page. */
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible,
+.tooltip-container:focus-visible, .coach-card:focus-visible, .persona-card:focus-visible,
+.segmented-control label:has(input:focus-visible) { outline: 3px solid #f59e0b; outline-offset: 2px; }
+.tooltip-container:focus-visible { border-radius: 4px; }
+.segmented-control label { position: relative; }
+.segmented-control input[type="radio"] { display: block; position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; pointer-events: none; }
+
