@@ -47,6 +47,7 @@ input[type=number],select{width:100%;font:inherit;padding:11px 12px;border:1px s
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
 .chip{border:2px solid var(--line);background:#fff;border-radius:999px;padding:9px 14px;font:inherit;font-size:15px;cursor:pointer;min-height:42px}
 .chip.sel{border-color:var(--accent);background:var(--soft);font-weight:700}
+.chips.anchors{flex-direction:column}.chips.anchors .chip{border-radius:12px;text-align:left;width:100%;line-height:1.35}.chips.anchors .chip.sel{font-weight:400}.chips.anchors .chip.sel b{font-weight:700}
 .seg{display:inline-flex;border:2px solid var(--line);border-radius:999px;overflow:hidden;background:#fff}
 .seg button{border:none;background:none;font:inherit;font-size:15px;padding:8px 16px;cursor:pointer;min-height:40px}
 .seg button.sel{background:var(--accent);color:#fff;font-weight:700}
@@ -130,7 +131,7 @@ ul.ask li{margin:6px 0}
   <label>What interest does it earn?</label>
   <div class="opts" role="radiogroup" aria-label="Interest on savings">
     <button class="opt sel" role="radio" aria-checked="true" data-rate="basic"><b>A basic savings account</b><span>Around 0.05% a year</span></button>
-    <button class="opt" role="radio" aria-checked="false" data-rate="hy"><b>A high-interest savings account</b><span>Around 1.5% a year, after the bonus conditions (an example: rates and conditions vary)</span></button>
+    <button class="opt" role="radio" aria-checked="false" data-rate="hy"><b>A high-interest savings account</b><span>Around 1.3% a year with few conditions (an example: rates vary from about 1.0% to 1.5%, and higher advertised rates need salary credit or card spending)</span></button>
     <button class="opt" role="radio" aria-checked="false" data-rate="basic"><b>I'm not sure</b><span>Most basic accounts pay about 0.05%. Your bank app will show it.</span></button>
   </div>
   <button class="btn" onclick="next()">Continue</button>
@@ -163,11 +164,16 @@ ul.ask li{margin:6px 0}
   <input type="range" id="aMonths" min="3" max="12" step="1" value="6">
   <label for="aMed">How much would you want ready for a big surprise, such as a family medical bill? <span class="val" id="aMedOut"></span></label>
   <input type="range" id="aMed" min="0" max="200000" step="5000" value="50000">
-  <p class="hint">MediShield Life and MediSave cover a large part of many hospital bills. MediShield Life's yearly claim limit was raised to S$200,000 in 2025, and the Ministry of Health says median subsidised day-surgery bills at public hospitals now have no out-of-pocket payment. This amount is for the unusual: a long illness, private care, or a family member who isn't fully covered.</p>
+  <div class="chips anchors" id="aMedAnchors" role="group" aria-label="Example reserve amounts">
+    <button class="chip" data-med="20000"><b>S$20k</b>&nbsp;Deductibles and co-payments around a subsidized stay</button>
+    <button class="chip" data-med="50000"><b>S$50k</b>&nbsp;About a year of long-term care help for one parent, or a large private-ward bill share (default)</button>
+    <button class="chip" data-med="100000"><b>S$100k</b>&nbsp;A big private episode, or two to three years of care</button>
+  </div>
+  <p class="hint">Hospital bills in subsidized wards are mostly covered by MediShield Life and MediSave. The bigger risks are private-ward bills and years of long-term care, which are paid monthly. These amounts are illustrations. What fits you depends on your income tier and citizenship.</p>
   <label for="aDays">How much of that would you want within days? <span class="val" id="aDaysOut"></span></label>
   <input type="range" id="aDays" min="0" max="50000" step="1000" value="10000">
   <p class="hint">The rest can sit in Singapore Savings Bonds, which take about one to five weeks to cash in.</p>
-  <div class="callout">Placeholder: the S$50,000 and S$10,000 starting amounts are examples, not advice. The real tool will show typical bill sizes from the Ministry of Health's published data. For now, use your own sense of what would let you sleep.</div>
+  <div class="callout">Placeholder: the S$10,000 "within days" starting amount is an example, not advice. The reserve amounts above are illustrations too. Use your own sense of what would let you sleep.</div>
   <button class="btn" onclick="next()">Continue</button>
   <details class="notes"><summary>For the person showing this</summary><div>Which slider do they spend the most time on? Do they know what family members are covered for? Ask: "What would you need to know to feel sure about this number?"</div></details>
 </section>
@@ -359,13 +365,18 @@ var flow = null, idx = 0, cur = 'home';
 
 /* ---------------------------- state ---------------------------- */
 var A = { savings: 200000, rate: 0.0005, years: 20, spend: 3500, months: 6, med: 50000, days: 10000, dream: null, chose: {} };
-/* Rates as of October 2026. Sources (see the handoff pack, register of dated figures):
-   bank 0.05%: base rate quoted for traditional bank savings accounts (September 2026 comparison article).
-   hy 1.5%: an EXAMPLE for a high-interest account when only some bonus conditions are met; advertised maximums are higher but need salary credit, spending and so on.
-   ssb1 1.67%: first-year rate, November 2026 Singapore Savings Bond (SBNOV26). ssb 2.45%: its 10-year average. Both from a news report of the MAS announcement of 1 October 2026; the MAS notice itself could not be opened.
-   tbill 1.9%: 6-month T-bill cut-off yield at the 8 October 2026 auction.
-   mix 6%: placeholder for a steady mix of investments (not a forecast). */
-var RATES = { bank: 0.0005, hy: 0.015, ssb1: 0.0167, ssb: 0.0245, tbill: 0.019, mix: 0.06 };
+/* ===== ALL RATES LIVE HERE. Rates as of October 2026. Sources are secondary unless marked; spot-check on mas.gov.sg before launch (R55). =====
+   bank   0.05%  Base rate quoted for traditional bank savings accounts (September 2026 comparison article).
+   hy     1.3%   PLANNING EXAMPLE for a high-interest account with few conditions (realistic range 1.0% to 1.5%). Not sourced to one product: advertised maximums are higher but need salary credit or card spending, and sources disagree.
+   ssb    2.2%   PLANNING rate for long projections: average of Savings Bond 10-year averages since 2015 (about 2.23%).
+   tbill  2.0%   PLANNING rate for long projections: 6-month T-bill yields since mid-2019 average about 2.02%.
+   ssb1   1.67%  FIRST-YEAR rate of the current issue (November 2026, SBNOV26). Used only for year-one gains in step 2.
+   ssbNow 2.45%  10-year average of the current issue. Shown for reference only, not used in projections.
+   tbillNow 1.9% 6-month T-bill cut-off yield at the 8 October 2026 auction. Shown for reference only.
+   The SSB figures come from a news report of the MAS announcement of 1 October 2026; the MAS notice itself could not be opened.
+   mix    6%     Placeholder for a steady mix of investments (not a forecast). */
+var RATES = { bank: 0.0005, hy: 0.013, ssb1: 0.0167, ssb: 0.022, tbill: 0.020, ssbNow: 0.0245, tbillNow: 0.019, mix: 0.06 };
+var HY_HIGH = 0.015;   /* top of the realistic range for a high-interest account with few conditions */
 var SSB_CAP = 200000;   /* MAS: holding limit per person */
 var VOL = 0.15;
 var GROSS = { shares: 0.065, mix: 0.05, bonds: 0.03 };
@@ -373,10 +384,10 @@ var DIY_COST = 0.003;
 var TERM_COST = 560;
 
 var PRODUCTS = {
-  robo:    { name: 'Robo-adviser', desc: 'An app picks and manages a portfolio for you', entry: 0, bonus: 0, adv: 0.5, plat: 0, ter: 0.2, ins: 0, changeOn: false, changeYear: 10, after: 0, lock: 0, exit: 0, hint: 'Many robo-advisers quote one "all-in" fee. Check whether the funds inside charge extra on top.' },
+  robo:    { name: 'Robo-adviser', desc: 'An app picks and manages a portfolio for you', entry: 0, bonus: 0, adv: 0.6, plat: 0, ter: 0.2, ins: 0, changeOn: false, changeYear: 10, after: 0, lock: 0, exit: 0, hint: 'Many robo-advisers quote one "all-in" fee. Check whether the funds inside charge extra on top.' },
   adviser: { name: 'Adviser or platform-managed portfolio', desc: 'A financial adviser recommends funds on a platform', entry: 0, bonus: 0, adv: 1.0, plat: 0.25, ter: 0.6, ins: 0, changeOn: false, changeYear: 10, after: 0, lock: 0, exit: 0, hint: 'Three layers often stack up here: the adviser, the platform and the funds themselves.' },
   trust:   { name: 'Bank unit trust or fund', desc: 'A fund sold through your bank', entry: 3.0, bonus: 0, adv: 0, plat: 0, ter: 1.5, ins: 0, changeOn: false, changeYear: 10, after: 0, lock: 0, exit: 0, hint: 'Look for the sales charge on each payment in, and the yearly fund cost (TER) in the fund fact sheet.' },
-  ilp:     { name: 'Investment-linked policy (from an insurer)', desc: 'Insurance and investing bundled into one plan', entry: 0, bonus: 43, adv: 0, plat: 0.75, ter: 1.5, ins: 1.5, changeOn: true, changeYear: 10, after: 1.85, lock: 10, exit: 25, hint: 'Ask for the product summary and the benefit illustration. The page showing the total effect of charges is the one that matters.' },
+  ilp:     { name: 'Investment-linked policy (from an insurer)', desc: 'Insurance and investing bundled into one plan', entry: 0, bonus: 43, adv: 0, plat: 0.75, ter: 1.5, ins: 1.5, changeOn: true, changeYear: 10, after: 1.85, lock: 10, exit: 25, hint: 'These numbers are an illustration of one possible shape, not a typical product. Ask for the product summary and the benefit illustration. The page showing the total effect of charges is the one that matters.' },
   other:   { name: 'Something else', desc: 'Enter your own numbers', entry: 0, bonus: 0, adv: 0, plat: 0, ter: 0, ins: 0, changeOn: false, changeYear: 10, after: 0, lock: 0, exit: 0, hint: 'Fill in what you know. For anything you don\'t, the checklist at the end shows what to ask.' }
 };
 var B = { product: 'adviser', mode: 'hold', balance: 100000, monthly: 1000, years: 30, mix: 'shares', cover: false, exitYear: 3, picked: {} };
@@ -450,6 +461,7 @@ function updA4(){
   $('aMonthsOut').textContent = A.months + ' months';
   $('aMedOut').textContent = money(A.med);
   $('aDaysOut').textContent = money(A.days);
+  Array.prototype.forEach.call(document.querySelectorAll('#aMedAnchors .chip'), function(c){ var on = +c.dataset.med === A.med; c.classList.toggle('sel', on); c.setAttribute('aria-pressed', on); });
 }
 function updA5(){
   var L = layers();
@@ -486,7 +498,7 @@ function updA6(){
   h += '<div class="card path"><h3>Singapore Savings Bonds and T-bills</h3><div class="big good">' + money1k(safe) + '</div><p class="what">Backed by the Singapore government, and no stock-market ups and downs.</p>' + capNote + '<p class="bad">Rates can change when you reinvest, so this is an estimate.</p></div>';
   h += '<div class="card path"><h3>A steady mix of investments, including an index fund</h3><div class="big good">' + money1k(mix) + '</div><p class="what">In a typical case. Higher on average, but the road is bumpy.</p><p class="bad">In about 1 case in 10, you\'d end up with about ' + money1k(bad) + ' or less. Only for money you won\'t need for ten years or more.</p></div>';
   $('a6Cards').innerHTML = h;
-  $('a6Fine').textContent = 'Assumptions (rates as of October 2026; check the current ones): Singapore Savings Bonds about ' + pc(RATES.ssb * 100) + ' a year on average over 10 years (November 2026 issue); T-bills about ' + pc(RATES.tbill * 100) + ' (6-month bills, October 2026 auction); a steady mix of investments about ' + pc(RATES.mix * 100) + ' a year on average, with about 1 year in 10 going badly. Prices rising ' + pc(INFL * 100) + ' a year. Rates on new bonds and bills will change.';
+  $('a6Fine').textContent = 'Assumptions (rates as of October 2026; check the current ones): for long projections we use about ' + pc(RATES.ssb * 100) + ' a year for Singapore Savings Bonds (the average of their 10-year rates since 2015 is about 2.23%) and about ' + pc(RATES.tbill * 100) + ' for T-bills (6-month yields since mid-2019 average about 2.02%). Today\'s issues pay a little more: the November 2026 Savings Bond averages ' + pc(RATES.ssbNow * 100) + ' over 10 years, and 6-month T-bills yielded ' + pc(RATES.tbillNow * 100) + ' in October. A steady mix of investments is assumed at about ' + pc(RATES.mix * 100) + ' a year on average, with about 1 year in 10 going badly. Prices rise ' + pc(INFL * 100) + ' a year. Rates on new bonds and bills will change.';
 }
 var DREAMS = ['Care for family', 'Change careers', 'Learn something new', 'Give back', 'Rest for a while', 'Something else'];
 var DREAM_REPLY = {
@@ -518,7 +530,7 @@ function updA8(){
   var ssbRes = Math.min(L.l2b, SSB_CAP);
   var g2 = Math.max(0, ssbRes * (RATES.ssb1 - A.rate));
   var h = '';
-  h += card8('s1', 'Put your everyday money, and the part of your reserve you want within days, in a high-interest account', g1 > 0 ? 'About ' + money10(g1) + ' more a year. It takes one app session, and your money stays available.' : 'You are already earning about this. Nothing to change here.');
+  h += card8('s1', 'Put your everyday money, and the part of your reserve you want within days, in a high-interest account', g1 > 0 ? 'About ' + money10(g1) + ' more a year. Some accounts pay about ' + pc(RATES.hy * 100) + ' to ' + pc(HY_HIGH * 100) + ' with few conditions. Others pay more, but need salary credit or card spending. Your money stays available.' : 'You are already earning about this. Nothing to change here.');
   var t2;
   if (L.l2b <= 0) t2 = 'You chose to keep all of your reserve within days, so there is nothing to move here.';
   else if (g2 > 0) t2 = 'About ' + money10(g2) + ' more a year in the first year, backed by the Singapore government. You can cash a bond in any month with no early-exit penalty. The money reaches your bank account by the second working day of the following month, so allow about one to five weeks. Some banks charge a small fee for each request.';
@@ -773,6 +785,7 @@ function refresh(){ if (UPD[cur]) UPD[cur](); }
 function bind(){
   var rngA = { aSavings: 'savings', aSpend: 'spend', aMonths: 'months', aMed: 'med', aDays: 'days' };
   Object.keys(rngA).forEach(function(id){ $(id).addEventListener('input', function(e){ A[rngA[id]] = +e.target.value; refresh(); }); });
+  $('aMedAnchors').addEventListener('click', function(e){ var c = e.target.closest('[data-med]'); if (c) { A.med = +c.dataset.med; $('aMed').value = A.med; refresh(); } });
   Array.prototype.forEach.call(document.querySelectorAll('#a2 .opt'), function(b){
     b.addEventListener('click', function(){
       A.rate = RATES[b.dataset.rate];
