@@ -30,12 +30,14 @@ h2{font-size:1.2rem;margin:20px 0 8px}
 .door:hover{border-color:var(--accent)}
 .door b{display:block;font-size:18px;margin-bottom:2px}
 .door span{color:var(--muted);font-size:15px}
+.trust{list-style:none;display:flex;flex-wrap:wrap;gap:4px 14px;margin:0 0 18px;padding:0;font-size:14px;color:var(--muted)}
+.trust li::before{content:"\2713\00a0";color:var(--accent);font-weight:700}
 label{display:block;font-weight:600;margin:14px 0 6px}
 .hint{font-size:14px;color:var(--muted);font-weight:400;margin:2px 0 0}
 input[type=range]{width:100%;accent-color:var(--accent);height:32px}
 input[type=number],select{width:100%;font:inherit;padding:11px 12px;border:1px solid #cfc7b8;border-radius:10px;background:#fff;min-height:46px}
 .big{font-size:2.3rem;font-weight:800;line-height:1.1;margin:6px 0}
-.big.warm{color:var(--warm)}.big.good{color:var(--accent)}
+.big.warm{color:var(--warm)}.big.good{color:var(--accent)}.big.neutral{color:#3b4654}
 .val{font-weight:800;font-size:1.3rem;color:var(--accent)}
 .opts{display:grid;gap:10px;margin:8px 0}
 .opt{display:block;text-align:left;background:#fff;border:2px solid var(--line);border-radius:12px;padding:12px 14px;font:inherit;cursor:pointer;width:100%;margin:0;font-weight:400}
@@ -55,6 +57,8 @@ input[type=number],select{width:100%;font:inherit;padding:11px 12px;border:1px s
 .layer h3{margin:0 0 2px;font-size:16px}
 .layer .amt{font-weight:800;font-size:1.25rem}
 .layer p{margin:4px 0 0;font-size:14px;color:var(--muted)}
+.layer .sub{font-size:14px;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px dashed #b9cfcd}
+.layer .sub b{color:var(--ink)}
 .l1{background:#eef4fb}.l2{background:#e8f2f1}.l3{background:#fdf1d9}
 .path h3{margin:0;font-size:16px}
 .path .what{font-size:14px;color:var(--muted);margin:4px 0 0}
@@ -82,7 +86,7 @@ ul.ask li{margin:6px 0}
 </style>
 </head>
 <body>
-<div class="banner" role="note">Prototype for testing: example numbers, not financial advice</div>
+<div class="banner" role="note">Prototype for testing: example numbers, not financial advice. Rates as of October 2026.</div>
 <div class="app">
 <div class="topbar">
   <button class="link" id="backBtn" onclick="prev()" aria-label="Go back">&larr; Back</button>
@@ -93,11 +97,18 @@ ul.ask li{margin:6px 0}
 <!-- ============================== HOME ============================== -->
 <section class="screen active" id="home" aria-labelledby="homeTitle">
   <p class="eyebrow">Singapore money, made clear</p>
-  <h1 id="homeTitle">Where would you like to start?</h1>
+  <h1 id="homeTitle">What's my money doing?</h1>
   <p class="lead">Pick the one that sounds most like you. Each takes about three to five minutes. Nothing you type leaves this page.</p>
+  <ul class="trust" aria-label="What to expect">
+    <li>Free</li>
+    <li>Private: nothing you type leaves your device</li>
+    <li>No sign-up</li>
+    <li>We don't sell you anything</li>
+  </ul>
   <button class="door" onclick="startFlow('A')"><b>I keep most of my savings in the bank</b><span>See what it's doing, and how much to keep safe.</span></button>
-  <button class="door" onclick="startFlow('B')"><b>I invest through a platform, adviser or insurance plan</b><span>See what the fees really add up to.</span></button>
-  <a class="door" href="https://palocortado.github.io/sg-fire-simulator/" style="text-decoration:none;color:inherit"><b>Show me the full planner</b><span>Work out when you could stop needing a paycheque.</span></a>
+  <button class="door" onclick="startFlow('B')"><b>I already invest through a bank, app, adviser or insurance plan</b><span>See what the fees really add up to.</span></button>
+  <a class="door" href="https://palocortado.github.io/sg-fire-simulator/" style="text-decoration:none;color:inherit"><b>Show me the full planner</b><span>Work out when you could stop needing a paycheck.</span></a>
+  <p class="fine" style="margin-top:6px">Not sure which one fits? Start with the first. You can go back at any time, and nothing is saved.</p>
   <details class="notes"><summary>For the person showing this</summary><div>Watch which door they pick without help. Ask: "Which of these sounds most like you, and why?" If they hesitate on all three, note the words they use for themselves.</div></details>
 </section>
 
@@ -106,7 +117,7 @@ ul.ask li{margin:6px 0}
   <p class="eyebrow">Your money, at your pace</p>
   <h1>Keeping your money safe, and keeping its value</h1>
   <p class="lead">A three-minute look at what your savings are doing. It won't ask you to buy anything.</p>
-  <div class="story"><b>Meet Ling, 33.</b> She earns well and lives simply. She keeps S$350,000 in a savings account because it feels safe. She worries about her family's medical bills, and she isn't sure what is okay to do with the rest.<br><em>We'll start with her numbers. Change them to yours.</em></div>
+  <div class="story"><b>Meet Ling, 35.</b> She earns well and lives simply. She keeps S$200,000 in a savings account because it feels safe. She worries about a big family medical bill, a sudden job loss, or something she can't see coming, and she isn't sure what is okay to do with the rest.<br><em>We'll start with her numbers. Change them to yours.</em></div>
   <button class="btn" onclick="next()">Start</button>
   <details class="notes"><summary>For the person showing this</summary><div>Do they relax or tense up reading the story? Ask: "Does Ling sound like anyone you know?" Watch for the word "safe".</div></details>
 </section>
@@ -114,12 +125,12 @@ ul.ask li{margin:6px 0}
 <section class="screen" id="a2">
   <h1>Where is your money today?</h1>
   <label for="aSavings">About how much do you keep in savings accounts? <span class="val" id="aSavingsOut"></span></label>
-  <input type="range" id="aSavings" min="10000" max="1000000" step="5000" value="350000">
+  <input type="range" id="aSavings" min="10000" max="1000000" step="5000" value="200000">
   <p class="hint">Include cash you could withdraw tomorrow. Leave out CPF and your home.</p>
   <label>What interest does it earn?</label>
   <div class="opts" role="radiogroup" aria-label="Interest on savings">
     <button class="opt sel" role="radio" aria-checked="true" data-rate="basic"><b>A basic savings account</b><span>Around 0.05% a year</span></button>
-    <button class="opt" role="radio" aria-checked="false" data-rate="hy"><b>A high-interest savings account</b><span>Around 1.5% a year, after the bonus conditions</span></button>
+    <button class="opt" role="radio" aria-checked="false" data-rate="hy"><b>A high-interest savings account</b><span>Around 1.5% a year, after the bonus conditions (an example: rates and conditions vary)</span></button>
     <button class="opt" role="radio" aria-checked="false" data-rate="basic"><b>I'm not sure</b><span>Most basic accounts pay about 0.05%. Your bank app will show it.</span></button>
   </div>
   <button class="btn" onclick="next()">Continue</button>
@@ -150,10 +161,13 @@ ul.ask li{margin:6px 0}
   <input type="range" id="aSpend" min="1000" max="10000" step="100" value="3500">
   <label for="aMonths">If your income stopped, how many months would you want covered? <span class="val" id="aMonthsOut"></span></label>
   <input type="range" id="aMonths" min="3" max="12" step="1" value="6">
-  <label for="aMed">How much would you want ready for family medical bills? <span class="val" id="aMedOut"></span></label>
+  <label for="aMed">How much would you want ready for a big surprise, such as a family medical bill? <span class="val" id="aMedOut"></span></label>
   <input type="range" id="aMed" min="0" max="200000" step="5000" value="50000">
-  <p class="hint">MediShield Life and MediSave cover a large part of many hospital bills. This is for the part they don't, and for family members who may not be fully covered.</p>
-  <div class="callout">Placeholder: the real tool will show ranges from official hospital-bill data. For now, use your own sense of what would let you sleep.</div>
+  <p class="hint">MediShield Life and MediSave cover a large part of many hospital bills. MediShield Life's yearly claim limit was raised to S$200,000 in 2025, and the Ministry of Health says median subsidised day-surgery bills at public hospitals now have no out-of-pocket payment. This amount is for the unusual: a long illness, private care, or a family member who isn't fully covered.</p>
+  <label for="aDays">How much of that would you want within days? <span class="val" id="aDaysOut"></span></label>
+  <input type="range" id="aDays" min="0" max="50000" step="1000" value="10000">
+  <p class="hint">The rest can sit in Singapore Savings Bonds, which take about one to five weeks to cash in.</p>
+  <div class="callout">Placeholder: the S$50,000 and S$10,000 starting amounts are examples, not advice. The real tool will show typical bill sizes from the Ministry of Health's published data. For now, use your own sense of what would let you sleep.</div>
   <button class="btn" onclick="next()">Continue</button>
   <details class="notes"><summary>For the person showing this</summary><div>Which slider do they spend the most time on? Do they know what family members are covered for? Ask: "What would you need to know to feel sure about this number?"</div></details>
 </section>
@@ -165,7 +179,7 @@ ul.ask li{margin:6px 0}
   <div class="ok" id="a5Msg"></div>
   <a href="#" class="link" onclick="go('a4');return false;">Adjust these numbers</a>
   <button class="btn" onclick="next()">Continue</button>
-  <details class="notes"><summary>For the person showing this</summary><div>Do the layers make sense without explanation? Ask: "Which layer worries you most?" Does moving money out of the bank in layer 2 feel acceptable?</div></details>
+  <details class="notes"><summary>For the person showing this</summary><div>Do the layers make sense without explanation? Ask: "Which layer worries you most?" Does moving money out of the bank in layer 2 feel acceptable? Does "within weeks" feel too slow for a medical emergency?</div></details>
 </section>
 
 <section class="screen" id="a6">
@@ -173,7 +187,7 @@ ul.ask li{margin:6px 0}
   <p class="lead">This is the money you won't need for a long time (layer 3). Here is what it could buy in <span id="a6Yrs"></span> years, in today's prices.</p>
   <div id="a6Cards"></div>
   <details><summary>What is an index fund, really?</summary><div>Instead of choosing one company, you own a tiny slice of thousands of large companies. When the economy grows over the years, those companies grow too. Some years it falls, sometimes a lot, which is why it only suits money you won't need for 10 years or more. It isn't a bet against anyone: it grows when businesses grow. If a global fund feels too far away, a Singapore-only fund is a simpler first step, though less spread out.</div></details>
-  <p class="fine">Assumptions: T-bills and Singapore Savings Bonds at about 3% (placeholder: check current yields); a steady mix of investments at about 6% a year on average, with about 1 year in 10 going badly. Prices rising 2.5% a year.</p>
+  <p class="fine" id="a6Fine"></p>
   <button class="btn" onclick="next()">Continue</button>
   <details class="notes"><summary>For the person showing this</summary><div>Which card do they look at first? Which words stop them? Ask: "Which of these three feels like something you would do?" If the answer is the middle one, that is a win.</div></details>
 </section>
@@ -252,7 +266,7 @@ ul.ask li{margin:6px 0}
   <div><label for="fLock"><span id="fLockLabel">Lock-in</span> <span class="val" id="fLockOut"></span></label><p class="hint">A period when leaving costs you money. Some products have none.</p><input type="range" id="fLock" min="0" max="25" step="1" value="0"></div>
   <div id="fExitWrap"><label for="fExit">Charge for leaving early <span class="val" id="fExitOut"></span></label><p class="hint">As a share of your account. Ask for the "surrender value table" or "early withdrawal charges".</p><input type="range" id="fExit" min="0" max="60" step="1" value="0"></div>
 
-  <div id="fCoverWrap" class="hide"><label style="margin-top:14px"><input type="checkbox" id="fCover"> I want to keep the life cover that comes with it</label><p class="hint">If ticked, the low-cost route also pays for a separate term life plan (about S$560 a year, an example). Cover amounts differ, so this is only a rough comparison. Check what protection you already have before paying for more.</p></div>
+  <div id="fCoverWrap" class="hide"><label style="margin-top:14px"><input type="checkbox" id="fCover"> I want to keep the life cover that comes with it</label><p class="hint">If selected, the low-cost route also pays for a separate term life plan (about S$560 a year, an example). Cover amounts differ, so this is only a rough comparison. Check what protection you already have before paying for more.</p></div>
   <button class="btn" onclick="next()">Show me the numbers</button>
   <details class="notes"><summary>For the person showing this</summary><div>Which fields can they fill from memory? Which did they need to look up? Which words are unfamiliar? Note the ones they skip. Would they be able to find these numbers in real life?</div></details>
 </section>
@@ -270,12 +284,12 @@ ul.ask li{margin:6px 0}
 </section>
 
 <section class="screen" id="b5">
-  <h1>The same cost, in years</h1>
-  <p class="big warm" id="b5Big"></p>
+  <h1>The same cost, as time</h1>
+  <p class="big neutral" id="b5Big"></p>
   <p id="b5Text"></p>
-  <p class="hint">Because every extra year of paid work is a year of your life. That is why this number often lands harder than the dollars.</p>
+  <p class="hint">Some people find time easier to picture than dollars. This is how much longer your plan would need to run to reach the same place. It isn't a judgment of your choices.</p>
   <button class="btn" onclick="next()">Continue</button>
-  <details class="notes"><summary>For the person showing this</summary><div>Which landed harder: the dollars or the years? Ask why.</div></details>
+  <details class="notes"><summary>For the person showing this</summary><div>Which landed harder: the dollars or the time? Ask why. Does the time framing feel neutral, or does it still feel like blame?</div></details>
 </section>
 
 <section class="screen" id="b6">
@@ -335,6 +349,7 @@ var INFL = 0.025;
 var $ = function(id){ return document.getElementById(id); };
 function money(n){ return 'S$' + Math.round(n).toLocaleString('en-SG'); }
 function money1k(n){ return 'S$' + (Math.round(n/1000)*1000).toLocaleString('en-SG'); }
+function money10(n){ return 'S$' + (Math.round(n/10)*10).toLocaleString('en-SG'); }
 function approx(n){ return n >= 20000 ? money1k(n) : money(Math.round(n/100)*100); }
 function pc(x, d){ return (+x).toFixed(d === undefined ? 2 : d).replace(/\.?0+$/, '') + '%'; }
 function realMult(rate, yrs){ return Math.pow((1 + rate) / (1 + INFL), yrs); }
@@ -343,8 +358,15 @@ var FLOWS = { A: ['a1','a2','a3','a4','a5','a6','a7','a8'], B: ['b1','b2','b3','
 var flow = null, idx = 0, cur = 'home';
 
 /* ---------------------------- state ---------------------------- */
-var A = { savings: 350000, rate: 0.0005, years: 20, spend: 3500, months: 6, med: 50000, dream: null, chose: {} };
-var RATES = { bank: 0.0005, hy: 0.015, safe: 0.03, mix: 0.06 };
+var A = { savings: 200000, rate: 0.0005, years: 20, spend: 3500, months: 6, med: 50000, days: 10000, dream: null, chose: {} };
+/* Rates as of October 2026. Sources (see the handoff pack, register of dated figures):
+   bank 0.05%: base rate quoted for traditional bank savings accounts (September 2026 comparison article).
+   hy 1.5%: an EXAMPLE for a high-interest account when only some bonus conditions are met; advertised maximums are higher but need salary credit, spending and so on.
+   ssb1 1.67%: first-year rate, November 2026 Singapore Savings Bond (SBNOV26). ssb 2.45%: its 10-year average. Both from a news report of the MAS announcement of 1 October 2026; the MAS notice itself could not be opened.
+   tbill 1.9%: 6-month T-bill cut-off yield at the 8 October 2026 auction.
+   mix 6%: placeholder for a steady mix of investments (not a forecast). */
+var RATES = { bank: 0.0005, hy: 0.015, ssb1: 0.0167, ssb: 0.0245, tbill: 0.019, mix: 0.06 };
+var SSB_CAP = 200000;   /* MAS: holding limit per person */
 var VOL = 0.15;
 var GROSS = { shares: 0.065, mix: 0.05, bonds: 0.03 };
 var DIY_COST = 0.003;
@@ -383,10 +405,22 @@ function toHome(){ flow = null; idx = 0; show('home'); }
 
 /* ---------------------------- Flow A ---------------------------- */
 function futureValue(amount, rate, yrs){ return amount * Math.pow(1 + rate, yrs); }
+/* Layer 1: everyday. Layer 2: reserve, split into "within days" (high-interest account) and
+   "within weeks" (Singapore Savings Bonds). Layer 3: the rest. */
 function layers(){
-  var l1 = A.months * A.spend, l2 = A.med;
+  var l1 = A.months * A.spend;
+  var l2 = A.med;
+  var l2a = Math.min(A.days, l2);
+  var l2b = l2 - l2a;
   var l3 = A.savings - l1 - l2;
-  return { l1: l1, l2: l2, l3: Math.max(0, l3), short: l3 < 0, shortBy: -l3 };
+  return { l1: l1, l2: l2, l2a: l2a, l2b: l2b, l3: Math.max(0, l3), short: l3 < 0, shortBy: -l3 };
+}
+/* Singapore Savings Bonds are capped per person; what the reserve uses counts against the cap,
+   and any layer 3 money above the room left goes into T-bills instead. */
+function safeSplit(l3, l2b){
+  var room = Math.max(0, SSB_CAP - l2b);
+  var s = Math.min(l3, room);
+  return { ssb: s, tb: l3 - s, room: room };
 }
 function updA2(){ $('aSavingsOut').textContent = money(A.savings); }
 function updA3(){
@@ -409,15 +443,22 @@ function updA3(){
   }
 }
 function updA4(){
+  if (A.days > A.med) A.days = A.med;
+  $('aDays').max = A.med;
+  $('aDays').value = A.days;
   $('aSpendOut').textContent = money(A.spend);
   $('aMonthsOut').textContent = A.months + ' months';
   $('aMedOut').textContent = money(A.med);
+  $('aDaysOut').textContent = money(A.days);
 }
 function updA5(){
   var L = layers();
   var h = '';
   h += '<div class="layer l1"><h3>1. Everyday</h3><div class="amt">' + money1k(L.l1) + '</div><p>' + A.months + ' months of spending. Keep it in a high-interest account so you can reach it today.</p></div>';
-  h += '<div class="layer l2"><h3>2. Emergency reserve</h3><div class="amt">' + money1k(L.l2) + '</div><p>For family medical bills. Singapore Savings Bonds or T-bills: backed by the Singapore government, and you can get your money back when you need it.</p></div>';
+  h += '<div class="layer l2"><h3>2. Emergency reserve</h3><div class="amt">' + money1k(L.l2) + '</div><p>For a big surprise, such as a family medical bill.</p>';
+  if (L.l2a > 0) h += '<div class="sub"><b>' + money1k(L.l2a) + ' within days</b><br>In a high-interest account, so you can reach it quickly.</div>';
+  if (L.l2b > 0) h += '<div class="sub"><b>' + money1k(L.l2b) + ' within weeks</b><br>In Singapore Savings Bonds: backed by the Singapore government. You can cash them in any month with no early-exit penalty, and the money arrives about one to five weeks later.</div>';
+  h += '</div>';
   h += '<div class="layer l3"><h3>3. Freedom money</h3><div class="amt">' + money1k(L.l3) + '</div><p>Everything else. Money you won\'t need for ten years or more.</p></div>';
   $('a5Layers').innerHTML = h;
   $('a5Msg').textContent = L.short
@@ -431,15 +472,21 @@ function riskyP10(amount, yrs){
 function updA6(){
   var L = layers(), y = A.years;
   $('a6Yrs').textContent = y;
+  var sp = safeSplit(L.l3, L.l2b);
   var bank = L.l3 * realMult(A.rate, y);
-  var safe = L.l3 * realMult(RATES.safe, y);
+  var safe = sp.ssb * realMult(RATES.ssb, y) + sp.tb * realMult(RATES.tbill, y);
   var mix = L.l3 * realMult(RATES.mix, y);
   var bad = riskyP10(L.l3, y);
+  var capNote = '';
+  if (sp.tb > 0.5) {
+    capNote = '<p class="what">Singapore Savings Bonds are limited to ' + money1k(SSB_CAP) + ' per person' + (L.l2b > 0 ? ', and ' + money1k(L.l2b) + ' of that is already your emergency reserve' : '') + '. About ' + money1k(sp.tb) + ' of this money goes into T-bills instead, at about ' + pc(RATES.tbill * 100) + ' a year. T-bills last six months or a year, so you would buy new ones as they end.</p>';
+  }
   var h = '';
   h += '<div class="card path"><h3>Leave it in the bank</h3><div class="big" style="color:#3b4654">' + money1k(bank) + '</div><p class="what">Buys about this much in today\'s prices.</p><p class="what">Nothing goes wrong. It just buys a little less every year.</p></div>';
-  h += '<div class="card path"><h3>Singapore Savings Bonds and T-bills</h3><div class="big good">' + money1k(safe) + '</div><p class="what">Backed by the Singapore government, and no stock-market ups and downs.</p><p class="bad">Rates can change when you reinvest, so this is an estimate.</p></div>';
+  h += '<div class="card path"><h3>Singapore Savings Bonds and T-bills</h3><div class="big good">' + money1k(safe) + '</div><p class="what">Backed by the Singapore government, and no stock-market ups and downs.</p>' + capNote + '<p class="bad">Rates can change when you reinvest, so this is an estimate.</p></div>';
   h += '<div class="card path"><h3>A steady mix of investments, including an index fund</h3><div class="big good">' + money1k(mix) + '</div><p class="what">In a typical case. Higher on average, but the road is bumpy.</p><p class="bad">In about 1 case in 10, you\'d end up with about ' + money1k(bad) + ' or less. Only for money you won\'t need for ten years or more.</p></div>';
   $('a6Cards').innerHTML = h;
+  $('a6Fine').textContent = 'Assumptions (rates as of October 2026; check the current ones): Singapore Savings Bonds about ' + pc(RATES.ssb * 100) + ' a year on average over 10 years (November 2026 issue); T-bills about ' + pc(RATES.tbill * 100) + ' (6-month bills, October 2026 auction); a steady mix of investments about ' + pc(RATES.mix * 100) + ' a year on average, with about 1 year in 10 going badly. Prices rising ' + pc(INFL * 100) + ' a year. Rates on new bonds and bills will change.';
 }
 var DREAMS = ['Care for family', 'Change careers', 'Learn something new', 'Give back', 'Rest for a while', 'Something else'];
 var DREAM_REPLY = {
@@ -467,17 +514,22 @@ function updA7(){
 }
 function updA8(){
   var L = layers();
-  var g1 = Math.max(0, L.l1 * (RATES.hy - A.rate));
-  var g2 = Math.max(0, L.l2 * (RATES.safe - A.rate));
+  var g1 = Math.max(0, (L.l1 + L.l2a) * (RATES.hy - A.rate));
+  var ssbRes = Math.min(L.l2b, SSB_CAP);
+  var g2 = Math.max(0, ssbRes * (RATES.ssb1 - A.rate));
   var h = '';
-  h += card8('s1', 'Put your everyday money in a high-interest account', g1 > 0 ? 'About ' + money(g1) + ' more a year. It takes one app session, and your money stays available.' : 'You are already earning about this. Nothing to change here.');
-  h += card8('s2', 'Move your emergency reserve into Singapore Savings Bonds or T-bills', 'About ' + money(g2) + ' more a year, backed by the Singapore government. They are available through the main local banks, and the bonds can be redeemed without a penalty.');
-  h += card8('s3', 'Explore what to do with your freedom money', 'Open the full planner with your numbers to see when you could stop needing a paycheque. No rush, and no need to decide today.');
+  h += card8('s1', 'Put your everyday money, and the part of your reserve you want within days, in a high-interest account', g1 > 0 ? 'About ' + money10(g1) + ' more a year. It takes one app session, and your money stays available.' : 'You are already earning about this. Nothing to change here.');
+  var t2;
+  if (L.l2b <= 0) t2 = 'You chose to keep all of your reserve within days, so there is nothing to move here.';
+  else if (g2 > 0) t2 = 'About ' + money10(g2) + ' more a year in the first year, backed by the Singapore government. You can cash a bond in any month with no early-exit penalty. The money reaches your bank account by the second working day of the following month, so allow about one to five weeks. Some banks charge a small fee for each request.';
+  else t2 = 'You are already earning about this. Nothing to change here.';
+  h += card8('s2', 'Move the rest of your emergency reserve into Singapore Savings Bonds', t2);
+  h += card8('s3', 'Explore what to do with your freedom money', 'Open the full planner with your numbers to see when you could stop needing a paycheck. No rush, and no need to decide today.');
   $('a8Cards').innerHTML = h;
   var tot = (A.chose.s1 ? g1 : 0) + (A.chose.s2 ? g2 : 0);
   $('a8Total').textContent = (A.chose.s1 || A.chose.s2)
-    ? 'Doing just what you ticked would earn you about ' + money(tot) + ' more a year, with no stock-market risk. That alone is a good outcome.'
-    : 'Tick any step to see what it would be worth. Choosing none is fine too.';
+    ? 'Doing just what you selected would earn you about ' + money10(tot) + ' more a year, with no stock-market risk. That alone is a good outcome.'
+    : 'Select any step to see what it would be worth. Choosing none is fine too.';
 }
 function card8(key, title, text){
   return '<button class="opt' + (A.chose[key] ? ' sel' : '') + '" data-step="' + key + '" role="checkbox" aria-checked="' + (!!A.chose[key]) + '"><b>' + title + '</b><span>' + text + '</span></button>';
@@ -636,8 +688,8 @@ function updB4(){
 }
 function updB5(){
   var M = model(), c = catchUp();
-  if (M.gap <= 0) { $('b5Big').className = 'big good'; $('b5Big').textContent = 'No extra years'; $('b5Text').textContent = 'On these numbers your product keeps pace with the low-cost route.'; return; }
-  $('b5Big').className = 'big warm';
+  if (M.gap <= 0) { $('b5Big').className = 'big good'; $('b5Big').textContent = 'No extra time'; $('b5Text').textContent = 'On these numbers your product keeps pace with the low-cost route.'; return; }
+  $('b5Big').className = 'big neutral';
   if (c === null) { $('b5Big').textContent = 'More than 30 more years'; $('b5Text').textContent = 'To end up with the same amount after ' + B.years + ' years, you would have to keep paying in for more than 30 additional years.'; return; }
   $('b5Big').textContent = c + (c === 1 ? ' more year' : ' more years');
   $('b5Text').textContent = 'To end up with the same amount as the low-cost route does after ' + B.years + ' years, you would need to keep paying in for about ' + c + ' more ' + (c === 1 ? 'year' : 'years') + '.';
@@ -719,7 +771,7 @@ function updB2(){
 function refresh(){ if (UPD[cur]) UPD[cur](); }
 
 function bind(){
-  var rngA = { aSavings: 'savings', aSpend: 'spend', aMonths: 'months', aMed: 'med' };
+  var rngA = { aSavings: 'savings', aSpend: 'spend', aMonths: 'months', aMed: 'med', aDays: 'days' };
   Object.keys(rngA).forEach(function(id){ $(id).addEventListener('input', function(e){ A[rngA[id]] = +e.target.value; refresh(); }); });
   Array.prototype.forEach.call(document.querySelectorAll('#a2 .opt'), function(b){
     b.addEventListener('click', function(){
