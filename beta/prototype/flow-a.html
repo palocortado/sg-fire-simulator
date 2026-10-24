@@ -75,7 +75,7 @@
   <label for="aDays">How much of that would you want within days? <span class="val" id="aDaysOut"></span></label>
   <input type="range" id="aDays" min="0" max="50000" step="1000" value="10000">
   <p class="hint">The rest can sit in Singapore Savings Bonds, which take about one to five weeks to cash in.</p>
-  <div class="callout">Placeholder: the S$10,000 "within days" starting amount is an example, not advice. The reserve amounts above are illustrations too. Use your own sense of what would let you sleep.</div>
+  <div class="callout">An example: the S$10,000 "within days" starting amount is an example, not advice. The reserve amounts above are illustrations too. Use your own sense of what would let you sleep.</div>
   <button class="btn" onclick="next()">Continue</button>
   <details class="notes"><summary>For the person showing this</summary><div>Which slider do they spend the most time on? Do they know what family members are covered for? Ask: "What would you need to know to feel sure about this number?"</div></details>
 </section>
@@ -104,7 +104,7 @@
   <h1>What room could this give you?</h1>
   <div class="card"><p style="margin:0" id="a7Now"></p><p class="big good" id="a7NowBig" style="margin:4px 0"></p></div>
   <div class="card"><p style="margin:0" id="a7Later"></p><p class="hint" id="a7LaterText"></p></div>
-  <p class="fine" style="margin-top:0">This isn't a retirement date. It is a feel for how much breathing room your savings give you. The full planner can estimate when you could stop working.</p>
+  <p class="fine" style="margin-top:0">This isn't a retirement date. It is a feel for how much breathing room your savings give you. The full simulator can estimate when you could stop working.</p>
   <h2>If time were yours, what would you do with it?</h2>
   <div class="chips" id="a7Chips"></div>
   <p id="a7Reflect" class="ok hide"></p>
@@ -218,7 +218,7 @@ function updA6(){
   h += '<div class="card path"><h3>Singapore Savings Bonds and T-bills</h3><div class="big good">' + money1k(safe) + '</div><p class="what">Backed by the Singapore government, and no stock-market ups and downs.</p>' + capNote + '<p class="bad">Rates can change when you reinvest, so this is an estimate.</p></div>';
   h += '<div class="card path"><h3>A steady mix of investments, including an index fund</h3><div class="big good">' + money1k(mix) + '</div><p class="what">In a typical case. Higher on average, but the road is bumpy.</p><p class="bad">In about 1 case in 10, you\'d end up with about ' + money1k(bad) + ' or less. Only for money you won\'t need for ten years or more.</p></div>';
   $('a6Cards').innerHTML = h;
-  $('a6Fine').textContent = 'Assumptions (rates as of October 2026; check the current ones): for long projections we use about ' + pc(RATES.ssb * 100) + ' a year for Singapore Savings Bonds (the average of their 10-year rates since 2015 is about 2.23%) and about ' + pc(RATES.tbill * 100) + ' for T-bills (6-month yields since mid-2019 average about 2.02%). Today\'s issues pay a little more: the November 2026 Savings Bond averages ' + pc(RATES.ssbNow * 100) + ' over 10 years, and 6-month T-bills yielded ' + pc(RATES.tbillNow * 100) + ' in October. A steady mix of investments is assumed at about ' + pc(RATES.mix * 100) + ' a year on average, with about 1 year in 10 going badly. Prices rise ' + pc(INFL * 100) + ' a year. Rates on new bonds and bills will change.';
+  $('a6Fine').textContent = 'Assumptions (rates as of October 2026; check the current ones): for long projections we use about ' + pc(RATES.ssb * 100) + ' a year for Singapore Savings Bonds (the average of their 10-year rates since 2015 is about 2.23%) and about ' + pc(RATES.tbill * 100) + ' for T-bills (6-month yields since mid-2019 average about 2.02%). Today\'s issues pay a little more: the November 2026 Savings Bond averages ' + pc(RATES.ssbNow * 100) + ' over 10 years, and 6-month T-bills yielded ' + pc(RATES.tbillNow * 100) + ' in October. A steady mix of investments is assumed at about ' + pc(RATES.mix * 100) + ' a year on average, with about 1 year in 10 going badly. This is an example assumption, not a forecast. Prices rise ' + pc(INFL * 100) + ' a year. Rates on new bonds and bills will change.';
 }
 var DREAMS = ['Care for family', 'Change careers', 'Learn something new', 'Give back', 'Rest for a while', 'Something else'];
 var DREAM_REPLY = {
@@ -256,7 +256,7 @@ function updA8(){
   else if (g2 > 0) t2 = 'About ' + money10(g2) + ' more a year in the first year, backed by the Singapore government. You can cash a bond in any month with no early-exit penalty. The money reaches your bank account by the second working day of the following month, so allow about one to five weeks. Some banks charge a small fee for each request.';
   else t2 = 'You are already earning about this. Nothing to change here.';
   h += card8('s2', 'Move the rest of your emergency reserve into Singapore Savings Bonds', t2);
-  h += card8('s3', 'Explore what to do with your freedom money', 'Open the full planner with your numbers to see when you could stop needing a paycheck. No rush, and no need to decide today.');
+  h += card8('s3', 'Explore what to do with your freedom money', 'Open the full simulator with your numbers to see when you could stop needing a paycheck. No rush, and no need to decide today.');
   $('a8Cards').innerHTML = h;
   var tot = (A.chose.s1 ? g1 : 0) + (A.chose.s2 ? g2 : 0);
   $('a8Total').textContent = (A.chose.s1 || A.chose.s2)
