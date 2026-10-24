@@ -67,7 +67,7 @@
   <label for="aMed">How much would you want ready for a big surprise, such as a family medical bill? <span class="val" id="aMedOut"></span></label>
   <input type="range" id="aMed" min="0" max="200000" step="5000" value="50000">
   <div class="chips anchors" id="aMedAnchors" role="group" aria-label="Example reserve amounts">
-    <button class="chip" data-med="20000"><b>S$20k</b>&nbsp;Deductibles and co-payments around a subsidized stay</button>
+    <button class="chip" data-med="20000"><b>S$20k</b>&nbsp;Insurance covers most of a subsidized hospital bill. You pay a yearly deductible, usually S$2,000 to S$3,500, plus some of the rest. This leaves room for that and more.</button>
     <button class="chip" data-med="50000"><b>S$50k</b>&nbsp;About a year of long-term care help for one parent, or a large private-ward bill share (default)</button>
     <button class="chip" data-med="100000"><b>S$100k</b>&nbsp;A big private episode, or two to three years of care</button>
   </div>
@@ -116,6 +116,11 @@
   <h1>Your next step, your choice</h1>
   <p class="lead">Any one of these is enough. None is also fine.</p>
   <div id="a8Cards"></div>
+  <div id="a8Ret" class="hide">
+    <label for="aRet">Once you stop working, about how much would you want to spend each month, in today's money? <span class="val" id="aRetOut"></span></label>
+    <input type="range" id="aRet" min="1000" max="10000" step="100" value="3500">
+    <p class="hint">This helps the full simulator start in the right place. A guess is fine, and you can change it there.</p>
+  </div>
   <div class="ok" id="a8Total"></div>
   <button class="btn" onclick="window.print()">Save this summary</button>
   <button class="btn ghost" onclick="toHome()">Not today</button>
@@ -132,7 +137,7 @@ var FLOW = ['a1','a2','a3','a4','a5','a6','a7','a8'];
 function seq(){ return FLOW; }
 
 /* ---------------------------- state ---------------------------- */
-var A = { savings: 200000, rate: 0.0005, years: 20, spend: 3500, months: 6, med: 50000, days: 10000, dream: null, chose: {} };
+var A = { savings: 200000, rate: 0.0005, years: 20, spend: 3500, months: 6, med: 50000, days: 10000, dream: null, ret: null, chose: {} };
 
 /* ---------------------------- Flow A ---------------------------- */
 function futureValue(amount, rate, yrs){ return amount * Math.pow(1 + rate, yrs); }
@@ -258,6 +263,13 @@ function updA8(){
   h += card8('s2', 'Move the rest of your emergency reserve into Singapore Savings Bonds', t2);
   h += card8('s3', 'Explore what to do with your freedom money', 'Open the full simulator with your numbers to see when you could stop needing a paycheck. No rush, and no need to decide today.');
   $('a8Cards').innerHTML = h;
+  var retOn = !!A.chose.s3;
+  $('a8Ret').classList.toggle('hide', !retOn);
+  if (retOn) {
+    if (A.ret === null) A.ret = A.spend;
+    $('aRet').value = A.ret;
+    $('aRetOut').textContent = money(A.ret);
+  }
   var tot = (A.chose.s1 ? g1 : 0) + (A.chose.s2 ? g2 : 0);
   $('a8Total').textContent = (A.chose.s1 || A.chose.s2)
     ? 'Doing just what you selected would earn you about ' + money10(tot) + ' more a year, with no stock-market risk. That alone is a good outcome.'
@@ -287,6 +299,7 @@ function bind(){
       refresh();
     });
   });
+  $('aRet').addEventListener('input', function(e){ A.ret = +e.target.value; $('aRetOut').textContent = money(A.ret); });
   $('a7Chips').addEventListener('click', function(e){ var d = e.target.dataset.dream; if (d) { A.dream = (A.dream === d) ? null : d; refresh(); } });
   $('a8Cards').addEventListener('click', function(e){ var b = e.target.closest('[data-step]'); if (b) { A.chose[b.dataset.step] = !A.chose[b.dataset.step]; refresh(); } });
 }
