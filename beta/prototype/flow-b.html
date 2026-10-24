@@ -139,7 +139,7 @@
   </ul>
   <button class="btn" onclick="window.print()">Save this summary</button>
   <a class="btn ghost" style="text-align:center;text-decoration:none" href="https://palocortado.github.io/sg-fire-simulator/">Plan the rest in the full tool</a>
-  <p class="fine">In the real product, your numbers would carry over into the full planner. For anything involving an insurance policy, speak to an independent professional before cancelling it.</p>
+  <p class="fine">In the real product, your numbers would carry over into the full simulator. For anything involving an insurance policy, speak to an independent professional before cancelling it.</p>
   <details class="notes"><summary>For the person showing this</summary><div>Which option would they pick? What would stop them? Would they actually ask the provider these questions?</div></details>
 </section>
 
@@ -154,7 +154,7 @@ function seq(){ return FLOW.filter(function(id){ return id !== 'b7' || lockAppli
 
 /* ---------------------------- state ---------------------------- */
 var PRODUCTS = {
-  robo:    { name: 'Robo-adviser', desc: 'An app picks and manages a portfolio for you', entry: 0, bonus: 0, adv: 0.6, plat: 0, ter: 0.2, ins: 0, changeOn: false, changeYear: 10, after: 0, lock: 0, exit: 0, hint: 'Many robo-advisers quote one "all-in" fee. Check whether the funds inside charge extra on top.' },
+  robo:    { name: 'Robo-adviser', desc: 'An app picks and manages a portfolio for you', entry: 0, bonus: 0, adv: 0.6, plat: 0, ter: 0.2, ins: 0, changeOn: false, changeYear: 10, after: 0, lock: 0, exit: 0, hint: 'Many robo-advisers quote one "all-in" fee. Check whether the funds inside charge extra on top. The fee numbers shown are examples.' },
   adviser: { name: 'Adviser or platform-managed portfolio', desc: 'A financial adviser recommends funds on a platform', entry: 0, bonus: 0, adv: 1.0, plat: 0.25, ter: 0.6, ins: 0, changeOn: false, changeYear: 10, after: 0, lock: 0, exit: 0, hint: 'Three layers often stack up here: the adviser, the platform and the funds themselves.' },
   trust:   { name: 'Bank unit trust or fund', desc: 'A fund sold through your bank', entry: 3.0, bonus: 0, adv: 0, plat: 0, ter: 1.5, ins: 0, changeOn: false, changeYear: 10, after: 0, lock: 0, exit: 0, hint: 'Look for the sales charge on each payment in, and the yearly fund cost (TER) in the fund fact sheet.' },
   ilp:     { name: 'Investment-linked policy (from an insurer)', desc: 'Insurance and investing bundled into one plan', entry: 0, bonus: 30, adv: 0, plat: 0.75, ter: 1.5, ins: 1.5, changeOn: true, changeYear: 10, after: 1.85, lock: 10, exit: 25, hint: 'These numbers are an illustration of one possible shape, not a typical product. The 30% welcome bonus is an example only: use the figure in your own illustration, and drag the slider to match it. Ask for the product summary and the benefit illustration. The page showing the total effect of charges is the one that matters.' },
@@ -303,7 +303,7 @@ function fracText(f){
 function updB4(){
   var M = model(), y = B.years;
   var low = (B.entry === 0 && B.bonus === 0 && totalFee(B) <= 0.45 && (!B.changeOn));
-  $('b4How').innerHTML = 'We assume the same investments in both cases, growing ' + pc(GROSS[B.mix] * 100) + ' a year before costs, and prices rising ' + pc(INFL * 100) + ' a year. The low-cost route is a single index fund you buy yourself, costing about ' + pc(DIY_COST * 100) + ' a year in fund and trading costs, with no sales charge, no bonus and no lock-in. This assumes a low-fee online broker. A local broker with a per-trade minimum can cost more on small monthly purchases (see your options).' + (B.cover ? ' It also pays for a separate term life plan (about S$400 a year for S$500,000 of cover at age 31, an example).' : '') + ' Real markets go up and down, so treat this as a comparison, not a forecast.';
+  $('b4How').innerHTML = 'We assume the same investments in both cases, growing ' + pc(GROSS[B.mix] * 100) + ' a year before costs (an example assumption, not a forecast), and prices rising ' + pc(INFL * 100) + ' a year. The low-cost route is a single index fund you buy yourself, costing about ' + pc(DIY_COST * 100) + ' a year in fund and trading costs, with no sales charge, no bonus and no lock-in. This assumes a low-fee online broker. A local broker with a per-trade minimum can cost more on small monthly purchases (see your options).' + (B.cover ? ' It also pays for a separate term life plan (about S$400 a year for S$500,000 of cover at age 31, an example).' : '') + ' Real markets go up and down, so treat this as a comparison, not a forecast.';
   $('b4P').textContent = money1k(M.p[y]);
   $('b4D').textContent = money1k(M.d[y]);
   chart($('b4Chart'), M.p, M.d, y);
