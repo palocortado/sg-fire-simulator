@@ -1,6 +1,11 @@
 /* =============================================================================
    Financial Independence Simulator for Singapore — engine.js
-    Version: 7.1.1
+    Version: 7.2
+    7.2 (R34): CPF inflows can no longer grow past the Ordinary Wage ceiling. Inflows are still
+    grown by inflation, but each month they are capped at what a salary at the ceiling would
+    produce at your current-age contribution shares. The ceiling is S$8,000 in 2026 and the new
+    assumption "CPF salary ceiling growth" (default 0% a year) sets how it rises afterwards.
+    Old save files load unchanged (the field is added at its default).
     7.1.1: the Retirement Account (RA) balance field in Step 2 now appears for people aged 55
     and over. The age55 class that shows it was never being set, so the field stayed hidden.
     -----------------------------------------------------------------------------
@@ -68,7 +73,7 @@ let incomeStreamCount = 0;
 let milestoneCount = 0;
 let isLoading = true;
 
-const APP_VERSION = "7.1.1";
+const APP_VERSION = "7.2";
 const SAVE_FORMAT = 2;            // R25: bump when the save layout changes, and add a step to migrateState()
 const FIGURES_AS_OF = 'Oct 2026'; // R20: shown in the footer; update at the yearly refresh
 
@@ -120,6 +125,7 @@ const DEFAULTS = Object.freeze({
     cpfUnlockAge: 55,
     frs2026: 220400,          // Full Retirement Sum for members turning 55 in 2026
     frsGrowth: 3.5,           // % a year (2026 -> 2027 announced increase)
+    ceilingGrowth: 0,         // R34: % a year the CPF Ordinary Wage ceiling rises after 2026 (S$8,000). No rise announced, so 0
     lifeAge: 65,              // CPF LIFE payout start age (65–70)
     lifePlan: 'standard',     // 'standard' or 'escalating'
 
@@ -223,6 +229,7 @@ const FIELD_DEFAULTS = {
     'inp-lockYrs': DEFAULTS.lockYrs,
     'inp-mortgageShare': DEFAULTS.mortgageShare,
     'inp-frsGrowth': DEFAULTS.frsGrowth,
+    'inp-ceilingGrowth': DEFAULTS.ceilingGrowth,
     'inp-lifeAge': DEFAULTS.lifeAge,
     'inp-lifePlan': DEFAULTS.lifePlan,
     'inp-swrRate': DEFAULTS.swrRate,
@@ -237,7 +244,7 @@ const FIELD_DEFAULTS = {
 // Fields reset to their default by "Clear" (assumptions). All other fields are blanked.
 const ASSUMPTION_FIELDS = ['inp-expenseShare', 'inp-inflation', 'inp-realContribGrowth',
     'inp-invRet', 'inp-globalRet', 'inp-fxRate', 'inp-fxDrift', 'inp-sgRet', 'inp-cashYield', 'inp-mortgageRate', 'inp-mortgageShare',
-    'inp-mortgageRateLong', 'inp-lockYrs', 'inp-frsGrowth', 'inp-lifeAge', 'inp-lifePlan', 'inp-swrRate',
+    'inp-mortgageRateLong', 'inp-lockYrs', 'inp-frsGrowth', 'inp-ceilingGrowth', 'inp-lifeAge', 'inp-lifePlan', 'inp-swrRate',
     'inp-mcRuns', 'inp-volGlobal', 'inp-volSg', 'inp-volInfl', 'inp-volFx', 'inp-volMort'];
 
 const PERSISTED_TOGGLES = ['toggle-expense-partner', 'toggle-mortgage', 'toggle-mortgage-partner', 'inp-maxOA', 'inp-showFireCurve',
@@ -425,7 +432,7 @@ function advancedInUse() {
     if (isChecked('toggle-mortgage') && getRadio('loanType', 'hdb') === 'bank') return true;
     if (isChecked('inp-showFireCurve')) return true;
     if (readIncomeStreams().length || readMilestones().length) return true;
-    if (differs('inp-frsGrowth', DEFAULTS.frsGrowth) || differs('inp-lifeAge', DEFAULTS.lifeAge)) return true;
+    if (differs('inp-frsGrowth', DEFAULTS.frsGrowth) || differs('inp-ceilingGrowth', DEFAULTS.ceilingGrowth) || differs('inp-lifeAge', DEFAULTS.lifeAge)) return true;
     const plan = document.getElementById('inp-lifePlan');
     if (plan && plan.value !== DEFAULTS.lifePlan) return true;
     if (isChecked('inp-pledge') || isChecked('inp-swrOverride') || isChecked('toggle-ownhome')) return true;
@@ -1184,6 +1191,7 @@ function collectInputs() {
                 oaRate: DEFAULTS.oaRate / 100,
                 saRate: DEFAULTS.saRate / 100,
                 unlockAge: DEFAULTS.cpfUnlockAge,
+                ceilingGrowth: (adv ? rateOr('inp-ceilingGrowth', DEFAULTS.ceilingGrowth) : DEFAULTS.ceilingGrowth) / 100,
                 frsGrowth: (adv ? rateOr('inp-frsGrowth', DEFAULTS.frsGrowth) : DEFAULTS.frsGrowth) / 100,
                 lifeAge: adv ? Math.min(70, Math.max(65, Math.round(rateOr('inp-lifeAge', DEFAULTS.lifeAge)))) : DEFAULTS.lifeAge,
                 lifePlan: adv && document.getElementById('inp-lifePlan') ? document.getElementById('inp-lifePlan').value : DEFAULTS.lifePlan,
@@ -1359,6 +1367,12 @@ function simulatePath(inp, opts = {}) {
         const yrs = age - currentAge;
         const priceIdx = priceArr[yrs];
         const contribIdx = contribArr[yrs];
+        // R34: the Ordinary Wage ceiling rises in steps, not with inflation, so cap each CPF inflow at
+        // what a salary at the ceiling would give at today's age-band shares (salary itself is unknown).
+        const capBand = CPF_RATE_BANDS.find(b => currentAge <= b.maxAge);
+        const capCeil = CPF_OW_CEILING * Math.pow(1 + cpf.ceilingGrowth, yrs) * capBand.total;
+        const oaIn = Math.min(cpf.oaContrib * contribIdx, capCeil * capBand.oa);
+        const saIn = Math.min(cpf.saContrib * contribIdx, capCeil * capBand.sa);
         fx = fxArr[yrs];
         const gMonthly = sh ? sh.g[yrs] : 1 + g.ret / 12;
         const sMonthly = sh ? sh.s[yrs] : 1 + s.ret / 12;
@@ -1457,13 +1471,13 @@ function simulatePath(inp, opts = {}) {
                 st.sg += s.contrib * contribIdx;
                 st.cash += c.contrib * contribIdx;
                 if (!st.at55) {
-                    st.oa += cpf.oaContrib * contribIdx;
-                    if (cpf.hasSA) st.sa += cpf.saContrib * contribIdx;
+                    st.oa += oaIn;
+                    if (cpf.hasSA) st.sa += saIn;
                 } else {
                     // R30: after 55, OA savings stay locked until the RA reaches its target
-                    if (!st.lifeOn && st.ra < T.target - 0.5) st.oaLock += cpf.oaContrib * contribIdx;
-                    else st.oa += cpf.oaContrib * contribIdx;
-                    if (cpf.hasSA) toCpf(cpf.saContrib * contribIdx);   // SA share now goes to the RA until the target is met
+                    if (!st.lifeOn && st.ra < T.target - 0.5) st.oaLock += oaIn;
+                    else st.oa += oaIn;
+                    if (cpf.hasSA) toCpf(saIn);   // SA share now goes to the RA until the target is met
                 }
             }
 
