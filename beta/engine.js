@@ -6,6 +6,9 @@
     produce at your current-age contribution shares. The ceiling is S$8,000 in 2026 and the new
     assumption "CPF salary ceiling growth" (default 0% a year) sets how it rises afterwards.
     Old save files load unchanged (the field is added at its default).
+    7.3 (E-5): the simulator can start from the front door. A link ending #from=fd1&savings=..&spend=..
+    &inv=..&monthly=..&ret=..&src=a|b|d3 fills only those fields in Simple mode and shows a banner.
+    It asks one question only if the browser already holds inputs. #plan= share links work as before.
     7.1.1: the Retirement Account (RA) balance field in Step 2 now appears for people aged 55
     and over. The age55 class that shows it was never being set, so the field stayed hidden.
     -----------------------------------------------------------------------------
@@ -73,7 +76,7 @@ let incomeStreamCount = 0;
 let milestoneCount = 0;
 let isLoading = true;
 
-const APP_VERSION = "7.2";
+const APP_VERSION = "7.3";
 const SAVE_FORMAT = 2;            // R25: bump when the save layout changes, and add a step to migrateState()
 const FIGURES_AS_OF = 'Oct 2026'; // R20: shown in the footer; update at the yearly refresh
 
@@ -821,6 +824,98 @@ function readPlanFromLink() {
         for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
         return readPlanFile(new TextDecoder().decode(bytes)) || 'bad';
     } catch (e) { return 'bad'; }
+}
+
+
+// E-5: hand-over from the front door. Link format: #from=fd1&savings=..&spend=..&inv=..&monthly=..&ret=..&src=a|b|d3
+// Plain numbers in SGD (today's prices); unknown keys are ignored, missing keys are left alone, values are clamped.
+// "ret" is the nominal return AFTER the visitor's costs: the engine takes no fees off it.
+const HANDOFF_VERSION = 'fd1';
+const HANDOFF_FIELDS = {
+    savings: { id: 'inp-cashStart',   label: 'cash savings',        min: 0, max: 50000000 },
+    spend:   { id: 'inp-expenses',    label: 'monthly spending',    min: 0, max: 100000 },
+    inv:     { id: 'inp-invStart',    label: 'investments',         min: 0, max: 50000000 },
+    monthly: { id: 'inp-invContrib',  label: 'monthly top-up',      min: 0, max: 100000 },
+    ret:     { id: 'inp-invRet',      label: 'expected return',     min: 0, max: 15, decimals: 2 }
+};
+const HANDOFF_SOURCES = { a: 'Your safety, sized', b: 'What convenience costs', d3: 'the home page' };
+
+// Pure parser, no page needed. Returns null (not a hand-over link) or
+// { ok, version, src, values: {key: number}, clamped: [keys], skipped: [keys] }
+function parseHandoffHash(hash) {
+    if (typeof hash !== 'string' || hash.indexOf('#from=') !== 0) return null;
+    const out = { ok: true, version: '', src: '', values: {}, clamped: [], skipped: [] };
+    hash.slice(1).split('&').forEach(pair => {
+        const i = pair.indexOf('=');
+        if (i < 0) return;
+        let k, v;
+        try { k = decodeURIComponent(pair.slice(0, i)); v = decodeURIComponent(pair.slice(i + 1)); } catch (e) { return; }
+        if (k === 'from') { out.version = v; return; }
+        if (k === 'src') { out.src = Object.prototype.hasOwnProperty.call(HANDOFF_SOURCES, v) ? v : ''; return; }
+        if (!Object.prototype.hasOwnProperty.call(HANDOFF_FIELDS, k)) return;   // unknown key: ignored
+        if (!/^\d+(\.\d+)?$/.test(v.trim())) { out.skipped.push(k); return; }  // not a plain non-negative number
+        const f = HANDOFF_FIELDS[k];
+        let n = parseFloat(v);
+        if (!isFinite(n)) { out.skipped.push(k); return; }
+        if (n > f.max) { n = f.max; out.clamped.push(k); }
+        out.values[k] = f.decimals ? Math.round(n * Math.pow(10, f.decimals)) / Math.pow(10, f.decimals) : Math.round(n);
+    });
+    if (out.version !== HANDOFF_VERSION) out.ok = false;
+    return out;
+}
+
+function hasUserInputs() {
+    return Object.keys(FIELD_DEFAULTS).some(id => {
+        if (ASSUMPTION_FIELDS.includes(id)) return false;
+        const el = document.getElementById(id);
+        return el && String(el.value).trim() !== '';
+    });
+}
+
+function showHandoffBanner(p, applied) {
+    const el = document.getElementById('from-banner');
+    if (!el) return;
+    const where = HANDOFF_SOURCES[p.src] || 'the front door';
+    el.innerHTML = '';
+    const msg = document.createElement('div');
+    const parts = ['Started from your answers in ' + where + '. Change anything.'];
+    if (applied.indexOf('spend') >= 0) parts.push('The monthly spending is what you told us you spend today. Check it covers what you will need in retirement.');
+    if (applied.indexOf('ret') >= 0) parts.push('The expected return is already after the costs you entered, so do not subtract fees again.');
+    parts.push('We still need your age and the age you want to stop working.');
+    if (p.clamped.length) parts.push('Some numbers were very large and were capped.');
+    if (p.skipped.length) parts.push('Some numbers in the link could not be read and were left blank.');
+    msg.textContent = parts.join(' ');
+    const btn = document.createElement('button');
+    btn.type = 'button'; btn.className = 'from-banner-close'; btn.textContent = 'Dismiss';
+    btn.onclick = () => { el.style.display = 'none'; };
+    el.appendChild(msg); el.appendChild(btn);
+    el.style.display = 'flex';
+}
+
+// Returns true if a hand-over link was present (handled, applied or declined)
+function applyHandoffFromLink() {
+    const p = parseHandoffHash((typeof location !== 'undefined' && location.hash) || '');
+    if (!p) return false;
+    try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+    if (!p.ok) {
+        showPlanNotice("This link was made for a different version of the simulator, so none of its numbers were used. Enter your numbers below.", true);
+        return true;
+    }
+    const keys = Object.keys(p.values);
+    if (!keys.length) return true;
+    if (exampleState) clearAllInputs();        // an example is not the visitor's own plan: no question needed
+    if (hasUserInputs()) {
+        const names = keys.map(k => HANDOFF_FIELDS[k].label).join(', ');
+        if (!window.confirm('Your answers from ' + (HANDOFF_SOURCES[p.src] || 'the front door') + ' would change these inputs: ' + names + '. Your other inputs stay as they are. Go ahead?')) return true;
+    }
+    if (getMode() !== 'simple') setMode('simple');   // the investment fields only exist in Simple mode
+    isLoading = true;
+    keys.forEach(k => setVal(HANDOFF_FIELDS[k].id, p.values[k], true));
+    isLoading = false;
+    window.startPlan();
+    runSim();
+    showHandoffBanner(p, keys);
+    return true;
 }
 
 window.copyShareLink = function () {
@@ -2837,6 +2932,7 @@ function initApp() {
     runSim();
 
     // R29: open a plan from a share link, then tidy the address bar
+    if (applyHandoffFromLink()) return;
     const fromLink = readPlanFromLink();
     if (fromLink) {
         try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
@@ -2849,5 +2945,5 @@ if (typeof document !== 'undefined') {
     initApp();
 }
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { simulatePath, calcPmt, buildFinishLine, earliestFreedomAge, requiredCapitalAt, computeSwr, cpfTargets, DEFAULTS };
+    module.exports = { parseHandoffHash, simulatePath, calcPmt, buildFinishLine, earliestFreedomAge, requiredCapitalAt, computeSwr, cpfTargets, DEFAULTS };
 }
